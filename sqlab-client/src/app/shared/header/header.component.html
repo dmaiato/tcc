@@ -1,0 +1,16 @@
+<header class="header">
+  <div class="header-content">
+    <a routerLink="/" class="logo">SQLab</a>
+
+    <nav class="nav">
+      @if (isLoggedIn) {
+        <a routerLink="/dashboard">Dashboard</a>
+        <span class="user-name">{{ userName }}</span>
+        <button (click)="logout()" class="logout-btn">Logout</button>
+      } @else {
+        <a routerLink="/login">Login</a>
+        <a routerLink="/register" class="register-link">Register</a>
+      }
+    </nav>
+  </div>
+</header>
