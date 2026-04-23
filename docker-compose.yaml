@@ -1,0 +1,60 @@
+services:
+  db:
+    container_name: sqlab-db
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-sqlab}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-sqlab}
+      POSTGRES_DB: ${DB_NAME:-sqlab}
+    ports:
+      - "5436:5432"
+    volumes:
+      - sqlab_data:/var/lib/postgresql/data
+    networks:
+      - sqlab_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-sqlab} -d ${DB_NAME:-sqlab}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    container_name: sqlab-api
+    build:
+      context: ./sqlab-api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME:-sqlab}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-sqlab}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-sqlab}
+      SQLAB_JWT_SECRET: ${SQLAB_JWT_SECRET:-change-me-in-production-must-be-32-chars-long}
+      SQLAB_JWT_EXPIRATION: ${SQLAB_JWT_EXPIRATION:-86400000}
+    ports:
+      - "8081:8081"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - sqlab_network
+
+  client:
+    container_name: sqlab-client
+    build:
+      context: ./sqlab-client
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    networks:
+      - sqlab_network
+
+volumes:
+  sqlab_data:
+
+networks:
+  sqlab_network:
+    driver: bridge

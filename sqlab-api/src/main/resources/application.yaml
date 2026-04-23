@@ -3,9 +3,9 @@ spring:
     name: sqlab-api
 
   datasource:
-    url: jdbc:postgresql://localhost:5436/sqlab
-    username: sqlab
-    password: sqlab
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5436/sqlab}
+    username: ${SPRING_DATASOURCE_USERNAME:sqlab}
+    password: ${SPRING_DATASOURCE_PASSWORD:sqlab}
     driver-class-name: org.postgresql.Driver
 
   jpa:
