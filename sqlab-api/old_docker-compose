@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sqlab-postgres
+    environment:
+      POSTGRES_DB: sqlab
+      POSTGRES_USER: sqlab
+      POSTGRES_PASSWORD: sqlab
+    ports:
+      - "5436:5432"
+    volumes:
+      - sqlab-postgres-data:/var/lib/postgresql/data
+#    networks:
+#      - sqlab-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sqlab"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+#  api:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    container_name: sqlab-api
+#    restart: on-failure
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sqlab
+#      SPRING_DATASOURCE_USERNAME: sqlab
+#      SPRING_DATASOURCE_PASSWORD: sqlab
+#      SQLAB_JWT_SECRET: ${SQLAB_JWT_SECRET:-change-me-in-production-must-be-32-chars-long}
+#      SQLAB_JWT_EXPIRATION: ${SQLAB_JWT_EXPIRATION:-86400000}
+#    ports:
+#      - "8080:8080"
+#    depends_on:
+#      - postgres
+#    networks:
+#      - sqlab-network
+
+volumes:
+  sqlab-postgres-data:
+
+#networks:
+#  sqlab-network:
+#    driver: bridge

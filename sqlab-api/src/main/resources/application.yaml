@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: sqlab-api
+
+  datasource:
+    url: jdbc:postgresql://localhost:5436/sqlab
+    username: sqlab
+    password: sqlab
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 25
+          batch_versioned_data: true
+        order_inserts: true
+        order_updates: true
+        generate_statistics: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+    validate-on-migrate: true
+    clean-disabled: true
+    clean-on-validation-error: false
+
+
+logging:
+  level:
+    root: INFO
+    com.sqlab: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.results: DEBUG
+    org.flywaydb: DEBUG
+
+sqlab:
+  jwt:
+    secret: ${SQLAB_JWT_SECRET:change-me-in-production-must-be-32-chars-long}
+    expiration: ${SQLAB_JWT_EXPIRATION:86400000}
+
+server:
+  port: 8081

@@ -1,0 +1,21 @@
+services:
+  db:
+    container_name: sqlab-db
+    image: postgres:16-alpine
+    restart: no
+    environment:
+      POSTGRES_USER: sqlab
+      POSTGRES_PASSWORD: sqlab
+      POSTGRES_DB: sqlab
+    ports:
+      - "5436:5432"
+    volumes:
+      - sqlab_data:/var/lib/postgresql/data
+
+volumes:
+  sqlab_data:
+    name: sqlab_data
+
+networks:
+  default:
+    name: sqlab_network
