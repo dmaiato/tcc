@@ -1,0 +1,48 @@
+@startuml arquitetura
+
+skinparam backgroundColor white
+skinparam componentStyle rectangle
+skinparam ArrowColor black
+skinparam component {
+    BackgroundColor white
+    BorderColor black
+}
+skinparam rectangle {
+    BackgroundColor white
+    BorderColor black
+}
+skinparam database {
+    BackgroundColor white
+    BorderColor black
+}
+
+actor "Usuário" as usuario
+
+rectangle "Cliente (Front-end)" {
+    component "Interface Web\n(Angular)" as ui
+    component "Motor SQL Local\nPGlite\n(PostgreSQL + WebAssembly)" as pglite
+    component "Sandbox de\nExecução Local" as sandbox
+}
+
+rectangle "Comunicação" {
+    component "API REST" as api
+}
+
+rectangle "Servidor (Back-end)" {
+    component "Serviço de Validação\n(Spring Boot)" as validacao
+    component "Validação Estrutural\nde Tuplas" as tuplas
+    component "Sistema de XP\ne Progresso" as xp
+    database "PostgreSQL" as db
+}
+
+usuario --> ui : Interação
+ui --> pglite : Executa consultas SQL
+pglite --> sandbox : Execução isolada
+sandbox --> api : Envia tuplas resultantes
+api --> validacao : Submissão da solução
+validacao --> tuplas : Valida resultado
+validacao --> xp : Atualiza progresso
+validacao --> db : Persiste dados
+api --> ui : Feedback da missão
+
+@enduml

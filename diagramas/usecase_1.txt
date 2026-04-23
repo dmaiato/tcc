@@ -1,0 +1,49 @@
+@startuml caso_de_uso
+
+skinparam actorStyle awesome
+skinparam backgroundColor white
+skinparam usecase {
+    BackgroundColor white
+    BorderColor black
+    ArrowColor black
+}
+skinparam actor {
+    BackgroundColor white
+    BorderColor black
+}
+
+left to right direction
+
+actor "Usuário" as usuario
+actor "Admin" as admin
+
+rectangle "Plataforma SQLab" {
+    usecase "UC01\nCadastrar-se e\nautenticar-se" as UC01
+    usecase "UC02\nSelecionar missão" as UC02
+    usecase "UC03\nExecutar consulta SQL" as UC03
+    usecase "UC04\nVisualizar resultados" as UC04
+    usecase "UC05\nValidar missão" as UC05
+    usecase "UC06\nRestaurar banco local" as UC06
+    usecase "UC07\nVisualizar XP\ne progresso" as UC07
+    usecase "UC08\nCadastrar missão" as UC08
+    usecase "UC09\nEditar missão" as UC09
+    usecase "UC10\nExcluir missão" as UC10
+}
+
+usuario -- UC01
+usuario -- UC02
+usuario -- UC03
+usuario -- UC05
+usuario -- UC06
+usuario -- UC07
+
+UC03 <. UC04 : <<include>>
+UC05 <. UC04 : <<include>>
+UC03 <. UC06 : <<extend>>
+
+admin -- UC02
+admin -- UC08
+admin -- UC09
+admin -- UC10
+
+@enduml
