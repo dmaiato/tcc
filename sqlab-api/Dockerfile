@@ -1,16 +1,10 @@
-# Stage 1: Build
-FROM azul/zulu-openjdk-alpine:25 AS builder
+FROM azul/zulu-openjdk-alpine:25
 WORKDIR /app
-# Install Maven manually as it might not be in the base image
+# Install Maven for initial dependency download, though mvnw is preferred
 RUN apk add --no-cache maven
-COPY pom.xml .
-RUN mvn dependency:go-offline
-COPY src ./src
-RUN mvn clean package -DskipTests
-
-# Stage 2: Runtime
-FROM azul/zulu-openjdk-alpine:25-jre
-WORKDIR /app
-COPY --from=builder /app/target/*.jar app.jar
+COPY . .
+# Ensure Maven wrapper is executable
+RUN chmod +x mvnw
 EXPOSE 8081
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Run using Spring Boot devtools if available, or just boot:run
+CMD ["./mvnw", "spring-boot:run"]

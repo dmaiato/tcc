@@ -184,8 +184,8 @@ src/main/java/com/sqlab/
 
 ### 8.1 Configuration
 - PostgreSQL 16-alpine
-- Port: 5436 (docker-compose)
-- Database: `sqlab`
+- Port: 5436 (mapped to 5432 in container)
+- Database: `sqlab` (configurable via .env)
 - User: `sqlab` / Password: `sqlab`
 
 ### 8.2 Tables (managed by Flyway)
@@ -219,37 +219,41 @@ When correctly validated:
 ## 10. Project Structure
 
 ```
-sqlab-api/
-├── pom.xml
+.
 ├── docker-compose.yaml
-├── Dockerfile
-├── .mvn/
-├── src/
-│   ├── main/
-│   │   ├── java/com/sqlab/
-│   │   └── resources/
-│   └── test/
-│       └── java/com/sqlab/
+├── .env
+├── sqlab-api/           # Backend (Spring Boot)
+│   ├── Dockerfile
+│   └── src/
+└── sqlab-client/        # Frontend (Angular)
+    ├── Dockerfile
+    └── src/
 ```
 
 ---
 
 ## 11. Build & Run
 
+The project is fully dockerized for development with hot-reloading support.
+
+### 11.1 Prerequisites
+- Docker and Docker Compose
+
+### 11.2 Configuration
+Copy the default `.env` (if not present) and adjust if needed:
+- `DB_USER`, `DB_PASSWORD`, `DB_NAME`
+- `SQLAB_JWT_SECRET` (Escaped `$$` for Docker Compose)
+
+### 11.3 Running the stack
 ```bash
-# Build
-./mvnw clean package -DskipTests
-
-# Run with Docker
-docker-compose up -d
-
-# Or run locally
-./mvnw spring-boot:run
+# Start all services (Database, API, Client)
+docker-compose up --build
 ```
 
-**Required Environment Variables:**
-- `sqlab.jwt.secret` - JWT signing key
-- `sqlab.jwt.expiration` - Token expiration millis
+### 11.4 Services
+- **Frontend:** http://localhost:4200
+- **Backend API:** http://localhost:8081
+- **Database:** localhost:5436
 
 ---
 

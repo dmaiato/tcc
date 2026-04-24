@@ -33,6 +33,9 @@ services:
       SQLAB_JWT_EXPIRATION: ${SQLAB_JWT_EXPIRATION:-86400000}
     ports:
       - "8081:8081"
+    volumes:
+      - ./sqlab-api:/app
+      - ~/.m2:/root/.m2  # Cache maven dependencies
     depends_on:
       db:
         condition: service_healthy
@@ -46,7 +49,10 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "4200:4200"
+    volumes:
+      - ./sqlab-client:/app
+      - /app/node_modules  # Don't overwrite container's node_modules with host's
     depends_on:
       - api
     networks:
