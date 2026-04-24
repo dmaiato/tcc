@@ -72,12 +72,12 @@ export class AuthService {
           id: response.id,
           email: response.email,
           username: response.username,
-          createdAt: response.createdAt
+          createdAt: ''
         };
-        this._token.set(response.accessToken);
-        this._refreshToken.set(response.refreshToken || '');
+        this._token.set(response.token);
+        this._refreshToken.set('');
         this._user.set(user);
-        this.saveToStorage(response.accessToken, response.refreshToken || '', user);
+        this.saveToStorage(response.token, '', user);
       }),
       tap(() => {
         this.isLoading.set(false);
@@ -100,12 +100,12 @@ export class AuthService {
           id: response.id,
           email: response.email,
           username: response.username,
-          createdAt: response.createdAt
+          createdAt: ''
         };
-        this._token.set(response.accessToken);
-        this._refreshToken.set(response.refreshToken || '');
+        this._token.set(response.token);
+        this._refreshToken.set('');
         this._user.set(user);
-        this.saveToStorage(response.accessToken, response.refreshToken || '', user);
+        this.saveToStorage(response.token, '', user);
       }),
       tap(() => {
         this.isLoading.set(false);

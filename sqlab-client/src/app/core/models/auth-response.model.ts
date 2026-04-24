@@ -20,9 +20,9 @@ export interface RefreshRequest {
   refreshToken: string;
 }
 
-export interface AuthResponseWithUser extends AuthResponse {
+export interface AuthResponseWithUser {
+  token: string;
   id: number;
-  email: string;
   username: string;
-  createdAt: string;
+  email: string;
 }

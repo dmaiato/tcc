@@ -19,4 +19,10 @@ public class AuthDto {
     public record UserResponse(UUID id, String username, String email, int xp) {}
 
     public record TokenResponse(String token) {}
+
+    public record AuthResponseWithUser(String token, UUID id, String username, String email) {
+        public AuthResponseWithUser(String token) {
+            this(token, null, null, null);
+        }
+    }
 }
