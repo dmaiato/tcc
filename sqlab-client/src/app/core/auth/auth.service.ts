@@ -71,7 +71,7 @@ export class AuthService {
         const user: User = {
           id: response.id,
           email: response.email,
-          name: response.name,
+          username: response.username,
           createdAt: response.createdAt
         };
         this._token.set(response.accessToken);
@@ -99,7 +99,7 @@ export class AuthService {
         const user: User = {
           id: response.id,
           email: response.email,
-          name: response.name,
+          username: response.username,
           createdAt: response.createdAt
         };
         this._token.set(response.accessToken);

@@ -4,15 +4,15 @@
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <div class="form-group">
-        <label for="name">Name</label>
+        <label for="username">Username</label>
         <input
-          id="name"
+          id="username"
           type="text"
-          formControlName="name"
-          placeholder="Enter your name"
+          formControlName="username"
+          placeholder="Enter your username"
         />
-        @if (form.get('name')?.touched && form.get('name')?.errors) {
-          <span class="error">Name is required (min 2 characters)</span>
+        @if (form.get('username')?.touched && form.get('username')?.errors) {
+          <span class="error">Username is required (min 2 characters)</span>
         }
       </div>
 

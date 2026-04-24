@@ -20,7 +20,7 @@ export class RegisterComponent {
   error = signal<string | null>(null);
 
   form = this.fb.group({
-    name: ['', [Validators.required, Validators.minLength(2)]],
+    username: ['', [Validators.required, Validators.minLength(2)]],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
     confirmPassword: ['', [Validators.required]]
@@ -42,7 +42,7 @@ export class RegisterComponent {
     this.error.set(null);
 
     this.authService.register({
-      name: this.form.value.name!,
+      username: this.form.value.username!,
       email: this.form.value.email!,
       password: this.form.value.password!
     }).subscribe({

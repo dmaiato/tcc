@@ -6,7 +6,7 @@ export interface LoginRequest {
 export interface RegisterRequest {
   email: string;
   password: string;
-  name: string;
+  username: string;
 }
 
 export interface AuthResponse {
@@ -23,6 +23,6 @@ export interface RefreshRequest {
 export interface AuthResponseWithUser extends AuthResponse {
   id: number;
   email: string;
-  name: string;
+  username: string;
   createdAt: string;
 }

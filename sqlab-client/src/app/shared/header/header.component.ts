@@ -20,7 +20,7 @@ export class HeaderComponent {
   get userName(): string {
     const userSignal = this.authService.user();
     const user = userSignal();
-    return user?.name || '';
+    return user?.username || '';
   }
 
   logout(): void {

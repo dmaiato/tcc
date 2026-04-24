@@ -15,6 +15,6 @@ export class DashboardComponent {
   get userName(): string {
     const userSignal = this.authService.user();
     const user = userSignal();
-    return user?.name || '';
+    return user?.username || '';
   }
 }
