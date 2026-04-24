@@ -1,0 +1,6 @@
+/* Add background to app root */
+app-root {
+  display: block;
+  min-height: 100vh;
+  background-color: var(--color-background);
+}

@@ -1,75 +1,98 @@
-<div class="auth-container">
-  <div class="auth-card">
-    <h1>Register to SQLab</h1>
-
-    <form [formGroup]="form" (ngSubmit)="onSubmit()">
-      <div class="form-group">
-        <label for="username">Username</label>
-        <input
-          id="username"
-          type="text"
-          formControlName="username"
-          placeholder="Enter your username"
-        />
-        @if (form.get('username')?.touched && form.get('username')?.errors) {
-          <span class="error">Username is required (min 2 characters)</span>
-        }
+<main class="flex-1 flex items-center justify-center px-4 py-12 mt-8 animate-fade-in">
+  <div class="w-full max-w-md">
+    <div class="rounded-xl border border-border bg-card p-6 card-shine">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-primary-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <line x1="19" y1="8" x2="19" y2="14"></line>
+            <line x1="22" y1="11" x2="16" y2="11"></line>
+          </svg>
+        </div>
+        <div>
+          <h1 class="font-sans text-2xl font-bold tracking-tight text-foreground">Register</h1>
+          <p class="font-mono text-xs text-muted-foreground">Join SQLab and start learning</p>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input
-          id="email"
-          type="email"
-          formControlName="email"
-          placeholder="Enter your email"
-        />
-        @if (form.get('email')?.touched && form.get('email')?.errors) {
-          <span class="error">Please enter a valid email</span>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <div class="space-y-4">
+          <div class="space-y-2">
+            <label for="username" class="font-mono text-xs text-muted-foreground">Username</label>
+            <input
+              id="username"
+              type="text"
+              formControlName="username"
+              placeholder="Choose a username"
+              class="w-full px-3 py-2 rounded-lg bg-input border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            @if (form.get('username')?.touched && form.get('username')?.errors) {
+              <span class="text-xs text-destructive font-mono">Username is required (min 2 characters)</span>
+            }
+          </div>
+
+          <div class="space-y-2">
+            <label for="email" class="font-mono text-xs text-muted-foreground">Email</label>
+            <input
+              id="email"
+              type="email"
+              formControlName="email"
+              placeholder="Enter your email"
+              class="w-full px-3 py-2 rounded-lg bg-input border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            @if (form.get('email')?.touched && form.get('email')?.errors) {
+              <span class="text-xs text-destructive font-mono">Please enter a valid email</span>
+            }
+          </div>
+
+          <div class="space-y-2">
+            <label for="password" class="font-mono text-xs text-muted-foreground">Password</label>
+            <input
+              id="password"
+              type="password"
+              formControlName="password"
+              placeholder="Create a password"
+              class="w-full px-3 py-2 rounded-lg bg-input border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            @if (form.get('password')?.touched && form.get('password')?.errors) {
+              <span class="text-xs text-destructive font-mono">Password is required (min 6 characters)</span>
+            }
+          </div>
+
+          <div class="space-y-2">
+            <label for="confirmPassword" class="font-mono text-xs text-muted-foreground">Confirm Password</label>
+            <input
+              id="confirmPassword"
+              type="password"
+              formControlName="confirmPassword"
+              placeholder="Confirm your password"
+              class="w-full px-3 py-2 rounded-lg bg-input border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            @if (form.get('confirmPassword')?.touched && form.get('confirmPassword')?.errors) {
+              <span class="text-xs text-destructive font-mono">Please confirm your password</span>
+            }
+          </div>
+        </div>
+
+        @if (error()) {
+          <div class="mt-4 p-3 rounded-lg bg-destructive/10 text-destructive font-mono text-sm">
+            {{ error() }}
+          </div>
         }
-      </div>
 
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input
-          id="password"
-          type="password"
-          formControlName="password"
-          placeholder="Enter your password"
-        />
-        @if (form.get('password')?.touched && form.get('password')?.errors) {
-          <span class="error">Password is required (min 6 characters)</span>
-        }
-      </div>
+        <button type="submit" [disabled]="form.invalid || loading()" class="mt-6 w-full flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-mono text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          @if (loading()) {
+            <span>Loading...</span>
+          } @else {
+            <span>Create Account</span>
+          }
+        </button>
+      </form>
 
-      <div class="form-group">
-        <label for="confirmPassword">Confirm Password</label>
-        <input
-          id="confirmPassword"
-          type="password"
-          formControlName="confirmPassword"
-          placeholder="Confirm your password"
-        />
-        @if (form.get('confirmPassword')?.touched && form.get('confirmPassword')?.errors) {
-          <span class="error">Please confirm your password</span>
-        }
-      </div>
-
-      @if (error()) {
-        <div class="error-message">{{ error() }}</div>
-      }
-
-      <button type="submit" [disabled]="form.invalid || loading()">
-        @if (loading()) {
-          <span>Loading...</span>
-        } @else {
-          <span>Register</span>
-        }
-      </button>
-    </form>
-
-    <p class="auth-link">
-      Already have an account? <a routerLink="/login">Login</a>
-    </p>
+      <p class="mt-6 text-center text-sm text-muted-foreground font-mono">
+        Already have an account? <a routerLink="/login" class="text-primary hover:underline">Login</a>
+      </p>
+    </div>
   </div>
-</div>
+</main>
