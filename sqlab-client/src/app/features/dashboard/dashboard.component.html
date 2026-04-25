@@ -1,11 +1,122 @@
-<div class="dashboard-container">
-  <h1>Welcome to SQLab!</h1>
+<div class="min-h-screen flex flex-col gradient-mesh">
+  <main class="flex-1 px-6 py-8">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-primary flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-accent-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+            <path d="M4 22h16"></path>
+            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-foreground">Mission Select</h1>
+          <p class="font-mono text-xs text-muted-foreground">Choose your next SQL operation</p>
+        </div>
+      </div>
 
-  @if (userName) {
-    <p class="welcome">Hello, {{ userName }}!</p>
-  }
+      <div class="flex items-center gap-3 mb-4">
+        <div class="relative">
+          <button (click)="toggleThemeDropdown(); $event.stopPropagation()" type="button" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-card text-sm font-mono text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+            {{ getThemeButtonLabel() }}
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 9l6 6 6-6"></path>
+            </svg>
+          </button>
+          @if (isThemeDropdownOpen()) {
+            <div class="absolute left-0 top-full mt-1 w-40 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50">
+              <button (click)="setTheme('ALL'); $event.stopPropagation()" type="button" class="flex items-center gap-2 w-full px-3 py-2 text-xs font-mono text-foreground hover:bg-muted/50 transition-colors" [class.bg-primary/10]="selectedTheme() === 'ALL'">All Themes</button>
+              <button (click)="setTheme('CRIMINAL'); $event.stopPropagation()" type="button" class="flex items-center gap-2 w-full px-3 py-2 text-xs font-mono text-foreground hover:bg-muted/50 transition-colors" [class.bg-primary/10]="selectedTheme() === 'CRIMINAL'">Criminal</button>
+              <button (click)="setTheme('FINANCE'); $event.stopPropagation()" type="button" class="flex items-center gap-2 w-full px-3 py-2 text-xs font-mono text-foreground hover:bg-muted/50 transition-colors" [class.bg-primary/10]="selectedTheme() === 'FINANCE'">Finance</button>
+              <button (click)="setTheme('ASTRONOMY'); $event.stopPropagation()" type="button" class="flex items-center gap-2 w-full px-3 py-2 text-xs font-mono text-foreground hover:bg-muted/50 transition-colors" [class.bg-primary/10]="selectedTheme() === 'ASTRONOMY'">Astronomy</button>
+              <button (click)="setTheme('CYBERSECURITY'); $event.stopPropagation()" type="button" class="flex items-center gap-2 w-full px-3 py-2 text-xs font-mono text-foreground hover:bg-muted/50 transition-colors" [class.bg-primary/10]="selectedTheme() === 'CYBERSECURITY'">Cybersecurity</button>
+              <button (click)="setTheme('BIOLOGY'); $event.stopPropagation()" type="button" class="flex items-center gap-2 w-full px-3 py-2 text-xs font-mono text-foreground hover:bg-muted/50 transition-colors" [class.bg-primary/10]="selectedTheme() === 'BIOLOGY'">Biology</button>
+            </div>
+          }
+        </div>
 
-  <div class="dashboard-content">
-    <p>Select a mission to start learning SQL.</p>
-  </div>
+        <div class="relative">
+          <button (click)="toggleDifficultyDropdown(); $event.stopPropagation()" type="button" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-card text-sm font-mono text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+            {{ getDifficultyButtonLabel() }}
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 9l6 6 6-6"></path>
+            </svg>
+          </button>
+          @if (isDifficultyDropdownOpen()) {
+            <div class="absolute left-0 top-full mt-1 w-40 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50">
+              <button (click)="setDifficulty('ALL'); $event.stopPropagation()" type="button" class="flex items-center gap-2 w-full px-3 py-2 text-xs font-mono text-foreground hover:bg-muted/50 transition-colors" [class.bg-primary/10]="selectedDifficulty() === 'ALL'">All Levels</button>
+              <button (click)="setDifficulty('BEGINNER'); $event.stopPropagation()" type="button" class="flex items-center gap-2 w-full px-3 py-2 text-xs font-mono text-foreground hover:bg-muted/50 transition-colors" [class.bg-primary/10]="selectedDifficulty() === 'BEGINNER'">Beginner</button>
+              <button (click)="setDifficulty('INTERMEDIATE'); $event.stopPropagation()" type="button" class="flex items-center gap-2 w-full px-3 py-2 text-xs font-mono text-foreground hover:bg-muted/50 transition-colors" [class.bg-primary/10]="selectedDifficulty() === 'INTERMEDIATE'">Intermediate</button>
+              <button (click)="setDifficulty('ADVANCED'); $event.stopPropagation()" type="button" class="flex items-center gap-2 w-full px-3 py-2 text-xs font-mono text-foreground hover:bg-muted/50 transition-colors" [class.bg-primary/10]="selectedDifficulty() === 'ADVANCED'">Advanced</button>
+              <button (click)="setDifficulty('EXPERT'); $event.stopPropagation()" type="button" class="flex items-center gap-2 w-full px-3 py-2 text-xs font-mono text-foreground hover:bg-muted/50 transition-colors" [class.bg-primary/10]="selectedDifficulty() === 'EXPERT'">Expert</button>
+            </div>
+          }
+        </div>
+
+        @if (hasActiveFilters) {
+          <button (click)="clearFilters(); $event.stopPropagation()" type="button" class="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-mono text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            Clear
+          </button>
+        }
+      </div>
+
+      @if (isLoading()) {
+        <div class="flex items-center justify-center py-12">
+          <div class="text-muted-foreground font-mono text-sm">Loading missions...</div>
+        </div>
+      } @else if (filteredMissions().length === 0) {
+        <div class="flex items-center justify-center py-12">
+          <div class="text-muted-foreground font-mono text-sm">No missions match the selected filters.</div>
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          @for (mission of filteredMissions(); track mission.id) {
+            <a [routerLink]="['/missions', mission.id]" class="group relative rounded-xl border border-border bg-card p-4 hover:bg-muted/30 transition-colors card-shine focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+              @if (isCompleted(mission.id)) {
+                <div class="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              }
+              <div class="flex items-center gap-2 mb-2">
+                <span class="font-mono text-[10px] px-1.5 py-0.5 rounded" [ngClass]="{'bg-primary/10': mission.difficulty === 'BEGINNER', 'bg-accent/10': mission.difficulty === 'INTERMEDIATE', 'bg-destructive/10': mission.difficulty === 'ADVANCED' || mission.difficulty === 'EXPERT'}">
+                  <span [ngClass]="getDifficultyClass(mission.difficulty)">{{ getDifficultyLabel(mission.difficulty) }}</span>
+                </span>
+                <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{{ getThemeLabel(mission.theme) }}</span>
+              </div>
+              <h3 class="font-sans text-sm font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">{{ mission.title }}</h3>
+              <div class="flex items-center gap-2 text-xs">
+                <div class="flex items-center gap-1 text-muted-foreground">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                    <path d="M4 22h16"></path>
+                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+                  </svg>
+                  <span class="font-mono text-xs text-primary">{{ mission.xpReward }}</span>
+                </div>
+                <span class="text-muted-foreground">·</span>
+                <div class="flex items-center gap-1 text-muted-foreground">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                  </svg>
+                  <span class="font-mono text-xs">{{ mission.techniques.slice(0, 2).join(', ') }}</span>
+                </div>
+              </div>
+            </a>
+          }
+        </div>
+      }
+    </div>
+  </main>
 </div>

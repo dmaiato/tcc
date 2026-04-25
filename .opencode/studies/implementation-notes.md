@@ -121,11 +121,15 @@ cd sqlab-api && mvn compile
 
 ## 6. Known Issues / TODO
 
-- [ ] Dashboard styling not implemented
+- [x] Dashboard styling implemented
 - [ ] Login/Register password confirm validation in backend
 - [ ] Error handling could be more user-friendly
+- [ ] Connect header stats to API (userLevel, totalXp, solvedMissions)
+- [ ] Connect dashboard stats to API
 
 ---
+
+## 8. Dashboard Implementation
 
 ## 7. Header Refactoring (per STYLING_GUIDE_v3 §8)
 
@@ -197,3 +201,52 @@ get missionsRemaining(): number { return this.totalMissions - this.solvedMission
 - `/profile` - TODO: implement profile page
 - `/leaderboard` - TODO: implement leaderboard page
 - `/admin` - TODO: implement admin page
+
+---
+
+## 8. Dashboard Implementation
+
+### Files Created
+- `sqlab-client/src/app/core/models/mission.model.ts` - Mission types
+- `sqlab-client/src/app/core/mission.service.ts` - Mission API service
+
+### Files Modified
+- `sqlab-client/src/app/features/dashboard/dashboard.component.ts` - Component logic
+- `sqlab-client/src/app/features/dashboard/dashboard.component.html` - Template
+- `sqlab-client/src/app/features/dashboard/dashboard.component.css` - Removed unused styles
+
+### Implementation Details
+
+#### Layout (§7.B)
+- Uses `max-w-6xl mx-auto` for mission browser
+- Section header with gradient icon tile (trophy)
+
+#### Filter Dropdowns
+- Theme dropdown: Criminal, Finance, Astronomy, Cybersecurity, Biology
+- Difficulty dropdown: Beginner, Intermediate, Advanced, Expert
+- Click-outside to close (HostListener on document)
+- Individual `$event.stopPropagation()` on buttons to prevent bubbling
+
+#### Mission Cards
+- Grid layout: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`
+- Badge order: difficulty first, then theme
+- Difficulty colors: Beginner (primary), Intermediate (accent), Advanced/Expert (destructive)
+- Theme badge: neutral (muted)
+- Completed indicator: checkmark overlay
+
+#### Filtering
+- Uses Angular signals (`selectedTheme`, `selectedDifficulty`)
+- `filteredMissions` computed signal
+- Clear filters button (appears when filters active)
+
+#### Known Issues
+- Missions not loading - backend enum mismatch (Theme/Difficulty)
+  - Frontend expected PRD values (`SQL`, `JOIN`, `EASY`, etc.)
+  - Backend uses (`CRIMINAL`, `FINANCE`, `BEGINNER`, etc.)
+  - **FIXED**: Updated frontend model to match backend enums
+
+### Mocked Values (TODO: Connect to API)
+All stats come from backend via MissionService. May need verification when backend is running.
+
+### Navigation Routes (Stubs)
+- `/missions/:id` - TODO: implement mission page
