@@ -1,10 +1,11 @@
 import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NgIconsModule } from '@ng-icons/core';
 
 @Component({
   selector: 'app-action-bar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NgIconsModule],
   templateUrl: './action-bar.component.html',
   styleUrl: './action-bar.component.css'
 })

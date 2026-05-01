@@ -1,6 +1,7 @@
 import { Component, Input, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataViewerComponent } from '../data-viewer/data-viewer.component';
+import { NgIconsModule } from '@ng-icons/core';
 
 interface MissionSchema {
   name: string;
@@ -24,7 +25,7 @@ interface Mission {
 @Component({
   selector: 'app-mission-tabs',
   standalone: true,
-  imports: [CommonModule, DataViewerComponent],
+  imports: [CommonModule, DataViewerComponent, NgIconsModule],
   templateUrl: './mission-tabs.component.html',
   styleUrl: './mission-tabs.component.css'
 })

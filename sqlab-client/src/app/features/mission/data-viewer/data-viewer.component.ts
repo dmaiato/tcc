@@ -1,5 +1,7 @@
 import { Component, Input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NgIconsModule } from '@ng-icons/core';
+import { lucideChevronRight, lucideTable2, lucideHash, lucideType, lucideKey } from '@ng-icons/lucide';
 
 interface TableSchema {
   name: string;
@@ -10,7 +12,7 @@ interface TableSchema {
 @Component({
   selector: 'app-data-viewer',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NgIconsModule],
   templateUrl: './data-viewer.component.html',
   styleUrl: './data-viewer.component.css'
 })

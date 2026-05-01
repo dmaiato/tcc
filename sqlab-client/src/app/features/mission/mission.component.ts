@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { NgIconsModule } from '@ng-icons/core';
 import { PgliteService, QueryResult } from '../../core/pglite.service';
 import { MissionService } from '../../core/mission.service';
 import { Mission, Theme, DifficultyLevel } from '../../core/models/mission.model';
@@ -13,7 +14,7 @@ import { ResultsPaneComponent } from './results-pane/results-pane.component';
 @Component({
   selector: 'app-mission',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, MissionTabsComponent, SqlEditorComponent, ActionBarComponent, ResultsPaneComponent],
+  imports: [CommonModule, FormsModule, RouterModule, MissionTabsComponent, SqlEditorComponent, ActionBarComponent, ResultsPaneComponent, NgIconsModule],
   templateUrl: './mission.component.html'
 })
 export class MissionComponent implements OnInit, OnDestroy {
@@ -42,11 +43,15 @@ export class MissionComponent implements OnInit, OnDestroy {
   runId = signal(0);
 
   ngOnInit(): void {
+    console.log('[Mission] ngOnInit called');
     const id = this.route.snapshot.paramMap.get('id');
+    console.log('[Mission] Route id:', id);
     if (!id) {
+      console.log('[Mission] No id, redirecting to dashboard...');
       this.router.navigate(['/dashboard']);
       return;
     }
+    console.log('[Mission] Loading mission:', id);
     this.loadMissions();
     this.loadMission(id);
   }
