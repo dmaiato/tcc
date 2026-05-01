@@ -20,6 +20,7 @@ export class PgliteService {
   isReady = signal(false);
   isLoading = signal(false);
   lastError = signal<string | null>(null);
+  isModified = signal(false);
 
   private static async loadPGlite(): Promise<any> {
     if (PgliteService.PGliteClass) {
@@ -85,6 +86,10 @@ export class PgliteService {
 
     try {
       const result = await this.db.query(sql);
+      const isDataModifying = this.isDataModifyingQuery(sql);
+      if (isDataModifying && result.affectedRows > 0) {
+        this.isModified.set(true);
+      }
       return {
         rows: result.rows as Record<string, unknown>[],
         fields: result.fields || [],
@@ -100,6 +105,16 @@ export class PgliteService {
         error: message
       };
     }
+  }
+
+  private isDataModifyingQuery(sql: string): boolean {
+    const trimmed = sql.trim().toUpperCase();
+    return trimmed.startsWith('INSERT') ||
+           trimmed.startsWith('UPDATE') ||
+           trimmed.startsWith('DELETE') ||
+           trimmed.startsWith('CREATE') ||
+           trimmed.startsWith('DROP') ||
+           trimmed.startsWith('ALTER');
   }
 
   async exec(sql: string): Promise<void> {
@@ -137,6 +152,8 @@ export class PgliteService {
       if (this.storedDml.trim()) {
         await this.db.exec(this.storedDml);
       }
+
+      this.isModified.set(false);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to reset database';
       this.lastError.set(message);
@@ -161,6 +178,10 @@ export class PgliteService {
 
   isSessionReady(): boolean {
     return this.isReady();
+  }
+
+  isDbModified(): boolean {
+    return this.isModified();
   }
 
   clearError(): void {

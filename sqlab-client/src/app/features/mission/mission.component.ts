@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { NgIconsModule } from '@ng-icons/core';
 import { PgliteService, QueryResult } from '../../core/pglite.service';
 import { MissionService } from '../../core/mission.service';
+import { ToastService } from '../../shared/toast/toast.service';
 import { Mission, Theme, DifficultyLevel } from '../../core/models/mission.model';
 import { MissionTabsComponent } from './mission-tabs/mission-tabs.component';
 import { SqlEditorComponent } from './sql-editor/sql-editor.component';
@@ -22,6 +23,7 @@ export class MissionComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly pgliteService = inject(PgliteService);
   private readonly missionService = inject(MissionService);
+  private readonly toastService = inject(ToastService);
 
   mission = signal<Mission | null>(null);
   isLoading = signal(true);
@@ -33,7 +35,8 @@ export class MissionComponent implements OnInit, OnDestroy {
   query = signal('');
   queryResult = signal<QueryResult | null>(null);
   queryError = signal<string | null>(null);
-  isExecuting = signal(false);
+  isRunning = signal(false);
+  isRestoring = signal(false);
 
   allMissions = signal<Mission[]>([]);
   prevMission = signal<Mission | null>(null);
@@ -43,17 +46,15 @@ export class MissionComponent implements OnInit, OnDestroy {
   runId = signal(0);
 
   ngOnInit(): void {
-    console.log('[Mission] ngOnInit called');
-    const id = this.route.snapshot.paramMap.get('id');
-    console.log('[Mission] Route id:', id);
-    if (!id) {
-      console.log('[Mission] No id, redirecting to dashboard...');
-      this.router.navigate(['/dashboard']);
-      return;
-    }
-    console.log('[Mission] Loading mission:', id);
     this.loadMissions();
-    this.loadMission(id);
+    this.route.paramMap.subscribe(params => {
+      const id = params.get('id');
+      if (!id) {
+        this.router.navigate(['/dashboard']);
+        return;
+      }
+      this.loadMission(id);
+    });
   }
 
   ngOnDestroy(): void {
@@ -82,10 +83,10 @@ export class MissionComponent implements OnInit, OnDestroy {
   }
 
   private loadMission(id: string): void {
+    this.isLoading.set(true);
     this.missionService.getMissionById(id).subscribe({
       next: (mission) => {
         this.mission.set(mission);
-        this.isLoading.set(false);
         this.initializePglite(mission);
         this.updateNavigation();
       },
@@ -106,6 +107,7 @@ export class MissionComponent implements OnInit, OnDestroy {
       this.queryError.set(message);
     } finally {
       this.isInitializing.set(false);
+      this.isLoading.set(false);
     }
   }
 
@@ -117,11 +119,22 @@ export class MissionComponent implements OnInit, OnDestroy {
     return this.pgliteService.isSessionReady();
   }
 
+  isDbModified(): boolean {
+    return this.pgliteService.isDbModified();
+  }
+
+  get queryResultWithError(): { rows: Record<string, unknown>[]; fields: { name: string }[]; error?: string } | null {
+    if (this.queryError()) {
+      return { rows: [], fields: [], error: this.queryError() || undefined };
+    }
+    return this.queryResult();
+  }
+
   async executeQuery(): Promise<void> {
     const sql = this.query().trim();
     if (!sql) return;
 
-    this.isExecuting.set(true);
+    this.isRunning.set(true);
     this.queryError.set(null);
     this.queryResult.set(null);
     this.pgliteService.clearError();
@@ -130,31 +143,50 @@ export class MissionComponent implements OnInit, OnDestroy {
       const result = await this.pgliteService.executeQuery(sql);
       if (result.error) {
         this.queryError.set(result.error);
+      } else {
+        this.queryResult.set(result);
+        this.runId.set(this.runId() + 1);
       }
-      this.queryResult.set(result);
-      this.runId.set(this.runId() + 1);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Query execution failed';
       this.queryError.set(message);
     } finally {
-      this.isExecuting.set(false);
+      this.isRunning.set(false);
     }
   }
 
   async resetDatabase(): Promise<void> {
-    this.isExecuting.set(true);
+    this.isRestoring.set(true);
     this.queryError.set(null);
     this.queryResult.set(null);
     this.pgliteService.clearError();
 
     try {
       await this.pgliteService.resetToOriginalState();
+      this.toastService.success('Database restored');
+      await new Promise(resolve => setTimeout(resolve, 1000));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to reset database';
       this.queryError.set(message);
     } finally {
-      this.isExecuting.set(false);
+      this.isRestoring.set(false);
     }
+  }
+
+  private normalizeRows(rows: Record<string, unknown>[]): Record<string, unknown>[] {
+    return rows.map(row => {
+      const normalized: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(row)) {
+        if (value instanceof Date) {
+          normalized[key] = value.toISOString().split('T')[0];
+        } else if (typeof value === 'object' && value !== null && !(value instanceof Array)) {
+          normalized[key] = this.normalizeRows([value as Record<string, unknown>])[0];
+        } else {
+          normalized[key] = value;
+        }
+      }
+      return normalized;
+    });
   }
 
   submitSolution(): void {
@@ -168,7 +200,9 @@ export class MissionComponent implements OnInit, OnDestroy {
     this.submitError.set(null);
     this.validationResult.set(null);
 
-    this.missionService.validateMission(mission.id, result.rows).subscribe({
+    const normalizedRows = this.normalizeRows(result.rows);
+
+    this.missionService.validateMission(mission.id, normalizedRows).subscribe({
       next: (response) => this.validationResult.set(response),
       error: (error) => {
         const message = error instanceof Error ? error.message : 'Validation failed';
@@ -203,6 +237,6 @@ export class MissionComponent implements OnInit, OnDestroy {
   }
 
   get canSubmit(): boolean {
-    return this.queryResult() !== null && !this.isExecuting() && !this.isValidating();
+    return this.queryResult() !== null && !this.isRunning() && !this.isRestoring() && !this.isValidating();
   }
 }

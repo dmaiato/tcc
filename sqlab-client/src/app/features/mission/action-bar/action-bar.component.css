@@ -1,3 +1,15 @@
 :host {
   display: block;
 }
+
+button {
+  transition: transform 0.1s ease;
+}
+
+.animate-spin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center;
+  transform-box: fill-box;
+}

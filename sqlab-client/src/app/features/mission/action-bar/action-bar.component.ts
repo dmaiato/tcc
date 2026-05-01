@@ -11,6 +11,7 @@ import { NgIconsModule } from '@ng-icons/core';
 })
 export class ActionBarComponent {
   @Input() query = '';
+  @Input() running = false;
   @Input() restoring = false;
   @Input() verifying = false;
   @Input() verifyResult: { correct: boolean } | null = null;
