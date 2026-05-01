@@ -1,0 +1,48 @@
+@if (isLoading()) {
+  <div class="h-full flex flex-col min-h-0 text-foreground">
+    <div class="flex items-center justify-center gap-1 px-5 py-1.5 border-b border-border bg-background/50 shrink-0">
+      <span class="font-mono text-[10px] text-muted-foreground px-3">Loading...</span>
+    </div>
+    <div class="flex flex-1 min-h-0">
+      <div class="w-[38%] border-r border-border flex flex-col min-h-0 bg-background/50"></div>
+      <div class="w-[62%] flex flex-col min-h-0 p-4 gap-3">
+        <div class="flex-1 min-h-0 rounded-lg border border-border bg-card flex items-center justify-center">
+          <div class="flex items-center gap-2 text-muted-foreground">
+            <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12a9 9 0 1 1-6.219-8.569"/>
+            </svg>
+            <span class="font-mono text-sm">Initializing mission...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+} @else if (mission(); as mission) {
+  <div class="h-full flex flex-col min-h-0 text-foreground">
+  <!-- Navigator strip -->
+  <div class="flex items-center justify-center gap-1 px-5 py-1.5 border-b border-border bg-background/50 shrink-0">
+    @if (prevMission()) {
+      <a [routerLink]="['/mission', prevMission()!.id]" class="font-mono text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted">← Prev</a>
+    }
+    <span class="font-mono text-[10px] text-muted-foreground px-3">{{ currentIndex() + 1 }} / {{ totalMissions() }}</span>
+    @if (nextMission()) {
+      <a [routerLink]="['/mission', nextMission()!.id]" class="font-mono text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted">Next →</a>
+    }
+  </div>
+
+  <!-- Main split 38/62 -->
+  <div class="flex flex-1 min-h-0">
+    <div class="w-[38%] border-r border-border flex flex-col min-h-0 bg-background/50">
+      <app-mission-tabs [mission]="mission" [missionIndex]="currentIndex()" />
+    </div>
+
+    <div class="w-[62%] flex flex-col min-h-0 p-4 gap-3">
+      <app-sql-editor [value]="query()" [dbModified]="isPgliteReady()" (valueChange)="onQueryChange($event)" (submit)="executeQuery()" />
+
+      <app-action-bar [query]="query()" [restoring]="isInitializing()" [verifying]="isValidating()" [verifyResult]="validationResult()" [dbModified]="isPgliteReady()" (restore)="resetDatabase()" (run)="executeQuery()" (verify)="submitSolution()" />
+
+      <app-results-pane [result]="queryResult()" [runId]="runId()" />
+    </div>
+  </div>
+  </div>
+}

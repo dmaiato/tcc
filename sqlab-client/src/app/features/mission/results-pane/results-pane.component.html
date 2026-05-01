@@ -1,0 +1,52 @@
+<div class="flex-1 min-h-0 rounded-lg border border-border bg-card overflow-hidden">
+  @if (!result()) {
+    <div class="h-full w-full flex items-center justify-center p-4">
+      <span class="font-mono text-xs text-muted-foreground/50">Output will appear here</span>
+    </div>
+  } @else if (result()?.error) {
+    <div class="h-full p-4">
+      <div class="rounded-lg border border-destructive/30 bg-destructive/5 p-4 glow-error">
+        <span class="font-mono text-[10px] text-destructive uppercase tracking-wider block mb-2">Error</span>
+        <p class="font-mono text-sm leading-relaxed text-foreground">{{ result()?.error }}</p>
+      </div>
+    </div>
+  } @else {
+    <div class="h-full overflow-auto p-4">
+      <div class="rounded-lg border border-border overflow-hidden">
+        <table class="w-full font-mono text-xs">
+          @if (showHeaders()) {
+            <thead>
+              <tr class="bg-muted/50">
+                @for (col of getColumnNames(); track col) {
+                  <th class="text-left py-2 px-3 font-medium text-muted-foreground border-b border-border whitespace-nowrap">
+                    {{ col }}
+                  </th>
+                }
+              </tr>
+            </thead>
+          }
+          <tbody>
+            @for (row of getRows(); track $index; let i = $index) {
+              <tr 
+                class="border-b border-border/50 last:border-0 hover:bg-muted/20 transition-colors"
+                [class.opacity-0]="i >= visibleRows()"
+                [class.animate-fade-in]="i < visibleRows()"
+                [style.animation-delay.ms]="i * 50"
+              >
+                @for (cell of row; track $index) {
+                  <td class="py-2 px-3">
+                    @if (cell === null) {
+                      <span class="text-muted-foreground/40">NULL</span>
+                    } @else {
+                      {{ cell }}
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

@@ -19,10 +19,22 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "assets": [
+              "src/favicon.ico",
+              "src/assets",
               {
                 "glob": "**/*",
                 "input": "public"
               }
+            ],
+            "externalDependencies": [
+              "fs",
+              "path",
+              "util",
+              "zlib",
+              "stream",
+              "stream/promises",
+              "fs/promises",
+              "module"
             ],
             "styles": [
               "src/styles.css"

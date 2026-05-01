@@ -12,6 +12,12 @@
     </h1>
   </a>
 
+  @if (showBackLink) {
+    <a routerLink="/" class="font-mono text-xs text-muted-foreground hover:text-primary transition-colors">
+      ← Missions
+    </a>
+  }
+
   <nav class="flex items-center gap-2">
     @if (isLoggedIn) {
       <div class="relative">

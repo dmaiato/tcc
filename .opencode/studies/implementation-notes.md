@@ -250,3 +250,87 @@ All stats come from backend via MissionService. May need verification when backe
 
 ### Navigation Routes (Stubs)
 - `/missions/:id` - TODO: implement mission page
+
+---
+
+## 9. Mission Page Implementation
+
+### Overview
+Implemented the mission page workbench following STYLING_GUIDE_v3 principles, adapted for Angular. The page provides a full-viewport SQL editor with mission details, schema explorer, and results pane.
+
+### Files Modified
+
+#### Layout & Container
+- `sqlab-client/src/app/app.html` - Changed to `h-screen flex flex-col overflow-hidden gradient-mesh` for proper viewport locking
+- `sqlab-client/src/app/features/mission/mission.component.html` - Simplified parent to only handle spacing (`p-4 gap-3`)
+
+#### Components (Each manages own container styling)
+
+**sql-editor** (`sql-editor.component.html`)
+- Height: `h-[180px]`
+- Container: rounded border + bg-editor
+- Title bar: traffic lights (red/amber/green dots), shortcut hint
+- Textarea: flex-1, font-mono, placeholder styling
+
+**action-bar** (`action-bar.component.html`)
+- Status zone (left): char count, "Modified" pill
+- Buttons (right): Restore → Run → Verify order
+- Verify button has three states via `verifyClasses` getter
+
+**results-pane** (`results-pane.component.html`)
+- Container: `flex-1 min-h-0 rounded-lg border border-border bg-card`
+- Empty state: centered text "Output will appear here"
+- Error state: destructive card with glow
+- Data: table with staggered row animations
+
+**mission-tabs** (`mission-tabs.component.html/ts`)
+- Tabs: Mission (primary color) / Schema (secondary color)
+- Icons added to tab buttons
+- Mission content: badges (difficulty, theme, XP, solved), objective, tables available, hint
+- Schema tab: derives schema from DDL via `parseDDL()` method
+
+**data-viewer** (`data-viewer.component.html`)
+- Accordion-style table list
+- Type icons: hash (numeric), type (text), key (other)
+- Sample data expansion
+
+### Header Contextual Back-Link
+- `header.component.ts` - Added `currentPath` signal and `showBackLink` computed
+- Shows "← Missions" when not on root page
+
+### DDL Parsing
+- `mission-tabs.component.ts` - Added `parseDDL()` method
+- Extracts CREATE TABLE statements with column names and types
+- Filters out constraints (NOT NULL, PRIMARY KEY, etc.)
+
+### Signal Inputs (Angular 18+)
+- Converted `@Input()` to `input()` signal-based inputs for proper reactivity
+- `results-pane.component.ts` - Uses `result = input<QueryResult>()` pattern
+
+### QueryResult Handling
+- `pglite.service.ts` - Returns error as part of result object instead of throwing
+- `mission.component.ts` - Handles result.error and sets queryError accordingly
+
+### Styling Patterns
+```html
+<!-- Parent only handles spacing -->
+<div class="w-[62%] flex flex-col min-h-0 p-4 gap-3">
+  <app-sql-editor />
+  <app-action-bar />
+  <app-results-pane />
+</div>
+
+<!-- Each component manages own container -->
+<div class="h-[180px] rounded-lg border border-border ...">
+  <!-- content -->
+</div>
+```
+
+### Known Issues Fixed
+- Query results not appearing → Fixed by using signal inputs for reactivity
+- "Query correct" showing on every query → Removed success flag from executeQuery
+- Icons appearing broken → Added `stroke-linecap="round" stroke-linejoin="round"` to all SVGs
+- Schema tab not working → Added DDL parsing to extract table/column info
+- "NOT NULL" parsing as column type → Fixed regex to stop at constraints
+- Empty state not centered → Added `flex items-center justify-center`
+- SQL editor too short → Set fixed height `h-[180px]`

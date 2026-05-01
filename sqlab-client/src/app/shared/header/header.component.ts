@@ -1,7 +1,8 @@
 import { Component, inject, signal, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink, Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-header',
@@ -16,6 +17,15 @@ export class HeaderComponent {
   private readonly elementRef = inject(ElementRef);
 
   isDropdownOpen = signal(false);
+  currentPath = signal('');
+
+  constructor() {
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: NavigationEnd) => {
+      this.currentPath.set(event.urlAfterRedirects);
+    });
+  }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
@@ -57,6 +67,11 @@ export class HeaderComponent {
 
   get missionsRemaining(): number {
     return this.totalMissions - this.solvedMissions;
+  }
+
+  get showBackLink(): boolean {
+    const path = this.currentPath();
+    return path !== '/' && path !== '' && !path.startsWith('/login') && !path.startsWith('/register');
   }
 
   toggleDropdown(): void {

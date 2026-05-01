@@ -13,6 +13,10 @@ export class MissionService {
     return this.api.get<MissionSummary[]>('/missions');
   }
 
+  getAllMissions(): Observable<Mission[]> {
+    return this.api.get<Mission[]>('/missions');
+  }
+
   getMissionById(id: string): Observable<Mission> {
     return this.api.get<Mission>(`/missions/${id}`);
   }

@@ -1,787 +1,855 @@
-# SQLab Styling Guide — v3
+# SQLab — Styling Guide (v3)
 
-> **Senior review note (changes from v2):**
-> v2 was tight on tokens but vague on the **TopBar** (the single most-reused component) and didn't make it obvious which page/component each section governed. v3 fixes both: every section now opens with an **Applies to:** line listing the exact files it controls, and §8 is a full anatomical breakdown of `<TopBar />` — every sub-element, every state, complete code. Items marked **🆕 v3** are new in this revision.
-
----
-
-## How to read this guide
-
-Every section starts with:
-
-> **Applies to:** `path/to/file.tsx`, `path/to/other.tsx`
-
-That tells you exactly which files in the codebase the rules govern. If you're editing a file not listed in any "Applies to" block, you're either (a) building something new — pick the closest section as your template, or (b) editing infrastructure (config, tokens) — see §2–§6.
+> Authoritative reference for building and refactoring UI in this project.
+> Every section is scoped with **Applies to:** so you know exactly which file the rules govern.
+>
+> **Note:** This guide is written for React/shadcn-ui but has been adapted for Angular implementation.
+> See `.opencode/studies/implementation-notes.md` for Angular-specific details.
 
 ---
 
-## 1. Design Philosophy
+## 0. Foundations (global)
 
-> **Applies to:** *every* file under `src/` — this is the contract.
+> Applies to: `src/index.css`, `tailwind.config.ts`, every component.
 
-A **gamified, dark-mode SQL training console**:
+### 0.1 Color tokens (HSL only)
 
-- **Cyber/terminal feel** — deep slate-blue background, neon-teal primary, monospace numerics.
-- **Editorial gamification** — gradient avatars, soft glows, level badges, animated XP bars.
-- **Density with breathing room** — small font sizes (`text-xs`, occasional `text-[10px]`), tight padding, but generous `rounded-xl` corners and subtle borders.
+Defined in `src/index.css` under `:root`. Every color in every component MUST go through these tokens — no raw `#hex`, no `text-white`, no `bg-black`.
 
-**Rule #1 — token discipline.** Never write raw color classes (`text-white`, `bg-black`, `bg-slate-900`, `text-red-500`) or hex/rgb literals in components. Always go through semantic tokens (`bg-background`, `text-foreground`, `text-primary`, `border-destructive/30`, …). The whole system depends on this — theming, opacity composition, and future light mode all break the moment a component hardcodes a color.
+| Token              | Role                                  | HSL              |
+| ------------------ | ------------------------------------- | ---------------- |
+| `--background`     | App background                        | `230 25% 9%`     |
+| `--foreground`     | Default text                          | `220 20% 92%`    |
+| `--card`           | Elevated surfaces                     | `230 22% 12%`    |
+| `--popover`        | Popovers / dropdowns                  | `230 22% 12%`    |
+| `--primary`        | Brand teal (CTA, success, "correct")  | `165 80% 48%`    |
+| `--secondary`      | Indigo (schema / data accents)        | `250 60% 62%`    |
+| `--muted`          | Subdued surface / chip backgrounds    | `230 18% 16%`    |
+| `--muted-foreground` | Subdued text / metadata             | `220 15% 55%`    |
+| `--accent`         | Amber (XP, warnings, "modified")      | `35 95% 60%`     |
+| `--destructive`    | Red (errors, "incorrect", sign out)   | `0 72% 55%`      |
+| `--border`         | Standard borders                      | `230 15% 20%`    |
+| `--ring`           | Focus ring (matches primary)          | `165 80% 48%`    |
+| `--editor-bg`      | SQL editor background (darker)        | `230 25% 7%`     |
+| `--surface-raised` | Slight elevation above `--card`       | `230 20% 14%`    |
+| `--success`        | Alias of primary, for semantics       | `165 80% 48%`    |
+| `--radius`         | Base radius                           | `0.75rem`        |
 
-⚠️ **note:** `text-[9px]` looks cool but fails WCAG. Reserve sub-11px sizes for non-essential meta (badges, decorative counters), never for interactive labels or anything a screen reader user needs to read aloud.
+Tailwind class names: `bg-background`, `text-foreground`, `bg-card`, `bg-primary text-primary-foreground`, `bg-editor`, `bg-surface-raised`, `text-success`, etc.
 
----
+### 0.2 Typography
 
-## 2. Color System (HSL Tokens)
+| Family               | Class       | Use                                                |
+| -------------------- | ----------- | -------------------------------------------------- |
+| Space Grotesk 400–700 | `font-sans` | UI copy, titles, body text                         |
+| JetBrains Mono 400/500 | `font-mono` | Numbers, labels, badges, code, all metadata        |
 
-> **Applies to:** `src/index.css` (definitions), `tailwind.config.ts` (mappings). Consumed everywhere.
+Never introduce a third family. Default body uses `font-sans` via `body { @apply font-sans }` in `src/index.css`.
 
-All colors live in `src/index.css` as CSS variables in **HSL space**, stored as **bare numbers** (no `hsl()` wrapper). This is what lets Tailwind compose alpha via `/` syntax (`bg-primary/10`, `border-primary/30`).
+Common micro-sizes (intentional, do not "round up"):
+- `text-[10px]` — uppercase tracking labels, dot legends
+- `text-[9px]` / `text-[8px]` — sublabels inside dense components (header chip, stat tile labels)
+- `text-xs` — buttons, chips, links
+- `text-sm` — body, editor text, action buttons
+- `text-lg` — page subtitles
+- `text-xl` / `text-2xl` — page titles
 
-### 2.1 Core palette (authoritative — copy from `src/index.css`)
+### 0.3 Utilities (custom, in `src/index.css`)
 
-```css
-:root {
-  --background: 230 25% 9%;       /* page body */
-  --foreground: 220 20% 92%;      /* default text */
+- `.gradient-mesh` — subtle 3-color radial mesh background (use on full-screen pages like MissionPage).
+- `.glow-primary`, `.glow-success`, `.glow-error`, `.glow-accent` — colored box-shadows used on Verify button, error/success cards.
+- `.card-shine` — hover sheen for elevated cards.
 
-  --card: 230 22% 12%;            /* lifted surface */
-  --card-foreground: 220 20% 92%;
+### 0.4 Class-merging utility
 
-  --popover: 230 22% 12%;
-  --popover-foreground: 220 20% 92%;
+> Applies to: any component combining conditional classes.
 
-  --primary: 165 80% 48%;         /* neon teal — brand */
-  --primary-foreground: 230 25% 9%;
-
-  --secondary: 250 60% 62%;       /* violet */
-  --secondary-foreground: 0 0% 100%;
-
-  --muted: 230 18% 16%;           /* subtle panel bg */
-  --muted-foreground: 220 15% 55%;
-
-  --accent: 35 95% 60%;           /* warm orange/gold */
-  --accent-foreground: 230 25% 9%;
-
-  --destructive: 0 72% 55%;
-  --destructive-foreground: 0 0% 100%;
-
-  --border: 230 15% 20%;
-  --input: 230 18% 16%;           /* form input bg */
-  --ring: 165 80% 48%;            /* focus ring = primary */
-
-  --radius: 0.75rem;              /* drives rounded-lg/md/sm scale */
-
-  --success: 165 80% 48%;         /* alias of primary, used by ResultsPane */
-  --success-glow: 165 80% 48%;    /* reserved for emphasis glows */
-  --editor-bg: 230 25% 7%;        /* darker than --background, code surfaces */
-  --surface-raised: 230 20% 14%;  /* between --card and --muted */
-}
-```
-
-### 2.2 Semantic intent
-
-> **Applies to:** every component that renders color.
-
-| Token              | Use for                                                     |
-|--------------------|-------------------------------------------------------------|
-| `background`       | Page body                                                   |
-| `foreground`       | Default text                                                |
-| `card`             | Panels, dropdowns, dialogs                                  |
-| `popover`          | Floating menus, tooltips with bodies                        |
-| `muted`            | Inactive surfaces, subtle row backgrounds                   |
-| `muted-foreground` | Secondary/meta text (labels, timestamps)                    |
-| `primary`          | Brand actions, success, XP bar fill, focus ring             |
-| `secondary`        | Alternate gradient stop, secondary stats                    |
-| `accent`           | Highlights, level badges, gold/orange callouts              |
-| `destructive`      | Errors, delete/sign-out actions                             |
-| `border`           | All hairline borders (auto-applied to `*` in base layer)    |
-| `input`            | Form input backgrounds                                      |
-| `ring`             | Focus outlines (handled by shadcn `focus-visible:ring-ring`)|
-| `success`          | Verified/passing states (mission solve, query OK)           |
-| `editor` / `editor-bg` | SQL editor canvas background                            |
-| `surface-raised`   | Slightly lifted surface above `card`                        |
-
-### 2.3 Wiring tokens to Tailwind
-
-> **Applies to:** `tailwind.config.ts`.
-
-```ts
-colors: {
-  border: "hsl(var(--border))",
-  input: "hsl(var(--input))",
-  ring: "hsl(var(--ring))",
-  background: "hsl(var(--background))",
-  foreground: "hsl(var(--foreground))",
-  primary:     { DEFAULT: "hsl(var(--primary))",     foreground: "hsl(var(--primary-foreground))" },
-  secondary:   { DEFAULT: "hsl(var(--secondary))",   foreground: "hsl(var(--secondary-foreground))" },
-  destructive: { DEFAULT: "hsl(var(--destructive))", foreground: "hsl(var(--destructive-foreground))" },
-  muted:       { DEFAULT: "hsl(var(--muted))",       foreground: "hsl(var(--muted-foreground))" },
-  accent:      { DEFAULT: "hsl(var(--accent))",      foreground: "hsl(var(--accent-foreground))" },
-  popover:     { DEFAULT: "hsl(var(--popover))",     foreground: "hsl(var(--popover-foreground))" },
-  card:        { DEFAULT: "hsl(var(--card))",        foreground: "hsl(var(--card-foreground))" },
-  success: "hsl(var(--success))",
-  editor: "hsl(var(--editor-bg))",
-  "surface-raised": "hsl(var(--surface-raised))",
-}
-```
-
-**Why bare HSL numbers?** Tailwind generates `hsl(var(--primary) / <alpha-value>)` — letting you compose `bg-primary/10`, `border-primary/30`, etc. Storing colors as `hsl(165 80% 48%)` would break that.
-
----
-
-## 3. Typography
-
-> **Applies to:** `src/index.css` (font import + body default), `tailwind.config.ts` (family mapping). Consumed by every text-rendering component.
-
-Two Google fonts loaded at the top of `src/index.css`:
-
-```css
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-```
-
-Mapped in `tailwind.config.ts`:
-
-```ts
-fontFamily: {
-  sans: ["'Space Grotesk'", "sans-serif"],   // headings, UI labels, prose
-  mono: ["'JetBrains Mono'", "monospace"],   // numbers, meta, code, hints
-}
-```
-
-### Conventions
-
-- **`font-sans`** — page titles (`text-2xl font-bold tracking-tight`), button text, usernames, prose.
-- **`font-mono`** — anything numeric (XP, level, counts), uppercase labels, timestamps, hint/code text. Often paired with `text-xs` or `text-[10px]`.
-- `tracking-tight` on display headings; default tracking on body.
-- Body sizes: `text-xs` (12px) and `text-sm` (14px) dominate. Page titles at `text-2xl`. Section subtitles at `text-xs font-mono text-muted-foreground`.
-
-⚠️ **note:** the body font is set in the base layer (`body { @apply ... font-sans }`) — you only need to add `font-sans` when you've explicitly switched to `font-mono` and want to switch back inside a child.
-
----
-
-## 4. Global Base Layer
-
-> **Applies to:** `src/index.css` (`@layer base`). Implicit on every element.
-
-```css
-@layer base {
-  * { @apply border-border; }                  /* default border color */
-  body { @apply bg-background text-foreground font-sans antialiased; }
-  ::selection { background: hsl(var(--primary) / 0.3); }
-}
-```
-
-The `* { @apply border-border }` reset is what makes `<div className="border" />` automatically pick up the brand border color — you almost never need to write `border-border` explicitly.
-
----
-
-## 5. Custom Utilities (Glows & Mesh)
-
-> **Applies to:** `src/index.css` (`@layer utilities`). Consumed by page wrappers, result panes, and interactive cards.
-
-```css
-.glow-success { box-shadow: 0 0 20px hsl(165 80% 48% / 0.3), 0 0 60px hsl(165 80% 48% / 0.1); }
-.glow-error   { box-shadow: 0 0 20px hsl(0 72% 55% / 0.3),  0 0 60px hsl(0 72% 55% / 0.1); }
-.glow-primary { box-shadow: 0 0 15px hsl(165 80% 48% / 0.2); }
-.glow-accent  { box-shadow: 0 0 15px hsl(35 95% 60% / 0.2); }
-
-.gradient-mesh {
-  background:
-    radial-gradient(ellipse at 20% 50%, hsl(250 60% 62% / 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, hsl(165 80% 48% / 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, hsl(35 95% 60% / 0.04) 0%, transparent 50%);
-}
-
-.card-shine { position: relative; overflow: hidden; }
-.card-shine::before {
-  content: ''; position: absolute; top: 0; left: -100%;
-  width: 50%; height: 100%;
-  background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.03), transparent);
-  transition: left 0.5s ease;
-}
-.card-shine:hover::before { left: 100%; }
-```
-
-⚠️ **note:** these utilities currently inline raw HSL values (so they don't auto-react to token changes). That's a deliberate trade-off — `box-shadow` can't easily compose alpha from a Tailwind token. If you ever swap the brand hue, update these definitions in lockstep with the tokens.
-
-**Where to use:**
-- `.gradient-mesh` — full-page wrappers (`Index`, `Login`, `Register`, `Profile`, `Mission`, `Admin`, `Leaderboard`) for the ambient teal/violet/gold glow.
-- `.glow-primary` — pinned/active cards, primary CTAs, active tabs.
-- `.glow-success` / `.glow-error` — `ResultsPane`, test outcomes.
-- `.card-shine` — interactive list cards (mission browser on `Index`).
-
----
-
-## 6. Animation Tokens
-
-> **Applies to:** `tailwind.config.ts` (keyframes + animation map). Consumed by any component using `animate-fade-in`, `animate-scale-in`, etc., and by `framer-motion` consumers.
-
-```ts
-keyframes: {
-  "fade-in":    { "0%": { opacity:"0", transform:"translateY(10px)" }, "100%": { opacity:"1", transform:"translateY(0)" } },
-  "scale-in":   { "0%": { transform:"scale(0.95)", opacity:"0" }, "100%": { transform:"scale(1)", opacity:"1" } },
-  "pulse-glow": { "0%,100%": { opacity:"1" }, "50%": { opacity:"0.7" } },
-  "row-appear": { from: { opacity:"0", transform:"translateY(4px)" }, to: { opacity:"1", transform:"translateY(0)" } },
-},
-animation: {
-  "fade-in":    "fade-in 0.4s ease-out",
-  "scale-in":   "scale-in 0.3s ease-out",
-  "pulse-glow": "pulse-glow 2s ease-in-out infinite",
-  "row-appear": "row-appear 0.2s ease-out forwards",
-}
-```
-
-For richer page-level motion, use **`framer-motion`**:
+Use `cn()` from `@/lib/utils` for conditional merging — never string-concatenate Tailwind classes by hand:
 
 ```tsx
-<motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
+import { cn } from "@/lib/utils";
+<button className={cn("font-mono text-xs", isActive && "text-primary")} />
 ```
-
-Stagger lists with `transition={{ delay: i * 0.05 }}`. Cap delays at ~8 items so the last entry doesn't feel laggy.
 
 ---
 
-## 7. Layout Variants
+## 1. Layout variants
 
-> **Applies to:** the outermost JSX of each page in `src/pages/*`.
+> Applies to: every page in `src/pages/*`.
 
-The codebase uses **four** distinct page shells. Pick one — don't invent a fifth.
+Pick one — do not invent ad-hoc widths.
 
-### 7.A — Centered content page
-
-> **Applies to:** `src/pages/ProfilePage.tsx`, `src/pages/LeaderboardPage.tsx`, `src/pages/AdminPage.tsx`.
-
-```tsx
-<div className="min-h-screen flex flex-col gradient-mesh">
-  <TopBar />
-  <main className="flex-1 px-6 py-8">
-    <div className="max-w-5xl mx-auto">{/* content */}</div>
-  </main>
-</div>
-```
-
-### 7.B — Wider browser/landing
-
-> **Applies to:** `src/pages/Index.tsx`.
-
-```tsx
-<div className="min-h-screen flex flex-col gradient-mesh">
-  <TopBar />
-  <main className="flex-1 px-6 py-8">
-    <div className="max-w-6xl mx-auto">{/* mission browser */}</div>
-  </main>
-</div>
-```
-
-### 7.C — Full-bleed workbench
-
-> **Applies to:** `src/pages/MissionPage.tsx`.
-
-```tsx
-<div className="h-screen flex flex-col overflow-hidden gradient-mesh">
-  <TopBar />
-  {/* resizable panels, no max-width, no scroll on root */}
-</div>
-```
-
-### 7.D — Centered card
-
-> **Applies to:** `src/pages/LoginPage.tsx`, `src/pages/RegisterPage.tsx`.
-
-```tsx
-<div className="min-h-screen flex items-center justify-center gradient-mesh px-4">
-  <div className="w-full max-w-md">{/* form card */}</div>
-</div>
-```
-
-**Rule:** if a page has a max width, it's `max-w-5xl` for content, `max-w-6xl` for grids, `max-w-md` for auth forms. Don't invent new widths.
+| Variant            | Container                                         | Used by                                |
+| ------------------ | ------------------------------------------------- | -------------------------------------- |
+| Centered content   | `max-w-5xl mx-auto px-5 py-8`                     | `Index.tsx`, `ProfilePage.tsx`         |
+| Wider browser      | `max-w-6xl mx-auto px-5 py-8`                     | `LeaderboardPage.tsx`, `AdminPage.tsx` |
+| Full-bleed workbench | `h-screen flex flex-col` + `gradient-mesh`     | `MissionPage.tsx`                      |
+| Centered auth card | `min-h-screen flex items-center justify-center`   | `LoginPage.tsx`, `RegisterPage.tsx`    |
 
 ---
 
-## 8. The TopBar — Full Anatomy 🆕 v3
+## 2. TopBar (`src/components/TopBar.tsx`)
 
-> **Applies to:** `src/components/TopBar.tsx` (the only file). Rendered by every layout in §7 except `LoginPage` / `RegisterPage` (auth shells use 7.D and intentionally omit it).
+> Applies to: `src/components/TopBar.tsx` only. Imported by every page.
 
-The `<TopBar />` is the single most-reused component in the app and the visual anchor of every authenticated page. This section documents **every sub-element** in render order.
-
-### 8.0 At a glance
-
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│  [LogoTile] SQLab          ← Missions          [SignIn] | [UserChip ▾] │
-│   (left)                    (center, optional)            (right)      │
-└────────────────────────────────────────────────────────────────────────┘
-```
-
-Three slots, separated by `flex items-center justify-between`:
-
-| Slot   | Content                                | Always present? |
-|--------|----------------------------------------|-----------------|
-| Left   | Logo tile + wordmark (`<Link to="/">`) | ✅ yes          |
-| Center | "← Missions" back-link                 | Only when `pathname !== "/"` |
-| Right  | Either `Sign in` button **or** `UserChip` dropdown | ✅ yes (one of the two) |
-
-### 8.1 The shell
+### 2.1 Shell
 
 ```tsx
 <header className="px-5 py-3 flex items-center justify-between
                    border-b border-border bg-background/80 backdrop-blur-sm shrink-0">
-  {/* slots */}
-</header>
 ```
 
-**Rules — do not deviate:**
+- **Three-slot flex row**: Logo (left) · contextual nav (center) · auth slot (right).
+- **Glass effect**: `bg-background/80 backdrop-blur-sm` — never opaque.
+- **`shrink-0`** is mandatory so it doesn't collapse inside `h-screen flex flex-col` pages.
 
-| Property         | Value                          | Why                                           |
-|------------------|--------------------------------|-----------------------------------------------|
-| Padding          | `px-5 py-3`                    | Tighter than page padding (`px-6 py-8`) so the bar feels structural, not content. |
-| Element          | `<header>`                     | Semantic landmark for screen readers.         |
-| Background       | `bg-background/80 backdrop-blur-sm` | The "glass" recipe. The translucency over `gradient-mesh` is the whole point — never substitute `bg-card`. |
-| Border           | `border-b border-border`       | Single hairline at bottom only.               |
-| Sizing           | `shrink-0`                     | Critical for layout 7.C (workbench) — without it the resizable panels eat the bar. |
-| Position         | Static (no `sticky`)           | All layouts use `flex-col` page shells; the bar is the first child and stays at top naturally. |
+### 2.2 Logo
 
-### 8.2 Slot 1 — Logo (LogoTile + wordmark)
+Gradient tile (`from-primary to-secondary`) → `Database` icon → wordmark `SQ<span class="text-primary">Lab</span>`. Hover transitions title to `text-primary` via the parent `group` selector.
+
+### 2.3 Contextual back-link
+
+Rendered only when `useLocation().pathname !== "/"`:
 
 ```tsx
-<Link to="/" className="flex items-center gap-2.5 group">
-  <motion.div
-    initial={{ opacity: 0, scale: 0.9 }}
-    animate={{ opacity: 1, scale: 1 }}
-    className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary
-               flex items-center justify-center"
-  >
-    <Database className="w-4 h-4 text-primary-foreground" />
-  </motion.div>
-  <h1 className="font-sans text-lg font-bold tracking-tight
-                 group-hover:text-primary transition-colors">
-    SQ<span className="text-primary">Lab</span>
-  </h1>
+<Link to="/" className="font-mono text-xs text-muted-foreground hover:text-primary transition-colors">
+  ← Missions
 </Link>
 ```
 
-| Sub-part      | Spec                                                                          |
-|---------------|-------------------------------------------------------------------------------|
-| Tile size     | `w-8 h-8` (32 px) — this matches the user avatar exactly, intentionally.      |
-| Tile radius   | `rounded-lg` (not `xl`) — small enough that it reads as an icon, not a card.  |
-| Tile gradient | `from-primary to-secondary` — the **only** gradient permitted on the logo.    |
-| Tile icon     | `lucide-react/Database`, `w-4 h-4`, `text-primary-foreground`.                |
-| Wordmark      | `font-sans text-lg font-bold tracking-tight`. The "Lab" half is `text-primary` — **never** color the "SQ" half. |
-| Hover         | `group-hover:text-primary` on the wordmark only — the tile does not animate on hover. |
-| Entrance      | `framer-motion` scale+fade, ~250 ms (default `motion` transition). Don't add per-page entrance — the bar's own animation is enough. |
+### 2.4 Auth slot — unauthenticated
 
-### 8.3 Slot 2 — Back-link (conditional)
-
-Rendered only on non-home routes. Drives users back to mission selection.
+Single primary CTA, never an icon-only button:
 
 ```tsx
-{!isHome && (
-  <Link to="/" className="font-mono text-xs text-muted-foreground hover:text-primary transition-colors">
-    ← Missions
+<Link to="/login" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+       bg-primary text-primary-foreground hover:bg-primary/90
+       font-mono text-xs font-medium transition-colors">
+  <LogIn className="w-3.5 h-3.5" /> Sign in
+</Link>
+```
+
+### 2.5 Auth slot — authenticated (UserChip + dropdown)
+
+**Trigger** — `<DropdownMenuTrigger asChild>` wrapping a `<button>`:
+- `w-8 h-8` avatar tile, gradient resolved from `AVATAR_COLORS[profile.avatarSeed]`.
+- Level badge: `absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-accent` with `border-2 border-background` and `text-[8px]` numeric.
+- Username + `Lvl N` stack: hidden on mobile (`hidden sm:block`).
+- `ChevronDown w-3 h-3 text-muted-foreground` affordance.
+
+**Content** — `<DropdownMenuContent align="end" className="w-64 p-0 bg-card border-border">`. Two regions:
+
+1. **Profile summary** (`p-4`):
+   - Large `w-12 h-12 rounded-xl` avatar + `Level N · {totalXp} XP` line.
+   - **XP bar**: `h-1.5 rounded-full bg-muted overflow-hidden` track with a `motion.div` fill `bg-gradient-to-r from-primary to-accent`, animated `width: ${(xpProgress/xpForNextLevel)*100}%`, duration `0.6`.
+   - **Stat tiles** (`grid grid-cols-3 gap-2`): each `rounded-lg bg-muted/50 py-2 text-center`. Color rotation: Solved → `text-primary` (Trophy), XP → `text-accent` (Star), Left → `text-secondary` (Flame). Sublabel `font-mono text-[8px] text-muted-foreground`.
+
+2. **Links** (`p-2 space-y-0.5`), separated by `<DropdownMenuSeparator className="bg-border" />`:
+   - Each link/button: `flex items-center gap-2 w-full px-3 py-2.5 rounded-lg font-mono text-xs hover:bg-muted/50`.
+   - Icon color encodes destination: `text-primary` (Profile), `text-accent` (Leaderboard, Admin), `text-destructive` (Sign out — also `hover:bg-destructive/10 hover:text-destructive`).
+
+---
+
+## 3. Mission Page — Build Guide (`src/pages/MissionPage.tsx`)
+
+> **Scope.** This section is the canonical reference for the workbench screen and its three direct children:
+> `src/components/SqlEditor.tsx`, `src/components/ResultsPane.tsx`, `src/components/DataViewer.tsx`.
+> Read it top-to-bottom before editing any of those files. Every Tailwind class below is load-bearing — do not "clean up" classes you do not understand.
+
+---
+
+### 3.0 Mental model
+
+The Mission page is a **non-scrolling, full-viewport workbench**. The browser window itself never scrolls; only the inner Mission/Schema content pane and the Results pane scroll. The page is built as **four vertically-stacked regions** inside a single `h-screen` flex column:
+
+```
+┌──────────────────────────────────────────────────────┐
+│  TopBar                                  shrink-0    │  ← global header
+├──────────────────────────────────────────────────────┤
+│  Mission navigator strip                shrink-0    │  ← prev / counter / next
+├──────────────────────────────────────────────────────┤
+│  Main split                       flex-1 min-h-0    │
+│  ┌────────────── 38% ─────────────┬───── 62% ─────┐ │
+│  │ Tabs: Mission | Schema         │ SqlEditor     │ │
+│  │ TabsContent (scrolls)          │ Action bar    │ │
+│  │                                │ ResultsPane   │ │
+│  └────────────────────────────────┴───────────────┘ │
+└──────────────────────────────────────────────────────┘
+```
+
+The two iron rules that make this layout work:
+
+1. **Every direct flex child** is either `shrink-0` (header strips) or `flex-1 min-h-0` (the body row).
+2. **Every column** that wraps a scrollable child uses `min-h-0` on itself AND `overflow-auto` on the scroller. Without `min-h-0`, flex children inherit `min-height: auto` and refuse to shrink — your scroll area pushes the layout instead of overflowing.
+
+If you forget `min-h-0` once, the workbench will silently grow past the viewport and the page will scroll. Search the file for `min-h-0` before opening a PR.
+
+---
+
+### 3.1 Page shell — exact HTML
+
+```tsx
+// src/pages/MissionPage.tsx
+return (
+  <div className="h-screen flex flex-col overflow-hidden gradient-mesh">
+    <TopBar />
+
+    {/* §3.2 navigator strip */}
+    <div className="flex items-center justify-center gap-1 px-5 py-1.5 border-b border-border bg-background/50 shrink-0">
+      …
+    </div>
+
+    {/* §3.3 main 38/62 split */}
+    <div className="flex flex-1 min-h-0">
+      <div className="w-[38%] border-r border-border flex flex-col min-h-0 bg-background/50">…</div>
+      <div className="w-[62%] flex flex-col min-h-0 p-4 gap-3">…</div>
+    </div>
+  </div>
+);
+```
+
+Class-by-class:
+
+| Class | Why |
+| --- | --- |
+| `h-screen` | Pin the page to viewport height. Required for the no-scroll contract. |
+| `flex flex-col` | Stack header / strip / main vertically. |
+| `overflow-hidden` | Belt-and-braces: even if a child miscalculates, the page itself cannot scroll. |
+| `gradient-mesh` | Custom utility from `index.css` — soft 3-color radial mesh that shows through `bg-background/50` panels. |
+
+Do not add padding or margin to this wrapper. All spacing belongs to the inner regions.
+
+---
+
+### 3.2 Mission navigator strip
+
+A thin, **centered** horizontal strip immediately under `<TopBar />`. It exists so users can move between adjacent missions without going back to the catalog.
+
+```tsx
+{prevMission && (
+  <Link
+    to={`/mission/${prevMission.id}`}
+    className="font-mono text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted"
+  >
+    ← Prev
+  </Link>
+)}
+<span className="font-mono text-[10px] text-muted-foreground px-3">
+  {idx + 1} / {missions.length}
+</span>
+{nextMission && (
+  <Link
+    to={`/mission/${nextMission.id}`}
+    className="font-mono text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted"
+  >
+    Next →
   </Link>
 )}
 ```
 
-| Spec                  | Value                                          |
-|-----------------------|------------------------------------------------|
-| Determined by         | `useLocation().pathname === "/"`               |
-| Font                  | `font-mono text-xs` (it's meta, not a CTA).    |
-| Color                 | `text-muted-foreground` → `hover:text-primary`.|
-| Glyph                 | Literal `←` character (NOT a `lucide` chevron — keeps the terminal aesthetic). |
+Rules:
 
-### 8.4 Slot 3a — Logged-out state: `Sign in` button
+- Wrapper uses `justify-center` (visual balance under the centered TopBar). Never `justify-between`.
+- Prev/Next render **conditionally** on `idx`. Do not render disabled placeholder links.
+- Counter is intentionally **smaller** than the links (`text-[10px]` vs `text-xs`) so it reads as metadata, not a control.
+- Wrapper is `shrink-0` — non-negotiable, otherwise it collapses when the editor grows.
 
-```tsx
-<Link
-  to="/login"
-  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-             bg-primary text-primary-foreground hover:bg-primary/90
-             font-mono text-xs font-medium transition-colors
-             focus-visible:outline-none focus-visible:ring-2
-             focus-visible:ring-ring focus-visible:ring-offset-2
-             focus-visible:ring-offset-background"
->
-  <LogIn className="w-3.5 h-3.5" /> Sign in
-</Link>
-```
+---
 
-This is the canonical inline primary button (see also §10.7). **Always include focus-visible styles** — handcrafted buttons don't get them from shadcn.
-
-### 8.5 Slot 3b — Logged-in state: `UserChip` trigger
-
-The clickable button that opens the dropdown.
+### 3.3 Main split — 38 / 62
 
 ```tsx
-<DropdownMenuTrigger asChild>
-  <button className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg
-                     hover:bg-muted/50 transition-colors outline-none">
-    {/* avatar with badge — see 8.6 */}
-    <div className="hidden sm:block text-left">
-      <p className="font-sans text-xs font-semibold leading-tight">{username}</p>
-      <p className="font-mono text-[9px] text-muted-foreground">Lvl {level}</p>
-    </div>
-    <ChevronDown className="w-3 h-3 text-muted-foreground" />
-  </button>
-</DropdownMenuTrigger>
-```
-
-| Sub-part          | Spec                                                                |
-|-------------------|---------------------------------------------------------------------|
-| Layout            | `flex items-center gap-2.5 px-2 py-1.5 rounded-lg`                  |
-| Hover             | `hover:bg-muted/50` — subtle, no color shift.                       |
-| Username/lvl text | Hidden below `sm` (`hidden sm:block`) — avatar alone on mobile.     |
-| Username font     | `font-sans text-xs font-semibold leading-tight`                     |
-| Level meta        | `font-mono text-[9px] text-muted-foreground` (decorative meta — exempt from §1's 11px rule). |
-| Chevron           | `lucide/ChevronDown w-3 h-3 text-muted-foreground` — NEVER rotate it. |
-
-### 8.6 Avatar with level badge (used inside §8.5)
-
-```tsx
-<div className="relative">
-  <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${avatarColor}
-                   flex items-center justify-center text-sm font-bold
-                   text-primary-foreground`}>
-    {initial}
+<div className="flex flex-1 min-h-0">
+  <div className="w-[38%] border-r border-border flex flex-col min-h-0 bg-background/50">
+    {/* §3.4 tabbed info panel */}
   </div>
-  <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full
-                  bg-accent text-accent-foreground flex items-center justify-center
-                  text-[8px] font-bold border-2 border-background">
-    {level}
+  <div className="w-[62%] flex flex-col min-h-0 p-4 gap-3">
+    {/* §3.5 workbench */}
   </div>
 </div>
 ```
 
-| Sub-part      | Spec                                                                |
-|---------------|---------------------------------------------------------------------|
-| Avatar size   | `w-8 h-8` in TopBar; `w-12 h-12 rounded-xl` inside the dropdown header (8.7.A). Never `rounded-full` — that breaks the cyber aesthetic. |
-| Avatar color  | One of the gradients in the `AVATAR_COLORS` map at the top of `TopBar.tsx`. **Add new seeds there only**, never inline. |
-| Initial       | `username.charAt(0).toUpperCase()`                                  |
-| Badge         | `w-4 h-4 rounded-full bg-accent`. The `border-2 border-background` is what punches it visually out of the avatar — don't drop it. |
-| Badge digit   | `text-[8px]` is OK — purely decorative; the level is also announced in 8.5's text. |
+- The split is **fixed-percentage**, not `flex-1`. The right column needs a predictable, wider area for the editor; `flex-1` would let content on the left fight for space.
+- Both columns are `flex flex-col min-h-0` because each contains an internal scroll region (TabsContent on the left, ResultsPane on the right).
+- The left column is `bg-background/50` so the gradient-mesh shows through. The right column is **transparent** — its `bg-editor` and `bg-card` children supply contrast.
+- A single right `border-r border-border` separates the two columns. No gap, no shadow.
 
-### 8.7 Dropdown content
+---
 
-Opened from §8.5. Rendered as a single `<DropdownMenuContent>` with three regions stacked vertically.
+### 3.4 Left column — tabbed info panel
 
-```tsx
-<DropdownMenuContent align="end" className="w-64 p-0 bg-card border-border">
-  {/* A — profile summary */}
-  {/* <DropdownMenuSeparator className="bg-border" /> */}
-  {/* B — link list */}
-</DropdownMenuContent>
-```
+#### 3.4.1 Tabs scaffolding
 
-| Spec        | Value                                                              |
-|-------------|--------------------------------------------------------------------|
-| Width       | `w-64` (256 px) — fixed, never `w-auto`.                           |
-| Padding     | `p-0` on the outer; each region pads itself.                       |
-| Background  | `bg-card border-border` — explicit token override of the default popover surface, because the dropdown sits over `gradient-mesh` and needs more contrast than `popover`. |
-| Alignment   | `align="end"` — flush with the trigger's right edge.               |
-
-#### 8.7.A — Region A: profile summary block
+Uses shadcn `<Tabs>`. The trick is that the **`Tabs` root itself must be a flex column** so its content can fill the remaining height and scroll independently.
 
 ```tsx
-<div className="p-4">
-  {/* big avatar + name + xp meta */}
-  <div className="flex items-center gap-3 mb-3">
-    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${avatarColor}
-                     flex items-center justify-center text-lg font-bold
-                     text-primary-foreground`}>
-      {initial}
-    </div>
-    <div>
-      <p className="font-sans text-sm font-semibold">{username}</p>
-      <p className="font-mono text-[10px] text-muted-foreground">
-        Level {level} · {totalXp} XP
-      </p>
-    </div>
+<Tabs defaultValue="mission" className="flex flex-col flex-1 min-h-0">
+  <div className="px-4 pt-3 shrink-0">
+    <TabsList className="w-full bg-muted/50 border border-border">
+      <TabsTrigger
+        value="mission"
+        className="flex-1 gap-1.5 font-mono text-xs data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
+      >
+        <ScrollText className="w-3.5 h-3.5" />
+        Mission
+      </TabsTrigger>
+      <TabsTrigger
+        value="schema"
+        className="flex-1 gap-1.5 font-mono text-xs data-[state=active]:bg-secondary/10 data-[state=active]:text-secondary"
+      >
+        <Database className="w-3.5 h-3.5" />
+        Schema
+      </TabsTrigger>
+    </TabsList>
   </div>
 
-  {/* xp bar — see 8.8 */}
-  {/* stat tiles — see 8.9 */}
+  <TabsContent value="mission" className="flex-1 overflow-auto px-5 pb-5 mt-0"> … </TabsContent>
+  <TabsContent value="schema"  className="flex-1 overflow-auto px-5 pb-5 mt-0"> … </TabsContent>
+</Tabs>
+```
+
+Required behaviors:
+
+- **Color pairing is semantic, not decorative.** Mission = **primary (teal)** because it is "what to do". Schema = **secondary (indigo)** because it is "the data". Never swap.
+- `TabsList` sits on `bg-muted/50` with a border so it reads as a grouped control, not a navbar.
+- `TabsContent` MUST include `mt-0` — shadcn injects a top margin by default that breaks the scroll boundary.
+- The wrapper around `TabsList` is `shrink-0`; the content panes own the scroll via `flex-1 overflow-auto`.
+
+#### 3.4.2 Mission tab body — full markup
+
+Four stacked motion blocks with **staggered delays** (`0`, `0.1`, `0.15`, `0.2`). Keep this rhythm when adding blocks; it's what makes the panel "land" instead of "appear".
+
+```tsx
+<TabsContent value="mission" className="flex-1 overflow-auto px-5 pb-5 mt-0">
+  <div className="space-y-5 pt-4">
+
+    {/* (1) Heading block */}
+    <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }}>
+      <div className="flex items-center gap-2 mb-2 flex-wrap">
+        <span className={`font-mono text-[10px] uppercase tracking-widest px-2 py-0.5 rounded ${diff.bgColor} ${diff.color}`}>
+          {diff.label}
+        </span>
+        <span className={`font-mono text-[10px] px-2 py-0.5 rounded ${cat.bgColor} ${cat.color}`}>
+          {cat.icon} {cat.label}
+        </span>
+        <span className="font-mono text-[10px] text-accent">{mission.xp} XP</span>
+        {completed && (
+          <span className="font-mono text-[10px] text-primary ml-auto flex items-center gap-1">
+            <CheckCircle2 className="w-3 h-3" /> Solved
+          </span>
+        )}
+      </div>
+      <div className="font-mono text-[10px] text-muted-foreground mb-1">
+        Mission {String(idx + 1).padStart(2, "0")}
+      </div>
+      <h1 className="font-sans text-xl font-bold mb-1">{mission.title}</h1>
+      <p className="font-sans text-sm text-muted-foreground">{mission.subtitle}</p>
+    </motion.div>
+
+    {/* (2) Objective card */}
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
+      className="rounded-lg bg-card border border-border p-4"
+    >
+      <h2 className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Objective</h2>
+      <p className="font-sans text-sm leading-relaxed">{mission.description}</p>
+    </motion.div>
+
+    {/* (3) Tables Available — secondary color (data) */}
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}>
+      <div className="rounded-lg bg-muted/30 border border-border/50 p-3">
+        <h2 className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Tables Available</h2>
+        <div className="flex flex-wrap gap-2">
+          {mission.schema.map((table) => (
+            <span
+              key={table.name}
+              className="inline-flex items-center gap-1.5 font-mono text-xs px-2.5 py-1 rounded-md bg-secondary/10 text-secondary border border-secondary/20"
+            >
+              <Database className="w-3 h-3" />
+              {table.name}
+            </span>
+          ))}
+        </div>
+        <p className="font-mono text-[10px] text-muted-foreground mt-2">
+          Switch to the Schema tab to explore table data →
+        </p>
+      </div>
+    </motion.div>
+
+    {/* (4) Hint — accent color, collapsible */}
+    {mission.hint && (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+        <button
+          onClick={() => setShowHint(!showHint)}
+          className="font-mono text-[10px] text-accent hover:text-accent/80 transition-colors"
+        >
+          {showHint ? "Hide hint" : "💡 Show hint"}
+        </button>
+        {showHint && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="mt-2 rounded-lg bg-accent/5 border border-accent/20 p-3"
+          >
+            <p className="font-mono text-xs text-accent">{mission.hint}</p>
+          </motion.div>
+        )}
+      </motion.div>
+    )}
+  </div>
+</TabsContent>
+```
+
+Block-by-block rules:
+
+| Block | Surface | Why this surface |
+| --- | --- | --- |
+| Heading | none | Sits directly on the panel — it IS the panel intro. |
+| Objective | `bg-card border border-border` | Promoted as the most important block. |
+| Tables | `bg-muted/30 border border-border/50` | Demoted to "reference info". The chips inside use **secondary**. |
+| Hint | `bg-accent/5 border border-accent/20` | Amber = optional / advisory. Never primary or destructive. |
+
+Pill specifications inside the heading:
+
+- Difficulty: `font-mono text-[10px] uppercase tracking-widest px-2 py-0.5 rounded` + colors from `difficultyConfig[mission.difficulty]`.
+- Category: `font-mono text-[10px] px-2 py-0.5 rounded` + colors from `categoryConfig[mission.category]`. **No `uppercase`** — categories include emoji, which uppercase corrupts visually.
+- XP: `font-mono text-[10px] text-accent`. **No background** — XP is a value, not a chip.
+- Solved: `ml-auto text-primary` with a `CheckCircle2 w-3 h-3`. `ml-auto` pushes it to the far right of the badges row.
+
+#### 3.4.3 Schema tab body
+
+```tsx
+<TabsContent value="schema" className="flex-1 overflow-auto px-5 pb-5 mt-0">
+  <div className="pt-4">
+    <h2 className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider mb-3">
+      Database Schema — click a table to explore
+    </h2>
+    <DataViewer schema={mission.schema} sampleData={mission.sampleData} />
+  </div>
+</TabsContent>
+```
+
+Just an eyebrow heading + `<DataViewer />` (see §3.7). Do not add filters, search, or sub-tabs here — schema exploration is intentionally low-friction.
+
+---
+
+### 3.5 Right column — workbench
+
+Three vertical regions in `w-[62%] flex flex-col min-h-0 p-4 gap-3`:
+
+```tsx
+<div className="w-[62%] flex flex-col min-h-0 p-4 gap-3">
+  {/* (1) Editor — flex-1 */}
+  <div className="flex-1 min-h-0">
+    <SqlEditor value={query} onChange={setQuery} onSubmit={handleRun} />
+  </div>
+
+  {/* (2) Action bar — shrink-0 */}
+  <div className="flex items-center justify-between shrink-0">
+    {/* §3.5.1 left side */}
+    {/* §3.5.2 buttons */}
+  </div>
+
+  {/* (3) Results — flex-1 */}
+  <div className="flex-1 min-h-0 rounded-lg border border-border bg-card overflow-hidden">
+    <ResultsPane result={result} runId={runId} />
+  </div>
 </div>
 ```
 
-The avatar grows from `w-8 h-8 rounded-lg` (header) to `w-12 h-12 rounded-xl` (dropdown). Same gradient, same initial — identity continuity matters.
+Layout rules:
 
-#### 8.7.B — Region B: link list
+- `p-4 gap-3` is the only padding/gap on this column. Children add their own internal padding.
+- Editor and Results both use `flex-1 min-h-0` and therefore **share the remaining vertical space ~50/50**. To shift the ratio, use `flex-[2]` / `flex-[1]` — never hardcoded heights.
+- The Results wrapper carries the **card chrome** (`rounded-lg border bg-card overflow-hidden`); `ResultsPane` itself does not draw a border. The editor is the inverse: `SqlEditor` draws its own chrome.
+
+#### 3.5.1 Action bar — left side (status zone)
 
 ```tsx
-<div className="p-2 space-y-0.5">
-  <Link to="/profile"     className={linkRow}><User    className="w-3.5 h-3.5 text-primary" /> View Full Profile</Link>
-  <Link to="/leaderboard" className={linkRow}><Trophy  className="w-3.5 h-3.5 text-accent" />  Leaderboard</Link>
-  <Link to="/admin"       className={linkRow}><Shield  className="w-3.5 h-3.5 text-accent" />  Mission Control</Link>
-  <button onClick={logout} className={destructiveRow}>
-    <LogOut className="w-3.5 h-3.5 text-destructive" /> Sign out
-  </button>
+<div className="flex items-center gap-3">
+  <span className="font-mono text-[10px] text-muted-foreground">
+    {query.length > 0 ? `${query.length} chars` : ""}
+  </span>
+  <AnimatePresence>
+    {dbModified && (
+      <motion.span
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.8 }}
+        className="inline-flex items-center gap-1 font-mono text-[10px] text-accent px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20"
+      >
+        <HardDriveDownload className="w-3 h-3" />
+        Modified
+      </motion.span>
+    )}
+  </AnimatePresence>
 </div>
-
-// where:
-const linkRow        = "flex items-center gap-2 w-full px-3 py-2.5 rounded-lg font-mono text-xs text-foreground hover:bg-muted/50 transition-colors";
-const destructiveRow = "flex items-center gap-2 w-full px-3 py-2.5 rounded-lg font-mono text-xs text-foreground hover:bg-destructive/10 hover:text-destructive transition-colors";
 ```
 
-**Rules for adding a new link:**
-1. Use `<Link>` from `react-router-dom` for in-app routes; `<a>` only for external.
-2. Icon = `lucide-react`, `w-3.5 h-3.5`, colored to match the link's *intent* (`text-primary` for neutral, `text-accent` for highlighted, `text-destructive` for danger).
-3. Reuse `linkRow` / `destructiveRow` class strings — don't fork them.
-4. Order: navigation links first (top to bottom by importance), destructive actions last.
+- Char counter is **silent until the user types** (empty string when `query.length === 0`). Do not render `0 chars`.
+- "Modified" pill is **amber (accent)** because schema mutation is a *warning state*, not an error. It animates in/out via `<AnimatePresence>` + `scale 0.8 → 1`.
 
-### 8.8 XP / progress bar (used in dropdown Region A)
+#### 3.5.2 Action bar — buttons
+
+Order is fixed: **Restore → Run → Verify**, left to right, escalating commitment. Encoded by border weight + glow.
 
 ```tsx
-<div
-  className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden"
-  role="progressbar"
-  aria-valuenow={xpProgress}
-  aria-valuemin={0}
-  aria-valuemax={xpForNextLevel}
->
-  <motion.div
-    className="h-full rounded-full bg-gradient-to-r from-primary to-accent"
-    initial={{ width: 0 }}
-    animate={{ width: `${(xpProgress / xpForNextLevel) * 100}%` }}
-    transition={{ duration: 0.6 }}
+<div className="flex items-center gap-2">
+  {/* Restore — muted, destructive-ish but recoverable */}
+  <motion.button
+    whileTap={{ scale: 0.95 }}
+    onClick={handleRestore}
+    disabled={restoring}
+    className="font-mono text-xs font-medium px-3 py-2 rounded-md border border-border bg-muted/30 text-muted-foreground hover:text-accent hover:border-accent/30 hover:bg-accent/5 transition-all flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+    title="Restore all tables to their original state"
+  >
+    {restoring ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+    {restoring ? "Restoring…" : "Restore DB"}
+  </motion.button>
+
+  {/* Run — neutral, repeatable */}
+  <motion.button
+    whileTap={{ scale: 0.97 }}
+    onClick={handleRun}
+    className="font-mono text-sm font-medium px-5 py-2 rounded-md border border-border bg-muted/50 text-foreground hover:bg-muted hover:border-foreground/30 transition-all flex items-center gap-2"
+  >
+    <Play className="w-3.5 h-3.5" />
+    Run Query
+  </motion.button>
+
+  {/* Verify — primary, scored action */}
+  <motion.button
+    whileTap={{ scale: 0.97 }}
+    onClick={handleVerify}
+    disabled={verifying || query.trim().length === 0}
+    className={`font-mono text-sm font-medium px-5 py-2 rounded-md border-2 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed ${
+      verifyResult === "success"
+        ? "border-primary text-primary glow-primary bg-primary/5"
+        : verifyResult === "fail"
+        ? "border-destructive text-destructive glow-error bg-destructive/5"
+        : "border-primary/50 text-primary hover:border-primary hover:glow-primary"
+    }`}
+  >
+    {verifying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+    {verifying ? "Verifying…" : verifyResult === "success" ? "Verified ✓" : verifyResult === "fail" ? "Incorrect" : "Verify Result"}
+  </motion.button>
+</div>
+```
+
+Anatomy table:
+
+| Button | Size | Border | Surface | Icon | Loading copy |
+| --- | --- | --- | --- | --- | --- |
+| Restore | `text-xs px-3 py-2` | `border` | `bg-muted/30` | `RotateCcw` | "Restoring…" |
+| Run | `text-sm px-5 py-2` | `border` | `bg-muted/50` | `Play` | — |
+| Verify | `text-sm px-5 py-2` | **`border-2`** | none / `bg-primary/5` | `CheckCircle2` | "Verifying…" |
+
+- **`border-2` is reserved for Verify.** That extra weight is the visual cue for "this is the action that scores you". Do not put `border-2` on Run or Restore.
+- Verify has **exactly three visual states** picked by ternary — never additive. Switching to additive classes will let `success` and `fail` styles overlap during transitions.
+- Disabled handling is uniform: `disabled:opacity-40 disabled:cursor-not-allowed`. Verify is disabled when `verifying || query.trim().length === 0`. Restore is disabled while `restoring`.
+
+---
+
+### 3.6 SqlEditor (`src/components/SqlEditor.tsx`)
+
+> Applies to: `src/components/SqlEditor.tsx` only.
+
+Full component shell:
+
+```tsx
+<div className="h-full flex flex-col bg-editor rounded-lg border border-border overflow-hidden">
+  {/* Title bar */}
+  <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/30">
+    <div className="flex items-center gap-2">
+      <div className="w-2 h-2 rounded-full bg-destructive/60" />
+      <div className="w-2 h-2 rounded-full bg-accent/60" />
+      <div className="w-2 h-2 rounded-full bg-primary/60" />
+    </div>
+    <span className="font-mono text-[10px] text-muted-foreground">⌘+Enter to run</span>
+  </div>
+
+  {/* Textarea */}
+  <textarea
+    ref={textareaRef}
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+    onKeyDown={handleKeyDown}
+    className="flex-1 w-full bg-transparent font-mono text-sm text-foreground p-4 resize-none outline-none leading-relaxed placeholder:text-muted-foreground/40"
+    placeholder="Write your SQL query here..."
+    spellCheck={false}
+    autoCapitalize="off"
+    autoCorrect="off"
   />
 </div>
 ```
 
-**Always include the ARIA attributes** — XP progression is meaningful state, not decoration.
+Specifics:
 
-### 8.9 Stat tile (3-column grid, used in dropdown Region A)
+- Outer surface uses the **dedicated `bg-editor` token** (darker than `bg-card`). This is the only place in the app that uses `bg-editor`.
+- The three "traffic-light" dots are decorative — `w-2 h-2 rounded-full` colored `bg-destructive/60` / `bg-accent/60` / `bg-primary/60` (red / amber / teal). Do not wire interaction. Do not change the order.
+- Right-side hint is `font-mono text-[10px] text-muted-foreground` reading literally `⌘+Enter to run`.
+- Textarea: `bg-transparent` (so `bg-editor` shows through), `outline-none` (the editor frame IS the focus indicator — do not add a focus ring), `resize-none` (the parent owns sizing), `placeholder:text-muted-foreground/40` for low-contrast hint text.
+- Required JS behavior: auto-focus on mount, `Tab` inserts two spaces (no focus loss), `⌘/Ctrl+Enter` calls `onSubmit`.
+
+---
+
+### 3.7 DataViewer (`src/components/DataViewer.tsx`)
+
+> Applies to: `src/components/DataViewer.tsx` only.
+
+Vertical accordion of tables. **One expansion at a time** — single `expandedTable: string | null` state. Do not switch to `Set` semantics; users should focus on one table.
+
+Per-table card:
 
 ```tsx
-<div className="grid grid-cols-3 gap-2">
-  <div className="text-center rounded-lg bg-muted/50 py-2">
-    <div className="flex items-center justify-center gap-1 text-primary">
-      <Trophy className="w-3 h-3" />
-      <span className="font-mono text-xs font-semibold">{solved}</span>
+<div className="rounded-lg border border-border bg-card overflow-hidden transition-all">
+  {/* Header — clickable */}
+  <button
+    onClick={() => setExpandedTable(isExpanded ? null : table.name)}
+    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group"
+  >
+    <motion.div animate={{ rotate: isExpanded ? 90 : 0 }} transition={{ duration: 0.2 }}>
+      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+    </motion.div>
+    <Table2 className="w-4 h-4 text-primary" />
+    <span className="font-mono text-sm font-medium text-primary">{table.name}</span>
+    <span className="font-mono text-[10px] text-muted-foreground ml-auto">
+      {table.columns.length} cols · {rows.length} rows
+    </span>
+  </button>
+
+  {/* Expansion */}
+  <AnimatePresence>
+    {isExpanded && (
+      <motion.div
+        initial={{ height: 0, opacity: 0 }}
+        animate={{ height: "auto", opacity: 1 }}
+        exit={{ height: 0, opacity: 0 }}
+        transition={{ duration: 0.25, ease: "easeInOut" }}
+        className="overflow-hidden"
+      >
+        {/* Columns block */}
+        <div className="px-4 pb-2 border-t border-border/50">
+          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground py-2">Columns</div>
+          <div className="grid gap-1">
+            {table.columns.map((col) => (
+              <div key={col.name} className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted/30">
+                <span className="text-muted-foreground">{typeIcon(col.type)}</span>
+                <span className="font-mono text-xs font-medium">{col.name}</span>
+                <span className="font-mono text-[10px] text-muted-foreground ml-auto px-1.5 py-0.5 rounded bg-muted">
+                  {col.type}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Sample data table */}
+        {rows.length > 0 && (
+          <div className="px-4 pb-3 border-t border-border/50">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground py-2">Sample Data</div>
+            <div className="rounded-md border border-border overflow-x-auto">
+              <table className="w-full font-mono text-xs">
+                <thead>
+                  <tr className="bg-muted/50">
+                    {table.columns.map((col) => (
+                      <th key={col.name} className="text-left py-2 px-3 font-medium text-muted-foreground border-b border-border whitespace-nowrap">
+                        {col.name}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row, i) => (
+                    <tr key={i} className="border-b border-border/30 last:border-0 hover:bg-muted/20 transition-colors">
+                      {table.columns.map((col) => (
+                        <td key={col.name} className="py-1.5 px-3 whitespace-nowrap">
+                          {row[col.name] === null
+                            ? <span className="text-muted-foreground/40">NULL</span>
+                            : String(row[col.name])}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </motion.div>
+    )}
+  </AnimatePresence>
+</div>
+```
+
+Type-icon picker (keep this list narrow — add new types here, not at call sites):
+
+```tsx
+const typeIcon = (type: string) => {
+  const t = type.toUpperCase();
+  if (t.includes("INT") || t.includes("DECIMAL")) return <Hash className="w-3 h-3" />;
+  if (t.includes("TEXT") || t.includes("VARCHAR")) return <Type className="w-3 h-3" />;
+  return <Key className="w-3 h-3" />;
+};
+```
+
+Color choice clarification (this trips people up):
+
+- **Inside DataViewer**, table icons + names are `text-primary` because each table sits on its own dedicated `bg-card`.
+- **In §3.4.2's "Tables Available" chips**, the same names are `text-secondary` because they sit on a muted reference panel.
+
+That is intentional, not a bug. Surface dictates color, not entity.
+
+---
+
+### 3.8 ResultsPane (`src/components/ResultsPane.tsx`)
+
+> Applies to: `src/components/ResultsPane.tsx` only.
+
+Three **mutually exclusive** states — render exactly one, never overlap.
+
+#### State 1 — Empty (`result === null`)
+
+```tsx
+<div className="h-full flex items-center justify-center">
+  <span className="font-mono text-xs text-muted-foreground/50">Output will appear here</span>
+</div>
+```
+
+Centered placeholder. The `/50` opacity is what makes it read as "waiting" instead of "disabled".
+
+#### State 2 — Error (`result.error`)
+
+```tsx
+<AnimatePresence>
+  <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="h-full p-4">
+    <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 glow-error">
+      <span className="font-mono text-[10px] text-destructive uppercase tracking-wider block mb-2">Error</span>
+      <p className="font-mono text-sm leading-relaxed text-foreground">{result.error}</p>
     </div>
-    <p className="font-mono text-[10px] text-muted-foreground mt-0.5">Solved</p>
+  </motion.div>
+</AnimatePresence>
+```
+
+- Card chrome is destructive (`border-destructive/30`, `bg-destructive/5`, `glow-error`).
+- Eyebrow ("Error") is `text-destructive`.
+- Body copy is **`text-foreground`**, not `text-destructive` — error chrome is red, but the *message* must stay legible. This is a recurring rookie mistake.
+
+#### State 3 — Success / rows
+
+```tsx
+<div className="h-full overflow-auto p-4">
+  {result.success && (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+      className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 mb-3 glow-success"
+    >
+      <span className="font-mono text-xs text-primary font-medium">✓ Query correct — mission complete!</span>
+    </motion.div>
+  )}
+
+  <div className="rounded-lg border border-border overflow-hidden">
+    <table className="w-full font-mono text-xs">
+      {showHeaders && (
+        <thead>
+          <tr className="bg-muted/50">
+            {result.columns.map((col) => (
+              <th key={col} className="text-left py-2 px-3 font-medium text-muted-foreground border-b border-border">
+                {col}
+              </th>
+            ))}
+          </tr>
+        </thead>
+      )}
+      <tbody>
+        {result.rows.slice(0, visibleRows).map((row, i) => (
+          <motion.tr
+            key={i}
+            initial={{ opacity: 0, x: -5 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.15 }}
+            className="border-b border-border/50 last:border-0 hover:bg-muted/20 transition-colors"
+          >
+            {row.map((cell, j) => (
+              <td key={j} className="py-2 px-3">
+                {cell === null ? <span className="text-muted-foreground/40">NULL</span> : String(cell)}
+              </td>
+            ))}
+          </motion.tr>
+        ))}
+      </tbody>
+    </table>
   </div>
-  {/* repeat with text-accent (XP) and text-secondary (remaining) */}
 </div>
 ```
 
-Color rotation is fixed: **primary → accent → secondary**. Don't reorder them across pages — visual rhythm relies on it.
+Animation timing — these constants live inside the component, do **not** tune them per page:
 
-### 8.10 Data dependencies
-
-The TopBar pulls from two Zustand stores:
-
-```tsx
-const { profile, totalXp, level, xpProgress, xpForNextLevel, completedMissions } = useGameStore();
-const { user, logout } = useAuthStore();
+```ts
+useEffect(() => {
+  if (!result || result.error) { setShowHeaders(true); setVisibleRows(0); return; }
+  setShowHeaders(false);
+  setVisibleRows(0);
+  const ht = setTimeout(() => setShowHeaders(true), 60);          // headers reveal at 60ms
+  const timers: ReturnType<typeof setTimeout>[] = [];
+  result.rows.forEach((_, i) => {
+    timers.push(setTimeout(() => setVisibleRows(i + 1), 140 + i * 50)); // rows: 140ms + 50ms each
+  });
+  return () => { clearTimeout(ht); timers.forEach(clearTimeout); };
+}, [result, runId]);
 ```
 
-If you add a new stat to the dropdown, **derive it inside the component** from these stores — don't add new props to `<TopBar />`. The bar takes no props by design; that's what keeps it droppable into every layout.
+Table chrome rules:
+
+- Outer `rounded-lg border border-border overflow-hidden` provides the frame; the wrapper around `ResultsPane` (in §3.5) adds a second `bg-card` layer behind it.
+- Header row: `bg-muted/50`, cells `text-left py-2 px-3 font-medium text-muted-foreground border-b border-border`.
+- Body rows: `border-b border-border/50 last:border-0 hover:bg-muted/20`. The `last:border-0` removes the trailing divider so the table doesn't double up its own bottom border.
+- NULLs render as `<span className="text-muted-foreground/40">NULL</span>` — same token as DataViewer. Do not use `text-destructive` or italics.
 
 ---
 
-## 9. Reusable Building-Block Patterns
+### 3.9 Mission Page invariants checklist
 
-> **Applies to:** any new page or component. These are the patterns the TopBar itself is composed of, hoisted out for use elsewhere.
+When editing `MissionPage.tsx` or any of its children, every PR must still satisfy:
 
-### 9.1 Section header with gradient icon tile
-
-> **Applies to:** top of any page body — `LeaderboardPage`, `ProfilePage`, `AdminPage`, `MissionPage` (header strip).
-
-```tsx
-<div className="flex items-center gap-3 mb-2">
-  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-primary
-                  flex items-center justify-center">
-    <Trophy className="w-5 h-5 text-accent-foreground" />
-  </div>
-  <div>
-    <h1 className="text-2xl font-bold tracking-tight">Leaderboard</h1>
-    <p className="font-mono text-xs text-muted-foreground">Top SQL operatives</p>
-  </div>
-</div>
-```
-
-Approved gradient pairs (don't invent new ones without a reason):
-
-| Gradient                          | Use for                          |
-|-----------------------------------|----------------------------------|
-| `from-primary to-secondary`       | Default brand decoration (logo)  |
-| `from-accent to-primary`          | Leaderboard, achievements        |
-| `from-secondary to-primary`       | Profile, identity                |
-| `from-destructive to-accent`      | Warnings, hero/danger CTAs       |
-| `from-primary to-accent`          | Progress fills (XP bars)         |
-
-### 9.2 Card / panel
-
-> **Applies to:** `ProfileCard`, `MissionFilters`, mission rows on `Index`, any future panel.
-
-```tsx
-<div className="rounded-xl border bg-card p-4">
-  {/* content */}
-</div>
-```
-
-For an interactive card add `hover:bg-muted/30 transition-colors card-shine`.
-
-⚠️ **note:** `border` (no color) is correct here — the base layer applies `border-border` via `* { @apply border-border }`. Only write `border-border` explicitly if you've previously overridden it.
-
-### 9.3 Inline primary button (non-shadcn)
-
-> **Applies to:** `TopBar` Sign-in CTA, micro-CTAs in headers/dropdowns. For full-size form CTAs, use shadcn `<Button>` from `@/components/ui/button` instead.
-
-```tsx
-<Link
-  to="/login"
-  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-             bg-primary text-primary-foreground hover:bg-primary/90
-             font-mono text-xs font-medium transition-colors
-             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
-             focus-visible:ring-offset-2 focus-visible:ring-offset-background"
->
-  <LogIn className="w-3.5 h-3.5" /> Sign in
-</Link>
-```
-
-### 9.4 Destructive ghost button
-
-> **Applies to:** Sign-out row in TopBar dropdown, delete actions in `AdminPage`.
-
-```tsx
-<button
-  type="button"
-  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-             text-xs font-mono transition-colors
-             hover:bg-destructive/10 hover:text-destructive
-             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive
-             focus-visible:ring-offset-2 focus-visible:ring-offset-background"
->
-  <LogOut className="w-3.5 h-3.5" /> Sign out
-</button>
-```
+- [ ] Outer wrapper is exactly `h-screen flex flex-col overflow-hidden gradient-mesh`.
+- [ ] Every direct child of the outer wrapper has `shrink-0` or `flex-1 min-h-0`.
+- [ ] Split is `w-[38%]` / `w-[62%]` — not `flex-1`, not `lg:w-1/2`.
+- [ ] Tabs: Mission = primary (teal), Schema = secondary (indigo).
+- [ ] Action bar order is Restore → Run → Verify, no exceptions.
+- [ ] Verify has exactly three visual states (idle / success / fail) chosen by **ternary**, not class concatenation.
+- [ ] Only Verify uses `border-2`. Run and Restore use `border`.
+- [ ] All numeric / metadata text is `font-mono`; all prose is `font-sans`.
+- [ ] No raw colors (`text-white`, `bg-[#…]`, `border-gray-…`). Tokens only.
+- [ ] No hardcoded heights on editor or results — they share vertical space via `flex-1 min-h-0`.
+- [ ] Animations use `framer-motion` (no `transition-*` for mount animations).
+- [ ] NULL renders as `<span className="text-muted-foreground/40">NULL</span>` everywhere.
 
 ---
 
-## 10. Spacing, Sizing & Radii
+## 4. Auth pages
 
-> **Applies to:** every component. The constants below are the only ones in regular use.
+> Applies to: `src/pages/LoginPage.tsx`, `src/pages/RegisterPage.tsx`.
 
-### Radius scale (driven by `--radius: 0.75rem`)
-
-| Class         | Computed   | Use for                              |
-|---------------|------------|--------------------------------------|
-| `rounded-sm`  | `0.5rem`   | Tags, very small chips               |
-| `rounded-md`  | `0.625rem` | Inputs, dropdown items               |
-| `rounded-lg`  | `0.75rem`  | Default — buttons, small surfaces, **logo tile**, **avatar tile (header size)** |
-| `rounded-xl`  | `0.75rem`* | Cards, **icon tiles in section headers**, **avatar in dropdown** |
-| `rounded-full`| —          | Pills, progress bars, level badge    |
-
-\* `rounded-xl` uses Tailwind's default (`0.75rem`) because we didn't override `xl` in the config — it happens to match `--radius`. If we ever change `--radius`, `xl` will *not* track it. Fine for now; flag it if they diverge.
-
-### Padding / gap conventions
-
-- **Pages:** `px-6 py-8`.
-- **TopBar:** `px-5 py-3` (intentionally tighter than pages).
-- **Cards:** `p-4` (occasionally `p-5` for hero cards).
-- **Compact buttons:** `px-3 py-1.5` or `px-2 py-1.5`.
-- **Gaps:** `gap-2` / `gap-2.5` / `gap-3` dominate; `gap-1.5` inside buttons.
-- **Icon sizing:** `w-3 h-3` (inline meta) → `w-3.5 h-3.5` (dropdown items) → `w-4 h-4` (buttons, logo) → `w-5 h-5` (section icons).
+Centered single-card layout: `min-h-screen flex items-center justify-center gradient-mesh px-5`. Card uses `bg-card border border-border rounded-2xl p-8 w-full max-w-md`. Inputs use shadcn `<Input />` and `<Label />`. Primary submit button uses the default shadcn `Button` (variant `default`, which already maps to `bg-primary text-primary-foreground`).
 
 ---
 
-## 11. Iconography
+## 5. Profile, Leaderboard, Admin
 
-> **Applies to:** every component that renders an icon.
+> Applies to: `src/pages/ProfilePage.tsx`, `src/pages/LeaderboardPage.tsx`, `src/pages/AdminPage.tsx`.
 
-Always **`lucide-react`** — never mix in Heroicons, react-icons, or inline SVGs. Pair icon color with the surrounding text token:
-
-```tsx
-<Trophy className="w-3 h-3 text-primary" />
-<Star   className="w-3 h-3 text-accent" />
-<Flame  className="w-3 h-3 text-secondary" />
-```
-
-Keep stroke widths default. Don't pass `color="..."` — use Tailwind text color so theming/opacity utilities apply.
+All use the **wider browser** layout (`max-w-6xl mx-auto px-5 py-8`) with `<TopBar />` on top. Stat tiles, gradient icon tiles, and chips follow the same patterns as the TopBar dropdown (see §2.5).
 
 ---
 
-## 12. shadcn/ui Components
+## 6. Anti-patterns (do not ship)
 
-> **Applies to:** everything under `src/components/ui/*` and any consumer.
-
-Components in `src/components/ui/*` are styled exclusively with semantic tokens. When customizing:
-
-1. **Don't hardcode colors.** Extend the component's `cva` variants instead.
-2. Add new variants like `premium` using token gradients:
-
-```tsx
-// src/components/ui/button.tsx — extend the existing buttonVariants
-variant: {
-  // ...existing variants
-  premium: "bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90",
-}
-```
-
-⚠️ The `premium` variant is **not** currently in `buttonVariants`. Treat the snippet above as the recipe to add it the first time you need it; don't reference `<Button variant="premium">` until you've actually extended the cva.
-
-3. Always preserve focus styles: `focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`.
-
-### Import helper
-
-> **Applies to:** any component composing conditional class names.
-
-Use the `cn()` utility from `@/lib/utils` for conditional class merging — it handles Tailwind class de-duplication via `tailwind-merge`:
-
-```tsx
-import { cn } from "@/lib/utils";
-<div className={cn("rounded-xl border bg-card p-4", isActive && "glow-primary border-primary/30")} />
-```
-
-Never concatenate class strings with template literals when conditions are involved — you'll get duplicate/conflicting classes that don't merge.
-
----
-
-## 13. Light-mode / Dark-mode
-
-> **Applies to:** `src/index.css` (`:root`) and `tailwind.config.ts` (`darkMode`).
-
-The app is **dark-only**. All tokens are defined under `:root`. The Tailwind config still declares `darkMode: ["class"]` so that future light-mode work won't require a config change — when you add light mode, define overrides under `.light { ... }` and toggle the class on `<html>`. **Do not branch component code on theme** — always go through tokens.
-
----
-
-## 14. Checklist Before Committing UI
-
-> **Applies to:** code review of any PR.
-
-- [ ] No raw color classes (`text-white`, `bg-slate-X`, `text-red-500`, hex/rgb literals).
-- [ ] Numeric/meta text uses `font-mono`; titles use `font-sans` (or omitted, since base layer is sans).
-- [ ] Borders use the base-layer default (`border` alone) or an intentional override (`border-primary/30`).
-- [ ] Surfaces are `bg-background` / `bg-card` / `bg-muted` / `bg-muted/50` / `bg-popover` only.
-- [ ] Interactive elements have `transition-colors`, a `hover:` state, and a `focus-visible:` ring.
-- [ ] Icon tiles use a gradient from the approved pairs in §9.1.
-- [ ] Animations are entry-only (`fade-in`, `scale-in`) or `framer-motion` with subtle `y: -8` / `opacity: 0` start.
-- [ ] No text below `text-[10px]`; ARIA attributes on progress/status widgets.
-- [ ] Conditional classes go through `cn()`.
-- [ ] Page picks the correct layout variant from §7 — no bespoke wrappers.
-- [ ] If editing `TopBar.tsx`: new dropdown links reuse the `linkRow`/`destructiveRow` patterns from §8.7.B; no new props added.
-
----
-
-## 15. TL;DR Cheat Sheet
-
-```text
-Page wrapper:    min-h-screen flex flex-col gradient-mesh
-Containers:      max-w-5xl (content) | max-w-6xl (grid) | max-w-md (auth)
-Card:            rounded-xl border bg-card p-4
-TopBar shell:    px-5 py-3 border-b bg-background/80 backdrop-blur-sm shrink-0
-TopBar logo:     w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary
-TopBar avatar:   w-8 h-8 rounded-lg + w-4 h-4 rounded-full bg-accent badge
-Dropdown:        w-64 p-0 bg-card border-border, align="end"
-Title:           text-2xl font-bold tracking-tight
-Meta:            font-mono text-xs text-muted-foreground
-Primary CTA:     bg-primary text-primary-foreground hover:bg-primary/90
-                 + focus-visible:ring-2 focus-visible:ring-ring
-Icon tile:       w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-primary
-Progress fill:   bg-gradient-to-r from-primary to-accent  (+ ARIA)
-Stat surface:    bg-muted/50 rounded-lg, color rotation primary→accent→secondary
-Conditional:     cn("base", flag && "extra")
-```
-
-If you can recite this section from memory, you can ship UI in this codebase.
+- ❌ Mixing `font-sans` and `font-mono` for the same kind of content within one screen.
+- ❌ `border-2` on non-Verify CTAs — that thickness is reserved for the "this is the action that scores you" button.
+- ❌ Using `bg-primary` as a passive surface — primary is for actions, success, and brand. Surfaces are `bg-card`, `bg-muted`, `bg-surface-raised`.
+- ❌ Adding a third tab to the left panel without redesigning the trigger color scheme (currently a 2-color story).
+- ❌ Replacing `framer-motion` row/tab animations with CSS transitions — the staggered timing depends on JS.
+- ❌ Removing `min-h-0` from any flex column inside MissionPage. It WILL break scroll.
+- ❌ Coloring Verify error copy `text-destructive` — chrome is red, copy stays `text-foreground`.
+- ❌ Adding padding to the outer `h-screen` wrapper — spacing belongs to inner regions only.
