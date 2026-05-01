@@ -33,8 +33,14 @@ export class MissionTabsComponent {
   missionSignal = signal<Mission | null>(null);
   activeTab = signal<'mission' | 'schema'>('mission');
   showHint = signal(false);
+  schemaInput = signal<{ name: string; columns: { name: string; type: string }[] }[] | null>(null);
 
   derivedSchema = computed(() => {
+    const dynamicSchema = this.schemaInput();
+    if (dynamicSchema && dynamicSchema.length > 0) {
+      return dynamicSchema;
+    }
+
     const mission = this.missionSignal();
     if (!mission) return null;
 
@@ -51,6 +57,10 @@ export class MissionTabsComponent {
 
   @Input() set mission(value: Mission | null) {
     this.missionSignal.set(value);
+  }
+
+  @Input() set schema(value: { name: string; columns: { name: string; type: string }[] }[] | null) {
+    this.schemaInput.set(value);
   }
 
   @Input() missionIndex = 0;

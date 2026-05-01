@@ -45,6 +45,8 @@ export class MissionComponent implements OnInit, OnDestroy {
   totalMissions = signal(0);
   runId = signal(0);
 
+  schema = signal<{ name: string; columns: { name: string; type: string }[] }[]>([]);
+
   ngOnInit(): void {
     this.loadMissions();
     this.route.paramMap.subscribe(params => {
@@ -82,6 +84,46 @@ export class MissionComponent implements OnInit, OnDestroy {
     this.nextMission.set(idx < all.length - 1 ? all[idx + 1] : null);
   }
 
+  private async refreshSchemaIfNeeded(): Promise<void> {
+    if (!this.pgliteService.isSessionReady()) return;
+    try {
+      const dbSchema = await this.pgliteService.getSchema();
+      const currentSchema = this.schema();
+
+      if (!this.schemasEqual(dbSchema, currentSchema)) {
+        this.schema.set(dbSchema);
+        this.toastService.info('Schema updated');
+      }
+    } catch {
+      // ignore errors
+    }
+  }
+
+  private schemasEqual(
+    a: { name: string; columns: { name: string; type: string }[] }[],
+    b: { name: string; columns: { name: string; type: string }[] }[]
+  ): boolean {
+    if (a.length !== b.length) return false;
+
+    const sortedA = [...a].sort((x, y) => x.name.localeCompare(y.name));
+    const sortedB = [...b].sort((x, y) => x.name.localeCompare(y.name));
+
+    for (let i = 0; i < sortedA.length; i++) {
+      const colsA = sortedA[i].columns.map(c => `${c.name}:${c.type}`).sort().join(',');
+      const colsB = sortedB[i].columns.map(c => `${c.name}:${c.type}`).sort().join(',');
+      if (colsA !== colsB) return false;
+    }
+    return true;
+  }
+
+  private loadSchema(): void {
+    this.pgliteService.getSchema().then(schema => {
+      this.schema.set(schema);
+    }).catch(() => {
+      this.schema.set([]);
+    });
+  }
+
   private loadMission(id: string): void {
     this.isLoading.set(true);
     this.missionService.getMissionById(id).subscribe({
@@ -102,6 +144,7 @@ export class MissionComponent implements OnInit, OnDestroy {
     this.queryError.set(null);
     try {
       await this.pgliteService.createSession(mission.ddlScript, mission.dmlScript);
+      await this.loadSchema();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to initialize database';
       this.queryError.set(message);
@@ -146,6 +189,7 @@ export class MissionComponent implements OnInit, OnDestroy {
       } else {
         this.queryResult.set(result);
         this.runId.set(this.runId() + 1);
+        await this.refreshSchemaIfNeeded();
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Query execution failed';
@@ -165,6 +209,7 @@ export class MissionComponent implements OnInit, OnDestroy {
       await this.pgliteService.resetToOriginalState();
       this.toastService.success('Database restored');
       await new Promise(resolve => setTimeout(resolve, 1000));
+      await this.refreshSchemaIfNeeded();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to reset database';
       this.queryError.set(message);

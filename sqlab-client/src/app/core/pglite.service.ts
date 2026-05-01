@@ -117,6 +117,38 @@ export class PgliteService {
            trimmed.startsWith('ALTER');
   }
 
+  async getSchema(): Promise<{ name: string; columns: { name: string; type: string }[] }[]> {
+    if (!this.db || !this.isReady()) {
+      return [];
+    }
+
+    try {
+      const result = await this.db.query(`
+        SELECT table_name, column_name, data_type, is_nullable
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+        ORDER BY table_name, ordinal_position
+      `);
+
+      const tableMap = new Map<string, { name: string; columns: { name: string; type: string }[] }>();
+
+      for (const row of result.rows as Record<string, unknown>[]) {
+        const tableName = row['table_name'] as string;
+        if (!tableMap.has(tableName)) {
+          tableMap.set(tableName, { name: tableName, columns: [] });
+        }
+        tableMap.get(tableName)!.columns.push({
+          name: row['column_name'] as string,
+          type: (row['data_type'] as string).toUpperCase()
+        });
+      }
+
+      return Array.from(tableMap.values());
+    } catch {
+      return [];
+    }
+  }
+
   async exec(sql: string): Promise<void> {
     if (!this.db || !this.isReady()) {
       throw new Error('Database not initialized');
