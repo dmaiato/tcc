@@ -334,3 +334,103 @@ Implemented the mission page workbench following STYLING_GUIDE_v3 principles, ad
 - "NOT NULL" parsing as column type → Fixed regex to stop at constraints
 - Empty state not centered → Added `flex items-center justify-center`
 - SQL editor too short → Set fixed height `h-[180px]`
+
+---
+
+## 10. Toast Component Implementation
+
+### Overview
+Created a standardized toast notification system for user feedback.
+
+### Files Created
+- `sqlab-client/src/app/shared/toast/toast.service.ts` - Toast service with signal-based state
+- `sqlab-client/src/app/shared/toast/toast.component.ts` - Toast display component
+
+### ToastService API
+```typescript
+// Methods available
+toastService.success(message: string, duration?: number): void
+toastService.error(message: string, duration?: number): void
+toastService.info(message: string, duration?: number): void
+toastService.dismiss(id: string): void
+```
+
+### Toast Design Standardized
+- Background: `bg-muted/90` (neutral gray)
+- Border: `border-border`
+- All icons: white (`style="color: white"`)
+- All text: white (`style="color: white"`)
+- Layout: icon (left) - text (center) - close button (right)
+- Min-width: 280px for consistency
+- Uses Lucide icons: lucideCheck, lucideXCircle, lucideInfo, lucideX
+
+### Files Modified
+- `sqlab-client/src/app/app.config.ts` - Added lucideXCircle, lucideInfo to provideIcons
+
+---
+
+## 11. Result Validation Fix
+
+### Problem
+Mission verification always returned `correct: false` even with correct queries because pglite returns JavaScript Date objects while backend stored date strings.
+
+### Files Modified
+- `sqlab-client/src/app/features/mission/mission.component.ts` - Added `normalizeRows()` method
+
+### Solution
+```typescript
+private normalizeRows(rows: Record<string, unknown>[]): Record<string, unknown>[] {
+  return rows.map(row => {
+    const normalized: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(row)) {
+      if (value instanceof Date) {
+        normalized[key] = value.toISOString().split('T')[0]; // "2022-11-01"
+      } else {
+        normalized[key] = value;
+      }
+    }
+    return normalized;
+  });
+}
+```
+
+### Usage
+- Called in `submitSolution()` before sending to validation API
+
+---
+
+## 12. Schema Auto-Refresh
+
+### Problem
+Schema tab showed static DDL-parsed schema, didn't update when user modified database.
+
+### Files Modified
+- `sqlab-client/src/app/core/pglite.service.ts` - Added `getSchema()` method
+- `sqlab-client/src/app/features/mission/mission.component.ts` - Added comparison logic
+
+### Implementation
+1. **PgliteService.getSchema()**: Queries `information_schema.columns` to get current DB schema
+2. **MissionComponent.refreshSchemaIfNeeded()**: Compares DB schema with displayed schema
+3. **MissionComponent.schemasEqual()**: Deep comparison (tables + columns with types)
+4. Triggers after `executeQuery()` and `resetDatabase()`
+5. Shows toast "Schema updated" when changes detected
+
+### Schema Comparison Logic
+```typescript
+private schemasEqual(a: Table[], b: Table[]): boolean {
+  if (a.length !== b.length) return false;
+  const sortedA = [...a].sort((x, y) => x.name.localeCompare(y.name));
+  const sortedB = [...b].sort((x, y) => x.name.localeCompare(y.name));
+  for (let i = 0; i < sortedA.length; i++) {
+    const colsA = sortedA[i].columns.map(c => `${c.name}:${c.type}`).sort().join(',');
+    const colsB = sortedB[i].columns.map(c => `${c.name}:${c.type}`).sort().join(',');
+    if (colsA !== colsB) return false;
+  }
+  return true;
+}
+```
+
+### Icon Registration
+- `lucideXCircle` - Error toast icon
+- `lucideInfo` - Info toast icon
+- Added to `provideIcons()` in `app.config.ts`
