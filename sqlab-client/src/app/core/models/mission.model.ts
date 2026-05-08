@@ -6,6 +6,8 @@ export interface Mission {
   id: string;
   title: string;
   briefing: string;
+  objective: string;
+  hint?: string;
   ddlScript: string;
   dmlScript: string;
   techniques: string[];

@@ -1,6 +1,6 @@
 -- V2__seed_missions.sql
 
-INSERT INTO missions (id, title, briefing, ddl_script, dml_script, techniques, xp_reward, expected_result, ordered, theme, difficulty)
+INSERT INTO missions (id, title, briefing, objective, hint, ddl_script, dml_script, techniques, xp_reward, expected_result, ordered, theme, difficulty)
 VALUES
 
 -- MISSION 1: BEGINNER / CRIMINAL
@@ -8,6 +8,8 @@ VALUES
     gen_random_uuid(),
     'A Lista de Suspeitos',
     'Um crime foi cometido na cidade. Sua primeira tarefa é simples: liste todos os suspeitos cadastrados no banco de dados. O detetive precisa saber com quem está lidando.',
+    'Liste todos os suspeitos cadastrados no banco de dados.',
+    'SELECT * FROM suspects;',
     '
         CREATE TABLE suspects (
             id      SERIAL PRIMARY KEY,
@@ -41,6 +43,8 @@ VALUES
     gen_random_uuid(),
     'Suspeitos de São Paulo',
     'O crime aconteceu em São Paulo. Filtre apenas os suspeitos que residem nessa cidade para estreitar as investigações.',
+    'Filtre apenas os suspeitos que residem em São Paulo.',
+    'SELECT * FROM suspects WHERE city = ''São Paulo'';',
     '
         CREATE TABLE suspects (
             id      SERIAL PRIMARY KEY,
@@ -72,6 +76,8 @@ VALUES
     gen_random_uuid(),
     'Cruzando Evidências',
     'Temos duas tabelas: suspeitos e registros de ocorrências. Descubra quais suspeitos possuem ao menos uma ocorrência registrada em seu nome.',
+    'Descubra quais suspeitos possuem ao menos uma ocorrência registrada.',
+    'SELECT DISTINCT suspects.name FROM suspects INNER JOIN occurrences ON suspects.id = occurrences.suspect_id;',
     '
         CREATE TABLE suspects (
             id      SERIAL PRIMARY KEY,
@@ -109,6 +115,8 @@ VALUES
     gen_random_uuid(),
     'Planetas do Sistema Solar',
     'O observatório registrou dados sobre os planetas do sistema solar. Liste os planetas em ordem crescente de distância do Sol.',
+    'Liste os planetas em ordem crescente de distância do Sol.',
+    'SELECT * FROM planets ORDER BY distance_from_sun_km ASC;',
     '
         CREATE TABLE planets (
             id                   SERIAL PRIMARY KEY,
@@ -150,6 +158,8 @@ VALUES
     gen_random_uuid(),
     'Média de Distância por Tipo',
     'Calcule a distância média do Sol para planetas com anéis e para planetas sem anéis. Retorne o resultado ordenado pelo campo has_rings.',
+    'Calcule a distância média do Sol para planetas com anéis e sem anéis, ordenado por has_rings.',
+    'SELECT has_rings, AVG(distance_from_sun_km) AS avg_distance FROM planets GROUP BY has_rings ORDER BY has_rings;',
     '
         CREATE TABLE planets (
             id                   SERIAL PRIMARY KEY,
@@ -185,6 +195,8 @@ VALUES
     gen_random_uuid(),
     'Usuários sem Autenticação Recente',
     'O sistema de segurança identificou contas suspeitas. Liste os usuários que nunca realizaram login ou cujo último login foi antes de 2023, ordenados pelo nome.',
+    'Liste os usuários sem login recente (nunca ou antes de 2023), ordenados por nome.',
+    'SELECT * FROM system_users WHERE last_login IS NULL OR last_login < ''2023-01-01'' ORDER BY username;',
     '
         CREATE TABLE system_users (
             id          SERIAL PRIMARY KEY,
@@ -217,6 +229,8 @@ VALUES
     gen_random_uuid(),
     'Clientes Acima da Média',
     'Liste os clientes cujo saldo é superior à média geral de todos os clientes. Retorne nome e saldo, ordenados pelo saldo de forma decrescente.',
+    'Liste os clientes com saldo acima da média, do maior para o menor saldo.',
+    'SELECT name, balance FROM clients WHERE balance > (SELECT AVG(balance) FROM clients) ORDER BY balance DESC;',
     '
         CREATE TABLE clients (
             id      SERIAL PRIMARY KEY,
@@ -249,6 +263,8 @@ VALUES
     gen_random_uuid(),
     'Corrigindo o Cadastro',
     'Um cliente teve seu saldo registrado incorretamente. Atualize o saldo de ''Bruno Souza'' para 5000.00 e em seguida liste todos os clientes.',
+    'Atualize o saldo de Bruno Souza para 5000.00 e liste todos os clientes.',
+    'UPDATE clients SET balance = 5000.00 WHERE name = ''Bruno Souza''; SELECT * FROM clients;',
     '
         CREATE TABLE clients (
             id      SERIAL PRIMARY KEY,

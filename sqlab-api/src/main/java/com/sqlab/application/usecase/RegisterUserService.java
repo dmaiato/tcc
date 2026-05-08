@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -38,7 +39,8 @@ public class RegisterUserService implements RegisterUserUseCase {
                 command.email(),
                 passwordEncoder.encode(command.rawPassword()),
                 0,
-                UserRole.USER
+                UserRole.USER,
+                LocalDateTime.now()
         );
 
         return userRepository.save(user);

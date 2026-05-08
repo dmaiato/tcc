@@ -14,6 +14,8 @@ public class MissionDto {
             UUID id,
             String title,
             String briefing,
+            String objective,
+            String hint,
             String ddlScript,
             String dmlScript,
             List<String> techniques,

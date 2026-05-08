@@ -7,13 +7,15 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 import java.util.UUID;
 
-@RequiredArgsConstructor
+@AllArgsConstructor
 @Getter
 public class Mission {
 
     private final UUID id;
     private final String title;
     private final String briefing;
+    private final String objective;
+    private final String hint;
     private final String ddlScript;
     private final String dmlScript;
     private final List<String> techniques;

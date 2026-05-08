@@ -2,9 +2,6 @@
 
 > Authoritative reference for building and refactoring UI in this project.
 > Every section is scoped with **Applies to:** so you know exactly which file the rules govern.
->
-> **Note:** This guide is written for React/shadcn-ui but has been adapted for Angular implementation.
-> See `.opencode/studies/implementation-notes.md` for Angular-specific details.
 
 ---
 
@@ -835,11 +832,395 @@ Centered single-card layout: `min-h-screen flex items-center justify-center grad
 
 ---
 
-## 5. Profile, Leaderboard, Admin
+## 5. Profile Page — Build Guide (`src/pages/ProfilePage.tsx`)
 
-> Applies to: `src/pages/ProfilePage.tsx`, `src/pages/LeaderboardPage.tsx`, `src/pages/AdminPage.tsx`.
+> Applies to: `src/pages/ProfilePage.tsx` only. Sibling page-types (Leaderboard, Admin) reuse the same shell + tile patterns — see §5.8.
 
-All use the **wider browser** layout (`max-w-6xl mx-auto px-5 py-8`) with `<TopBar />` on top. Stat tiles, gradient icon tiles, and chips follow the same patterns as the TopBar dropdown (see §2.5).
+### 5.0 Mental model
+
+The Profile page is the **player's trophy room**. Every block answers one question:
+
+| Block | Question it answers | Visual register |
+|---|---|---|
+| Identity card (§5.2) | "Who am I, and how strong am I?" | Hero, gradient avatar, large name, XP bar |
+| Stat strip (§5.3) | "What is my run summary?" | 4 quiet tiles, mono numerals |
+| Learned techniques (§5.4) | "What can I do?" | Primary-tinted chips, celebratory |
+| Yet-to-discover (§5.5) | "What's next?" | Muted chips, locked, hover reveals source |
+| Mission Log (§5.6) | "Where have I been?" | Compact list, ✓ / ○ markers |
+
+Reading order is top-down, **never side-by-side mixed registers**: identity is hero, then summary, then two parallel lists, then history. The two technique lists are deliberately the **only** side-by-side pairing — they answer mirror questions ("known" vs "unknown") and must occupy the same row.
+
+### 5.1 Page shell — exact HTML
+
+```tsx
+<div className="min-h-screen flex flex-col gradient-mesh">
+  <TopBar />
+  <div className="flex-1 px-6 md:px-10 py-8">
+    <div className="max-w-4xl mx-auto space-y-8">
+      {/* 1. Identity card     §5.2 */}
+      {/* 2. Two-up techniques §5.4 + §5.5  (grid md:grid-cols-2 gap-6) */}
+      {/* 3. Mission Log       §5.6 */}
+    </div>
+  </div>
+</div>
+```
+
+**Invariants:**
+- Outer wrapper is `min-h-screen` (NOT `h-screen`) — Profile scrolls naturally; do not trap it like the MissionPage workbench.
+- Background is `gradient-mesh` (defined in `index.css`) — same as auth pages, distinct from the flat `bg-background` of MissionPage.
+- Content cap is **`max-w-4xl`** (768px), narrower than Leaderboard/Admin's `max-w-6xl`. Profile is a personal page; the narrower column improves readability of the mission log.
+- Vertical rhythm between blocks is `space-y-8` (32px). Inside a block, use `space-y-4` or grid `gap-6`.
+- Horizontal padding scales: `px-6` mobile, `md:px-10` desktop.
+
+### 5.2 Identity card
+
+```tsx
+<motion.div
+  initial={{ opacity: 0, y: -10 }}
+  animate={{ opacity: 1, y: 0 }}
+  className="rounded-xl border border-border bg-card p-6 md:p-8"
+>
+  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+    {/* Avatar (§5.2.1) */}
+    {/* Name + XP (§5.2.2) */}
+  </div>
+  {/* Stat grid (§5.3) — separated by border-t */}
+</motion.div>
+```
+
+Container rules:
+- `rounded-xl` (12px) — larger than the inner cards (`rounded-lg`) to mark hero status.
+- `bg-card` over `gradient-mesh` reads as a raised pane. **Do not** add a shadow — depth comes from the gradient backdrop.
+- Padding scales: `p-6` mobile, `md:p-8` desktop. The card breathes more than secondary cards (`p-5`).
+- Mount animation: only this card animates from `y: -10`. Subsequent blocks animate from `y: 10` with staggered delays (0.1s, 0.2s, 0.3s) — they *fall in* while the identity card *drops down*.
+
+#### 5.2.1 Avatar tile
+
+```tsx
+<button onClick={cycleAvatar} className="relative group shrink-0" title="Click to change avatar">
+  <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${avatarColor}
+                   flex items-center justify-center
+                   text-3xl font-bold text-primary-foreground
+                   transition-transform group-hover:scale-105`}>
+    {initial}
+  </div>
+  <div className="absolute -bottom-1.5 -right-1.5
+                  w-7 h-7 rounded-full bg-accent text-accent-foreground
+                  flex items-center justify-center text-xs font-bold
+                  border-2 border-card">
+    {level}
+  </div>
+</button>
+```
+
+- `w-20 h-20` (80px) — exactly **double** the TopBar UserChip avatar (40px). The Profile is the canonical, large form.
+- `rounded-2xl` (16px) — softer than the TopBar's `rounded-lg`. Hero context allows more friendliness.
+- Gradient direction is always `bg-gradient-to-br` (top-left → bottom-right). Six seed-mapped gradients live in `AVATAR_COLORS` (file-top constant). **Never** inline a new gradient — extend the map.
+- The level badge is `w-7 h-7` (TopBar uses `w-5`), positioned at `-bottom-1.5 -right-1.5` and ringed with `border-2 border-card` so it visually punches *through* the card edge.
+- Hover affordance: only the inner gradient tile scales (`group-hover:scale-105`); the badge stays put. This communicates "click the face, not the number."
+- Cursor stays default (`button` element) — hand cursor is implicit; do not add `cursor-pointer`.
+
+#### 5.2.2 Name, level line, and XP bar
+
+```tsx
+<div className="flex-1 min-w-0">
+  {/* Name row — edit / display swap */}
+  <div className="flex items-center gap-2 mb-1">
+    {editing ? (
+      <div className="flex items-center gap-2">
+        <input
+          value={nameInput}
+          onChange={(e) => setNameInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
+          className="font-sans text-xl font-bold bg-muted rounded-lg px-3 py-1
+                     outline-none focus:ring-1 ring-primary text-foreground w-48"
+          autoFocus
+          maxLength={16}
+        />
+        <button onClick={handleSaveName} className="text-primary hover:text-primary/80">
+          <Check className="w-4 h-4" />
+        </button>
+      </div>
+    ) : (
+      <div className="flex items-center gap-2">
+        <h1 className="font-sans text-xl font-bold">{profile.username}</h1>
+        <button onClick={enterEdit} className="text-muted-foreground hover:text-foreground transition-colors">
+          <Pencil className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    )}
+  </div>
+
+  {/* Sub-line: level + total XP, mono */}
+  <p className="font-mono text-xs text-muted-foreground mb-3">
+    Level {level} · {totalXp} XP total
+  </p>
+
+  {/* XP bar (max-w-md so it never stretches the full card) */}
+  <div className="flex items-center gap-3 max-w-md">
+    <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+      <motion.div
+        className="h-full rounded-full bg-gradient-to-r from-primary to-accent"
+        initial={{ width: 0 }}
+        animate={{ width: `${(xpProgress / xpForNextLevel) * 100}%` }}
+        transition={{ duration: 0.8 }}
+      />
+    </div>
+    <span className="font-mono text-[10px] text-muted-foreground shrink-0">
+      {xpProgress}/{xpForNextLevel} XP to Level {level + 1}
+    </span>
+  </div>
+</div>
+```
+
+Rules:
+- The `<h1>` lives **here** — there is one and only one `<h1>` per page (SEO + a11y). Use `text-xl font-bold` (not `text-2xl`); the gradient avatar is doing the heavy hero lifting visually.
+- Name is `font-sans`, sub-line and XP counter are `font-mono`. The split is consistent with the rest of the app: prose / chrome → sans; numbers / metadata → mono.
+- Edit/display swap MUST be in the same DOM slot — no layout shift when toggling. The input width (`w-48`) approximates the longest allowed name (`maxLength={16}` × ~12px).
+- XP bar height is `h-2` (TopBar uses `h-1.5`). Profile is the canonical larger form.
+- XP bar is capped at `max-w-md` (28rem). Stretching it edge-to-edge inside an 8xl card looks like a loading skeleton — keep it visually anchored to the name.
+- Bar fill animation is `duration: 0.8` (slow, ceremonial). The TopBar bar uses `0.6`. Profile is where the player lingers; the longer fill is felt, not seen.
+
+### 5.3 Stat strip (4 tiles)
+
+```tsx
+<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-border">
+  <StatCard icon={<Trophy className="w-4 h-4" />} value={completedCount}             label="Solved"     color="text-primary" />
+  <StatCard icon={<Star    className="w-4 h-4" />} value={totalXp}                   label="Total XP"   color="text-accent"  />
+  <StatCard icon={<Flame   className="w-4 h-4" />} value={totalMissions - completedCount} label="Remaining" color="text-secondary" />
+  <StatCard icon={<Zap     className="w-4 h-4" />} value={learned.length}            label="Techniques" color="text-primary" />
+</div>
+```
+
+```tsx
+const StatCard = ({ icon, value, label, color }) => (
+  <div className="text-center rounded-lg bg-muted/30 border border-border py-3 px-2">
+    <div className={`flex items-center justify-center gap-1.5 ${color}`}>
+      {icon}
+      <span className="font-mono text-lg font-semibold">{value}</span>
+    </div>
+    <p className="font-mono text-[9px] text-muted-foreground mt-0.5">{label}</p>
+  </div>
+);
+```
+
+- The strip is **inside** the identity card, separated only by `border-t border-border` + `mt-6 pt-6`. Do NOT promote it to a sibling card — it's a footer to the identity, not its own block.
+- Surface is `bg-muted/30` (semi-transparent muted) — quieter than `bg-card`, so tiles read as recessed wells inside the card.
+- Color story (fixed, do not shuffle):
+  - `text-primary` for **achievement** counters (Solved, Techniques)
+  - `text-accent` for **economy** counters (XP)
+  - `text-secondary` for **remaining work** counters (Remaining)
+- All values are `font-mono text-lg font-semibold` — numbers; labels are `text-[9px]` mono uppercase-feel without actual uppercase. Resist the urge to bump label size — the tile's job is the **number**.
+- Grid is `grid-cols-2` on mobile, `sm:grid-cols-4` from 640px. Never 3-up — it leaves a lonely tile.
+
+### 5.4 Learned techniques card
+
+```tsx
+<motion.div
+  initial={{ opacity: 0, y: 10 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.1 }}
+  className="rounded-xl border border-border bg-card p-5"
+>
+  <div className="flex items-center gap-2 mb-4">
+    <BookOpen className="w-4 h-4 text-primary" />
+    <h2 className="font-sans text-sm font-semibold">Learned Techniques</h2>
+    <span className="ml-auto font-mono text-[10px] text-muted-foreground">
+      {learned.length}/{allTechniques.length}
+    </span>
+  </div>
+
+  {learned.length === 0 ? (
+    <p className="font-mono text-xs text-muted-foreground py-4 text-center">
+      Complete missions to learn SQL techniques!
+    </p>
+  ) : (
+    <div className="flex flex-wrap gap-2">
+      {learned.map((tech) => (
+        <motion.span
+          key={tech}
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="inline-flex items-center gap-1.5 font-mono text-xs px-3 py-1.5
+                     rounded-lg bg-primary/10 text-primary border border-primary/20"
+        >
+          <Zap className="w-3 h-3" />
+          {tech}
+        </motion.span>
+      ))}
+    </div>
+  )}
+</motion.div>
+```
+
+- Card is `p-5` (smaller than identity's `p-6/8`) — it is a secondary block.
+- Header pattern (reused in §5.5 and §5.6): `<icon> <h2> <ml-auto counter>`. Always `<h2>` here, never `<h3>` — these are top-level page sections.
+- Empty state: centered mono copy, `py-4` so the card doesn't collapse to nothing. Never render the chip container at all when empty (no zero-height flex-wrap).
+- Chip token (mandatory, do not invent variants):
+  - shape: `rounded-lg px-3 py-1.5`
+  - color: `bg-primary/10 text-primary border border-primary/20` (10/20 alpha pair — same as TopBar dropdown chips)
+  - typography: `font-mono text-xs`
+  - icon: `Zap`, `w-3 h-3`, **always** prefixed (no chip without an icon)
+- Chips animate `scale: 0.9 → 1` on mount. No `delay` per chip — they pop together; the per-card stagger handled by the parent's `transition.delay`.
+
+### 5.5 Yet-to-discover card (mirror of §5.4)
+
+```tsx
+<motion.div
+  initial={{ opacity: 0, y: 10 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.2 }}
+  className="rounded-xl border border-border bg-card p-5"
+>
+  <div className="flex items-center gap-2 mb-4">
+    <Lock className="w-4 h-4 text-muted-foreground" />
+    <h2 className="font-sans text-sm font-semibold">Yet to Discover</h2>
+    <span className="ml-auto font-mono text-[10px] text-muted-foreground">
+      {notLearned.length} remaining
+    </span>
+  </div>
+
+  {notLearned.length === 0 ? (
+    <p className="font-mono text-xs text-primary py-4 text-center">
+      🎉 You've mastered all techniques!
+    </p>
+  ) : (
+    <div className="flex flex-wrap gap-2">
+      {notLearned.map((tech) => {
+        const source = techniqueSource(tech);
+        return (
+          <div key={tech} className="group relative">
+            <span className="inline-flex items-center gap-1.5 font-mono text-xs px-3 py-1.5
+                             rounded-lg bg-muted/50 text-muted-foreground border border-border">
+              <Lock className="w-3 h-3" />
+              {tech}
+            </span>
+            {source && (
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5
+                              px-2.5 py-1 rounded-md bg-popover border border-border
+                              font-mono text-[9px] text-muted-foreground whitespace-nowrap
+                              opacity-0 group-hover:opacity-100 transition-opacity
+                              pointer-events-none z-10">
+                Unlocked in: {source}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  )}
+</motion.div>
+```
+
+Mirror rules vs §5.4 — these MUST match so the two cards read as a pair:
+- Same dimensions, padding, radius, header pattern, chip shape.
+- Only **two axes** flip:
+  1. Header icon: `BookOpen / text-primary` → `Lock / text-muted-foreground`.
+  2. Chip color: `bg-primary/10 text-primary border-primary/20` → `bg-muted/50 text-muted-foreground border-border`. The chip icon mirrors: `Zap` → `Lock`.
+- Counter copy diverges intentionally: "X/Y" (progress) vs "N remaining" (work-to-do framing).
+- Tooltip is **CSS-only** (no Radix `Tooltip`) — it is decorative/contextual, not critical info, and we want it to live inside the natural document flow without portal cost. Pattern: `group` on wrapper, `opacity-0 group-hover:opacity-100 transition-opacity` on the floating element, `pointer-events-none` so it never blocks chip hit-area. Position is `bottom-full left-1/2 -translate-x-1/2 mb-1.5` and surface `bg-popover border border-border`.
+- Empty state turns **celebratory** (`text-primary`, emoji). This is the only state where the muted card wears a primary color — earned by total mastery.
+- Animation delay is `0.2s` (vs `0.1s` for §5.4) so the pair cascades left → right.
+
+### 5.6 Mission Log
+
+```tsx
+<motion.div
+  initial={{ opacity: 0, y: 10 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.3 }}
+  className="rounded-xl border border-border bg-card p-5"
+>
+  <h2 className="font-sans text-sm font-semibold mb-4">Mission Log</h2>
+  <div className="space-y-2">
+    {missions.map((m) => {
+      const done = completedMissions.has(m.id);
+      return (
+        <div
+          key={m.id}
+          className={`flex items-center justify-between px-3 py-2 rounded-lg border transition-colors ${
+            done ? "border-primary/20 bg-primary/5" : "border-border bg-muted/20"
+          }`}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <span className={`font-mono text-[10px] ${done ? "text-primary" : "text-muted-foreground"}`}>
+              {done ? "✓" : "○"}
+            </span>
+            <span className={`font-sans text-xs truncate ${done ? "text-foreground" : "text-muted-foreground"}`}>
+              {m.title}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {m.techniques.map((t) => (
+              <span
+                key={t}
+                className={`font-mono text-[9px] px-1.5 py-0.5 rounded ${
+                  done ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {t}
+              </span>
+            ))}
+            <span className="font-mono text-[10px] text-accent ml-1">{m.xp} XP</span>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+</motion.div>
+```
+
+- Row state is binary: `done` (primary tint) vs `not done` (muted). There is no "in-progress" row — the engine has no concept of partial completion.
+- Status glyphs are `✓` (U+2713) and `○` (U+25CB), **not** lucide icons. Text glyphs ensure perfect baseline alignment with the title text.
+- Title uses `truncate` + `min-w-0` on the parent flex item — without `min-w-0`, the truncation silently no-ops in flex children.
+- Trailing meta cluster (`shrink-0`) holds **two kinds** of chips:
+  1. Technique mini-chips: `text-[9px] px-1.5 py-0.5 rounded` (no `-lg` — these are smaller than the §5.4/§5.5 chips and must read as metadata, not features).
+  2. XP value: `text-accent`, no chip background — it's a numeric, not a tag.
+- Row gap is `space-y-2` (8px). Tighter than top-level `space-y-8` because rows belong to one block.
+- Mount delay is `0.3s` — last in the cascade.
+
+### 5.7 Avatar system reference
+
+Two file-top constants are the **single source of truth**:
+
+```tsx
+const AVATAR_SEEDS = ["hero", "mage", "rogue", "sage", "knight", "druid"];
+const AVATAR_COLORS: Record<string, string> = {
+  default: "from-primary to-secondary",
+  hero:    "from-destructive to-accent",
+  mage:    "from-secondary to-primary",
+  rogue:   "from-accent to-destructive",
+  sage:    "from-primary to-accent",
+  knight:  "from-secondary to-destructive",
+  druid:   "from-primary to-secondary",
+};
+```
+
+- Adding a seed = add to **both** maps. `cycleAvatar` walks `AVATAR_SEEDS` modulo length.
+- Every gradient is a token-pair (`from-X to-Y`) — never a hex, never `from-blue-500`.
+- The same map is consumed by `ProfileCard.tsx` (the small in-app avatar). Keeping a single source means the small/large avatars match colors exactly.
+
+### 5.8 Sibling page-types (Leaderboard, Admin)
+
+These pages reuse the Profile shell **except**:
+- Content cap widens to `max-w-6xl` (Leaderboard tables, Admin forms need horizontal room).
+- They do **not** carry the identity card; their hero is a page title row (`<h1 className="font-sans text-2xl font-bold">…</h1>` + sub-line).
+- Tile, chip, and row patterns are identical — re-import the same look from §5.3, §5.4, §5.6 rather than re-deriving.
+
+### 5.9 Profile Page invariants checklist
+
+Before merging changes to `ProfilePage.tsx`:
+
+- [ ] Outer wrapper is `min-h-screen flex flex-col gradient-mesh` (not `h-screen`, not `bg-background`).
+- [ ] Exactly one `<h1>`, inside the identity card.
+- [ ] Section headers are `<h2 className="font-sans text-sm font-semibold">`.
+- [ ] All numeric values render in `font-mono`. All names/titles/headers in `font-sans`.
+- [ ] No new chip variants — chips are either "earned" (primary 10/20) or "locked" (muted/50 + border).
+- [ ] No raw colors. Avatar gradients come from `AVATAR_COLORS`; tile colors come from `text-primary | text-accent | text-secondary`.
+- [ ] Mount animations are staggered: identity `y: -10`, then `y: 10` with delays `0.1, 0.2, 0.3`.
+- [ ] Tooltip on locked chips is CSS-only (`group` + `opacity-0 group-hover:opacity-100`), never Radix.
+- [ ] Edit-name input occupies the same slot as the displayed name — no layout shift on toggle.
+- [ ] Empty states render centered mono copy, never a zero-height container.
 
 ---
 

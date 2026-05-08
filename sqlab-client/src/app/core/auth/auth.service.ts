@@ -72,7 +72,9 @@ export class AuthService {
           id: response.id,
           email: response.email,
           username: response.username,
-          createdAt: ''
+          createdAt: '',
+          xp: 0,
+          level: 1
         };
         this._token.set(response.token);
         this._refreshToken.set('');
@@ -100,7 +102,9 @@ export class AuthService {
           id: response.id,
           email: response.email,
           username: response.username,
-          createdAt: ''
+          createdAt: '',
+          xp: 0,
+          level: 1
         };
         this._token.set(response.token);
         this._refreshToken.set('');

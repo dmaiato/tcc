@@ -30,8 +30,12 @@ public class UserController {
     @GetMapping
     public ResponseEntity<UserDto.ProfileResponse> getProfile(@AuthenticationPrincipal String userId) {
         return userRepository.findById(UUID.fromString(userId))
-                .map(u -> ResponseEntity.ok(new UserDto.ProfileResponse(u.getId(), u.getUsername(), u.getEmail(), u.getXp())))
+                .map(u -> ResponseEntity.ok(new UserDto.ProfileResponse(u.getId(), u.getUsername(), u.getEmail(), u.getXp(), computeLevel(u.getXp()), u.getCreatedAt())))
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    private int computeLevel(int xp) {
+        return (int) Math.sqrt(xp / 100.0) + 1;
     }
 
     @GetMapping("/progress")

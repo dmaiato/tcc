@@ -434,3 +434,188 @@ private schemasEqual(a: Table[], b: Table[]): boolean {
 - `lucideXCircle` - Error toast icon
 - `lucideInfo` - Info toast icon
 - Added to `provideIcons()` in `app.config.ts`
+
+---
+
+## 13. Profile Page Implementation
+
+### Overview
+Built user profile page (route `/profile`) with real API data, XP progress bar, stat grid, skills chips, and mission progress table.
+
+### Backend Changes
+
+**New endpoints (`UserController`):**
+- `GET /api/users/me` — now returns `level` (computed from XP) and `createdAt`
+- `GET /api/users/me/progress` — returns mission progress list
+- `GET /api/users/me/skills` — returns aggregated skill tags
+
+**Level formula (server-authoritative):**
+```java
+computeLevel(xp) = floor(sqrt(xp / 100)) + 1
+```
+
+**Level added to `UserDto.ProfileResponse`:**
+```java
+public record ProfileResponse(UUID id, String username, String email, int xp, int level,
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime createdAt) {}
+```
+
+**Files Modified:**
+- `infrastructure/adapter/in/web/dto/UserDto.java` — Added `level` field + `@JsonFormat`
+- `infrastructure/adapter/in/web/dto/ProgressDto.java` — Added `@JsonFormat` on `completedAt`
+- `infrastructure/adapter/in/web/UserController.java` — Added `getProfile()`, `getProgress()`, `getSkills()`
+- `domain/model/User.java` — Made `createdAt` final, removed `@RequiredArgsConstructor` (Lombok conflict)
+- `application/usecase/RegisterUserService.java` — Passes `LocalDateTime.now()` instead of `null`
+
+**Lombok fix for `createdAt`:**
+- `User` had both `@AllArgsConstructor` + `@RequiredArgsConstructor` — with mixed final/non-final fields, the generated all-args constructor could skip non-final `createdAt` during constructor resolution
+- Fix: made `createdAt` final, removed `@RequiredArgsConstructor`, kept `@AllArgsConstructor` alone
+- `RegisterUserService` now passes `LocalDateTime.now()` instead of `null`
+
+### Frontend Changes
+
+**Models (`user.model.ts`):**
+```typescript
+export interface UserResponse {
+  id: string; username: string; email: string;
+  xp: number; level: number;
+  createdAt?: string;
+}
+```
+
+**ProfileService (`core/profile.service.ts`):**
+- `fetchProfile()` — `forkJoin` over 3 endpoints (user, progress, skills)
+- `xpProgress()` — returns `{ current, next, percentage }` computed from user XP
+
+**ProfileComponent (`features/profile/`):**
+- Uses signals: `profile`, `progress`, `skills`, `loading`, `error`
+- `@let prof = profile()` in template for clean signal access
+- Layout per STYLING_GUIDE_v3 §5: `max-w-6xl mx-auto px-5 py-8`
+- XP bar with animated fill
+- Stat grid: Solved / XP / Joined date
+- Skills displayed as tag chips
+- Mission progress table (name, completed, date)
+
+**Header (`shared/header/`):**
+- Added `refreshProfile()` — fetches `/users/me` on each `NavigationEnd`
+- `file:///C:/Users/David/Documents/coding/tcc/sqlab-client/src/app/shared/header/header.component.ts` — profile fetch on navigation
+- Stats now show real data (solved count, XP, level)
+
+**Route (`app.routes.ts`):**
+```typescript
+{ path: 'profile', canActivate: [authGuard],
+  loadComponent: () => import('./features/profile/profile.component')
+    .then(m => m.ProfileComponent) },
+```
+
+**AuthService:**
+- User creation after login/register now creates with `xp: 0, level: 1`
+
+### Known Issues / TODO
+- [x] `createdAt` serialization fixed — restart backend to confirm
+- [ ] Admin page (`/admin`) still a stub
+- [ ] Leaderboard page (`/leaderboard`) still a stub
+- [x] Missions `/missions/:id` page implemented
+- [ ] Error handling improvements
+
+---
+
+## 14. Mission Model: Added objective + hint fields
+
+### Date: 2026-05-08
+
+### Problem
+Mission model had no separate narrative context (`briefing` served both as description and objective) and no hint system for users.
+
+### Field Semantics
+| Field | Role | Required |
+|-------|------|----------|
+| `title` | Mission name | ✅ |
+| `briefing` | Narrative context / story | ✅ (repurposed) |
+| `objective` | The explicit task to complete | ✅ NEW |
+| `hint` | Key SQL command(s) to solve the mission | ❌ NEW |
+
+### Backend Changes
+
+**Schema (V1__init_schema.sql):**
+- Added `objective TEXT NOT NULL` and `hint TEXT` columns to `missions` table
+
+**Seed data (V2__seed_missions.sql):**
+- Added `objective` and `hint` values to all 8 seed missions
+- Column list updated: `id, title, briefing, objective, hint, ddl_script, ...`
+
+**Domain model (`Mission.java`):**
+- Added `objective` and `hint` fields
+- Switched from `@RequiredArgsConstructor` to `@AllArgsConstructor`
+
+**JPA Entity (`MissionJpaEntity.java`):**
+- Added `objective` (TEXT, NOT NULL) and `hint` (TEXT) columns
+
+**Mapper (`MissionMapper.java`):**
+- Maps `entity.getObjective()` and `entity.getHint()` in `toDomain()`
+
+**DTO (`MissionDto.java`):**
+- `MissionResponse` now includes `objective` and `hint`
+- `MissionSummary` unchanged (list view doesn't need these)
+
+**Controller (`MissionController.java`):**
+- `toResponse()` maps `m.getObjective()` and `m.getHint()`
+
+### Frontend Changes
+
+**Model (`mission.model.ts`):**
+- `Mission` interface: added `objective: string`, `hint?: string`
+
+**Mission tabs (`mission-tabs.component.ts`):**
+- Local `Mission` interface: added `objective: string` (already had `hint?: string`)
+
+**Mission tabs template (`mission-tabs.component.html`):**
+- Subtitle: `m.briefing` (unchanged — now the narrative)
+- Objective card: changed from `m.briefing` to `m.objective`
+- Hint section already existed in template (collapsible amber card)
+
+---
+
+## 15. JWT Auth: 401 Redirect on Invalid/Expired Token
+
+### Date: 2026-05-08
+
+### Problem
+Backend returned **403 Forbidden** (Spring Security default) for invalid/expired tokens instead of 401. The frontend interceptor checked for `error.status === 401` so it never triggered. Errors also propagated to components after logout, causing confusing error UIs.
+
+### Backend Changes
+
+**New: `JwtAuthenticationEntryPoint.java`**
+```java
+@Component
+public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
+    @Override
+    public void commence(HttpServletRequest request, HttpServletResponse response,
+                         AuthenticationException authException) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        response.setStatus(401);
+        response.getWriter().write("{\"status\":401,\"message\":\"Invalid or expired token\"}");
+    }
+}
+```
+
+**Modified: `SecurityConfig.java`**
+- Injected `JwtAuthenticationEntryPoint`
+- Added `.exceptionHandling(e -> e.authenticationEntryPoint(jwtAuthenticationEntryPoint))`
+
+### Frontend Changes
+
+**Modified: `auth-error.interceptor.ts`**
+- Simplified: removed dead refresh-token logic (refresh token stored as `''` — always returned false)
+- Now catches both `401` and `403` on non-auth endpoints
+- Calls `authService.logout()` (clears localStorage, navigates to `/login`)
+- Returns `EMPTY` instead of re-throwing — components never see the auth error
+```typescript
+catchError((error: HttpErrorResponse) => {
+    if ((error.status === 401 || error.status === 403) && !req.url.includes('/auth/')) {
+        authService.logout();
+        return EMPTY;
+    }
+    return throwError(() => error);
+});
+```

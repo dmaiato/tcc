@@ -13,6 +13,8 @@ public class MissionMapper {
                 entity.getId(),
                 entity.getTitle(),
                 entity.getBriefing(),
+                entity.getObjective(),
+                entity.getHint(),
                 entity.getDdlScript(),
                 entity.getDmlScript(),
                 entity.getTechniques(),

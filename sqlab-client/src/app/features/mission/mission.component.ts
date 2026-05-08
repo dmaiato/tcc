@@ -248,10 +248,18 @@ export class MissionComponent implements OnInit, OnDestroy {
     const normalizedRows = this.normalizeRows(result.rows);
 
     this.missionService.validateMission(mission.id, normalizedRows).subscribe({
-      next: (response) => this.validationResult.set(response),
-      error: (error) => {
-        const message = error instanceof Error ? error.message : 'Validation failed';
+      next: (response) => {
+        this.validationResult.set(response);
+        if (response.correct) {
+          this.toastService.success('Mission complete!');
+        } else {
+          this.toastService.error('Incorrect result. Try again.');
+        }
+      },
+      error: (err) => {
+        const message = err instanceof Error ? err.message : 'Validation failed';
         this.submitError.set(message);
+        this.toastService.error(message);
       },
       complete: () => this.isValidating.set(false)
     });

@@ -80,8 +80,9 @@
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/users/me` | GET | Get current user profile |
+| `/api/users/me` | GET | Get current user profile (id, username, email, xp, level, createdAt) |
 | `/api/users/me/progress` | GET | Get completed missions |
+| `/api/users/me/skills` | GET | Get aggregated skill tags |
 
 ## Tech Stack Summary
 
@@ -112,19 +113,35 @@ Backend (Spring Boot)
 - JWT pipeline with refresh tokens
 - Route protection
 
-## Implemented Features (Phase 1)
+### Phase 2: Mission Listing & Profile ✅ COMPLETED
+- Mission browser with theme/difficulty filtering
+- Mission workbench (SQL editor, schema explorer, results pane)
+- User profile page with XP bar, stats, skills, progress table
+- Header stats wired to real API data
+
+### Phase 3: Solution Validation ✅ COMPLETED
+- PGlite integration for in-browser SQL execution
+- Result submission to backend
+- Backend validation with ordered/unordered matching
+- XP rewards on correct submission
+
+## Implemented Features
 
 ### Core Services
 | File | Purpose |
 |------|---------|
 | `src/environments/environment.ts` | API config (http://localhost:8081/api) |
-| `src/app/core/models/user.model.ts` | User, UserResponse interfaces |
+| `src/app/core/models/user.model.ts` | User, UserResponse (id, username, email, xp, level, createdAt) |
 | `src/app/core/models/auth-response.model.ts` | LoginRequest, RegisterRequest, AuthResponse DTOs |
+| `src/app/core/models/mission.model.ts` | Mission (id, title, briefing, objective, hint, theme, difficulty, etc.), MissionSummary, enums |
 | `src/app/core/api.service.ts` | Base HTTP service with error handling |
 | `src/app/core/auth/auth.service.ts` | Login/register/logout/refresh token management with Signals |
 | `src/app/core/auth/auth.guard.ts` | authGuard, guestGuard |
 | `src/app/core/interceptors/auth.interceptor.ts` | Attaches JWT Bearer token |
-| `src/app/core/interceptors/auth-error.interceptor.ts` | 401 → refresh → retry |
+| `src/app/core/interceptors/auth-error.interceptor.ts` | Catches 401/403 → logout() → redirect to /login (EMPTY, no error propagation) |
+| `src/app/core/mission.service.ts` | Mission CRUD + validation |
+| `src/app/core/profile.service.ts` | Fetch profile/progress/skills (forkJoin) |
+| `src/app/core/pglite.service.ts` | Browser PostgreSQL via WebAssembly |
 
 ### Feature Components
 | Component | Route | Guard | File |
@@ -132,30 +149,27 @@ Backend (Spring Boot)
 | LoginComponent | /login | guestGuard | `src/app/features/login/` |
 | RegisterComponent | /register | guestGuard | `src/app/features/register/` |
 | DashboardComponent | /dashboard | authGuard | `src/app/features/dashboard/` |
+| ProfileComponent | /profile | authGuard | `src/app/features/profile/` |
+| MissionComponent | /missions/:id | authGuard | `src/app/features/mission/` |
 | HeaderComponent | - | - | `src/app/shared/header/` |
+
+### Shared Components
+| Component | File |
+|-----------|------|
+| SqlEditorComponent | `src/app/features/mission/sql-editor/` |
+| ActionBarComponent | `src/app/features/mission/action-bar/` |
+| ResultsPaneComponent | `src/app/features/mission/results-pane/` |
+| MissionTabsComponent | `src/app/features/mission/mission-tabs/` |
+| DataViewerComponent | `src/app/features/mission/data-viewer/` |
+| ToastComponent | `src/app/shared/toast/` |
 
 ### Auth Flow
 1. User submits login/register form
 2. AuthService calls API → receives JWT + user data
 3. Tokens stored in localStorage
 4. Auth interceptor attaches JWT to all API requests
-5. Auth error interceptor handles 401 → calls refresh → retries
-6. Route guards protect /dashboard, redirect guests to /login
-
-### Phase 2: Mission Listing
-- Display all missions
-- Category/difficulty filtering
-- Mission selection
-
-### Phase 3: Mission Execution
-- SQL code editor
-- PGlite integration
-- Query execution in browser
-
-### Phase 4: Solution Submission
-- Submit results to backend
-- Validation logic
-- Progress tracking
+5. Auth error interceptor catches 401/403 → calls `authService.logout()` → redirects to `/login` (error does not propagate to components)
+6. Route guards protect /dashboard, /profile, /missions/:id; redirect guests to /login
 
 ## Project Structure
 
@@ -168,17 +182,29 @@ src/
 │   │   │   └── auth.guard.ts
 │   │   ├── models/
 │   │   │   ├── user.model.ts
-│   │   │   └── auth-response.model.ts
+│   │   │   ├── auth-response.model.ts
+│   │   │   └── mission.model.ts
 │   │   ├── interceptors/
 │   │   │   ├── auth.interceptor.ts
 │   │   │   └── auth-error.interceptor.ts
-│   │   └── api.service.ts
+│   │   ├── api.service.ts
+│   │   ├── mission.service.ts
+│   │   ├── profile.service.ts
+│   │   └── pglite.service.ts
 │   ├── features/
 │   │   ├── login/
 │   │   ├── register/
-│   │   └── dashboard/
+│   │   ├── dashboard/
+│   │   ├── profile/
+│   │   └── mission/
+│   │       ├── sql-editor/
+│   │       ├── action-bar/
+│   │       ├── results-pane/
+│   │       ├── mission-tabs/
+│   │       └── data-viewer/
 │   ├── shared/
-│   │   └── header/
+│   │   ├── header/
+│   │   └── toast/
 │   ├── app.config.ts
 │   ├── app.routes.ts
 │   ├── app.ts

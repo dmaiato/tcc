@@ -3,6 +3,8 @@ export interface User {
   email: string;
   username: string;
   createdAt: string;
+  xp: number;
+  level: number;
 }
 
 export interface UserResponse {
@@ -10,4 +12,10 @@ export interface UserResponse {
   email: string;
   username: string;
   createdAt: string;
+  xp: number;
+  level: number;
+}
+
+export interface SkillsResponse {
+  skills: string[];
 }

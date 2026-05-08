@@ -15,7 +15,8 @@ public class UserMapper {
                 entity.getEmail(),
                 entity.getPasswordHash(),
                 entity.getXp(),
-                UserRole.valueOf(entity.getRole())
+                UserRole.valueOf(entity.getRole()),
+                entity.getCreatedAt()
         );
     }
 
@@ -27,6 +28,7 @@ public class UserMapper {
                 .passwordHash(user.getPasswordHash())
                 .xp(user.getXp())
                 .role(user.getRole().name())
+                .createdAt(user.getCreatedAt())
                 .build();
     }
 }

@@ -13,6 +13,7 @@ interface Mission {
   id: string;
   title: string;
   briefing: string;
+  objective: string;
   theme: string;
   difficulty: string;
   xpReward: number;

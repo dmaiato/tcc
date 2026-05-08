@@ -2,6 +2,7 @@ import { Component, inject, signal, HostListener, ElementRef } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { ProfileService, ProfileData } from '../../core/profile.service';
 import { filter } from 'rxjs/operators';
 
 @Component({
@@ -13,18 +14,31 @@ import { filter } from 'rxjs/operators';
 })
 export class HeaderComponent {
   private readonly authService = inject(AuthService);
+  private readonly profileService = inject(ProfileService);
   private readonly router = inject(Router);
   private readonly elementRef = inject(ElementRef);
 
   isDropdownOpen = signal(false);
   currentPath = signal('');
+  profile: ProfileData | null = null;
 
   constructor() {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: NavigationEnd) => {
       this.currentPath.set(event.urlAfterRedirects);
+      this.refreshProfile();
     });
+  }
+
+  private refreshProfile(): void {
+    if (this.isLoggedIn) {
+      this.profileService.fetchProfile().subscribe({
+        next: (data) => {
+          this.profile = data;
+        }
+      });
+    }
   }
 
   @HostListener('document:click', ['$event'])
@@ -50,15 +64,15 @@ export class HeaderComponent {
   }
 
   get userLevel(): number {
-    return 1;
+    return this.profile?.user.level ?? 1;
   }
 
   get totalXp(): number {
-    return 0;
+    return this.profile?.user.xp ?? 0;
   }
 
   get solvedMissions(): number {
-    return 0;
+    return this.profile?.progress.filter(p => p.completed).length ?? 0;
   }
 
   get totalMissions(): number {

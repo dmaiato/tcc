@@ -74,7 +74,9 @@ src/main/java/com/sqlab/
 ### 5.2 Mission
 - `id` (UUID)
 - `title` (String)
-- `briefing` (String) - Mission description
+- `briefing` (String) - Narrative context / story
+- `objective` (String) - Explicit task description
+- `hint` (String, nullable) - Key SQL command(s) to solve the mission
 - `ddlScript` (String) - SQL to create tables
 - `dmlScript` (String) - SQL to insert test data
 - `techniques` (List<String>) - SQL concepts taught
@@ -94,9 +96,9 @@ src/main/java/com/sqlab/
 
 ### 5.4 Enums
 
-**Theme:** SQL, JOIN, SUBQUERIES, AGGREGATION, WINDOW_FUNCTIONS, CTES
+**Theme:** ASTRONOMY, CYBERSECURITY, CRIMINAL, FINANCE, BIOLOGY
 
-**DifficultyLevel:** EASY, MEDIUM, HARD
+**DifficultyLevel:** BEGINNER, INTERMEDIATE, ADVANCED, EXPERT
 
 **UserRole:** STUDENT, ADMIN
 
@@ -116,8 +118,8 @@ src/main/java/com/sqlab/
 - Login: `{ "email", "password" }`
 
 **Response:**
-- Register: `{ "id", "username", "email", "xp" }`
-- Login: `{ "token" }`
+- Register: `{ "id", "username", "email", "xp", "level", "token" }`
+- Login: `{ "id", "username", "email", "xp", "level", "token" }`
 
 ### 6.2 Missions
 
@@ -128,8 +130,13 @@ src/main/java/com/sqlab/
 | POST | /api/missions/{id}/validate | Auth | Submit SQL results for validation |
 
 **Query Parameters:**
-- `theme` (optional): SQL, JOIN, SUBQUERIES, etc.
-- `difficulty` (optional): EASY, MEDIUM, HARD
+- `theme` (optional): ASTRONOMY, CYBERSECURITY, CRIMINAL, FINANCE, BIOLOGY
+- `difficulty` (optional): BEGINNER, INTERMEDIATE, ADVANCED, EXPERT
+
+**Mission Response:**
+```json
+{ "id", "title", "briefing", "objective", "hint", "ddlScript", "dmlScript", "techniques", "xpReward", "ordered", "theme", "difficulty" }
+```
 
 **Validation Request:**
 ```json
@@ -145,17 +152,26 @@ src/main/java/com/sqlab/
 
 | Method | Endpoint | Access | Description |
 |--------|---------|--------|-------------|
-| GET | /api/users/me | Auth | Get current user profile |
+| GET | /api/users/me | Auth | Get current user profile (including level, createdAt) |
 | GET | /api/users/me/progress | Auth | Get user's mission progress |
+| GET | /api/users/me/skills | Auth | Get user's aggregated skill tags |
 
 **Profile Response:**
 ```json
-{ "id", "username", "email", "xp" }
+{ "id", "username", "email", "xp", "level", "createdAt" }
 ```
+
+- `level` computed server-side via `floor(sqrt(xp/100)) + 1`
+- `createdAt` ISO string (`"yyyy-MM-dd'T'HH:mm:ss"`)
 
 **Progress Response:**
 ```json
 [{ "missionId", "completed", "completedAt" }]
+```
+
+**Skills Response:**
+```json
+{ "skills": ["JOIN", "AGGREGATION"] }
 ```
 
 ---
@@ -166,7 +182,16 @@ src/main/java/com/sqlab/
 - Secret key: Configured via `sqlab.jwt.secret`
 - Expiration: Configured via `sqlab.jwt.expiration`
 
-### 7.2 Role-Based Access Control
+### 7.2 Authentication Entry Point
+Invalid/expired tokens are handled by `JwtAuthenticationEntryPoint`:
+- Returns `401` with JSON `{"status":401,"message":"Invalid or expired token"}`
+- Configured via `.exceptionHandling()` in `SecurityConfig`
+- Frontend `authErrorInterceptor` catches 401/403 on non-auth endpoints → calls `logout()` → redirects to `/login`
+- Errors do NOT propagate to components (`EMPTY` return in interceptor)
+
+### 7.3 Role-Based Access Control
+
+### 7.3 Role-Based Access Control
 
 | Endpoint | Required Role |
 |-----------|---------------|

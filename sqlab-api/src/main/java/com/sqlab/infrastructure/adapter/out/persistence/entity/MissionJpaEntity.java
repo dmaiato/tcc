@@ -30,6 +30,12 @@ public class MissionJpaEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String briefing;
 
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String objective;
+
+    @Column(columnDefinition = "TEXT")
+    private String hint;
+
     @Column(name = "ddl_script", nullable = false, columnDefinition = "TEXT")
     private String ddlScript;
 

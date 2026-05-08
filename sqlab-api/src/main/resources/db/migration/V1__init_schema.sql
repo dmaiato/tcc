@@ -19,6 +19,8 @@ CREATE TABLE missions
     id              UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
     title           VARCHAR(100) NOT NULL,
     briefing        TEXT         NOT NULL,
+    objective       TEXT         NOT NULL,
+    hint            TEXT,
     ddl_script      TEXT         NOT NULL,
     dml_script      TEXT,
     techniques      TEXT[]       NOT NULL DEFAULT '{}',

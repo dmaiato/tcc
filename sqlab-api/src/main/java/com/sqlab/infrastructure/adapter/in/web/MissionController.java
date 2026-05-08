@@ -68,6 +68,7 @@ public class MissionController {
     private MissionDto.MissionResponse toResponse(Mission m) {
         return new MissionDto.MissionResponse(
                 m.getId(), m.getTitle(), m.getBriefing(),
+                m.getObjective(), m.getHint(),
                 m.getDdlScript(), m.getDmlScript(), m.getTechniques(),
                 m.getXpReward(), m.isOrdered(), m.getTheme(), m.getDifficulty());
     }
