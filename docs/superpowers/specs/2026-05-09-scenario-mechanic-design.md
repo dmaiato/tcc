@@ -5,11 +5,11 @@
 
 ## Problem
 
-SQLab currently supports only standalone missions. There is no way to group missions into ordered sequences with a continuous narrative, where each mission unlocks only after the previous one is completed.
+SQLab supports only standalone missions. No way to group missions into ordered sequences with continuous narrative, unlocking sequentially.
 
 ## Solution
 
-Introduce a **Scenario** entity — a named, ordered collection of 2+ missions sharing a continuous story. Scenarios live alongside standalone missions without breaking existing functionality.
+A **Scenario** is a named, ordered collection of 2+ missions sharing a continuous story. Scenarios live alongside standalone missions without breaking existing functionality.
 
 ---
 
@@ -27,147 +27,122 @@ CREATE TABLE scenarios (
 );
 ```
 
-- `description`: the overarching narrative, displayed on the scenario detail page
-- `theme`: one of `ASTRONOMY`, `CRIMINAL`, `CYBERSECURITY`, `FINANCE`, `BIOLOGY`
+- `description`: overarching narrative displayed on the scenario detail page
 
-### New table: `scenario_missions`
+### Modified table: `missions`
+
+Add two nullable columns:
 
 ```sql
-CREATE TABLE scenario_missions (
-    scenario_id  UUID    NOT NULL REFERENCES scenarios(id) ON DELETE CASCADE,
-    mission_id   UUID    NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
-    order_index  INTEGER NOT NULL,
-    PRIMARY KEY (scenario_id, mission_id),
-    UNIQUE (scenario_id, order_index),
-    UNIQUE (mission_id)
-);
+ALTER TABLE missions ADD COLUMN scenario_id UUID REFERENCES scenarios(id) ON DELETE CASCADE;
+ALTER TABLE missions ADD COLUMN order_index INTEGER;```
+
+- `scenario_id`: if set, mission belongs to that scenario
+- `order_index`: position within the scenario (1-based)
+- `UNIQUE (scenario_id, order_index)` ensures no duplicate positions
+- `CHECK (scenario_id IS NULL OR order_index IS NOT NULL)` prevents partial data
+- Standalone missions have both as NULL
+- `ON DELETE CASCADE`: deleting a scenario removes its missions too
+
+No join table needed — a mission belongs to at most one scenario.
+
+### No changes to `progress`
+
+The `progress` table already tracks per-user completion by `mission_id`. Unlocking logic uses this table.
+
+### Updated `Mission` Domain Model
+
+`Mission.java` gains two nullable fields:
+```java
+private final UUID scenarioId;         // null if standalone
+private final Integer orderIndex;       // null if standalone
+private final String scenarioTitle;     // null if standalone (populated via LEFT JOIN)
+private final Integer scenarioTotalMissions; // null if standalone
 ```
 
-- A mission belongs to **at most one** scenario (enforced by application logic / unique constraint on mission_id if needed). Design uses join table so the `missions` table itself requires zero changes.
-- `order_index` starts at 1 and must be contiguous within a scenario.
+`MissionJpaEntity` gains:
+- Column `scenario_id` + `order_index`
+- Lazy `@ManyToOne` to `ScenarioJpaEntity` for title
+- `scenarioTotalMissions` populated via a `@Subselect` or computed in the adapter
 
-### No changes to `missions` or `progress`
+`MissionMapper.toDomain()` maps all four from the JPA entity.
 
-- Standalone missions keep `scenario_id = null` conceptually — no schema change needed.
-- `progress` already tracks per-user completion by `mission_id`; unlocking logic uses this table.
+### Updated `MissionRepository` Port
 
-### V1 Migration: Append new tables
+New methods:
+```java
+List<Mission> findByScenarioIdOrderByOrderIndex(UUID scenarioId);
+int countByScenarioId(UUID scenarioId); // for scenarioTotalMissions
+```
 
-Add the two `CREATE TABLE` statements to `V1__init_schema.sql`.
+Implemented by `MissionJpaRepository` (Spring Data derived queries) and `MissionPersistenceAdapter`.
 
-### V2 Migration: Replace `gen_random_uuid()` with fixed UUIDs + seed scenarios
+---
 
-1. Change each `gen_random_uuid()` in the INSERT to a fixed UUID:
+## Migration Strategy (dev-only DB)
+
+Edit existing migration files in-place (project is in dev):
+
+### V1: Append new table + column changes
+
+Add `CREATE TABLE scenarios` and the two ALTER TABLE statements on `missions` at the end of `V1__init_schema.sql`.
+
+### V2: Fixed UUIDs + scenario seed
+
+1. Replace `gen_random_uuid()` with fixed UUIDs:
    - `'00000000-0000-0000-0000-000000000001'` through `'00000000-0000-0000-0000-000000000010'`
 
-2. Seed scenario — group the 3 CRIMINAL missions (1: O Último Gole, 2: Madrugada Suspeita, 3: Teia de Mentiras) into a scenario called "Noite no Blue Moon":
+2. Seed scenario "Noite no Blue Moon" grouping the 3 CRIMINAL missions:
 
 ```sql
 INSERT INTO scenarios (id, title, description, theme) VALUES (
     '00000000-0000-0000-0000-0000000000a1',
     'Noite no Blue Moon',
-    'São 3h da manhã e o detetive Estranho acaba de chegar ao Blue Moon Cabaret. Um corpo foi encontrado no beco, e as pistas estão todas no livro de registro da noite. Mas conforme você investiga, descobre que essa noite guarda mais segredos do que um simples assassinato — uma teia de mentiras que envolve frequentadores, interrogatórios e álibis que não se sustentam. Três missões o aguardam nas sombras do cabaré.',
+    'São 3h da manhã e o detetive Estranho acaba de chegar ao Blue Moon Cabaret. Um corpo foi encontrado no beco, e as pistas estão no livro de registro. Conforme você investiga, descobre que essa noite guarda mais segredos que um simples assassinato — uma teia de mentiras envolvendo frequentadores, interrogatórios e álibis que não se sustentam.',
     'CRIMINAL'
 );
+```
 
-INSERT INTO scenario_missions (scenario_id, mission_id, order_index) VALUES
-    ('00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-000000000001', 1),
-    ('00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-000000000002', 2),
-    ('00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-000000000003', 3);
+3. Assign missions to the scenario via UPDATE:
+
+```sql
+UPDATE missions SET scenario_id = '00000000-0000-0000-0000-0000000000a1', order_index = 1 WHERE id = '00000000-0000-0000-0000-000000000001';
+UPDATE missions SET scenario_id = '00000000-0000-0000-0000-0000000000a1', order_index = 2 WHERE id = '00000000-0000-0000-0000-000000000002';
+UPDATE missions SET scenario_id = '00000000-0000-0000-0000-0000000000a1', order_index = 3 WHERE id = '00000000-0000-0000-0000-000000000003';
 ```
 
 ---
 
-## Backend Architecture
+## Backend
 
-### New Domain Entity: `Scenario`
+### New Domain Entity
 
 ```java
-package com.sqlab.domain.model;
-
-import java.util.UUID;
-
 public class Scenario {
     private final UUID id;
     private final String title;
     private final String description;
     private final Theme theme;
-
-    // all-args constructor + getters
 }
 ```
 
 ### New Ports
 
-**In (use cases):**
+**In:**
 - `GetScenariosUseCase` — `List<ScenarioSummary> handle()` and `ScenarioDetail handle(FindScenarioQuery)`
-- `ScenarioDetail` contains the scenario metadata + list of `ScenarioMissionItem` (each with id, title, techniques, xpReward, difficulty, ordered, and `status: LOCKED|AVAILABLE|COMPLETED`)
+- `GetMissionsUseCase.FindByIdQuery` gains optional field: `UUID userId` (null for anonymous)
 
-**Out (repositories):**
-- `ScenarioRepository` — `findAll()`, `findById(UUID)`, `findMissionIdsByScenarioId(UUID)` (returns ordered list)
-- `ScenarioLockRepository` (or methods on ScenarioRepository) — `isMissionUnlocked(UUID userId, UUID missionId)`
+**Out:**
+- `ScenarioRepository` — `findAll()`, `findById(UUID)`
 
-### New persistence layer (follow existing patterns):
+### New Persistence Layer
 
 | Layer | Class |
 |-------|-------|
 | JPA Entity | `ScenarioJpaEntity` |
 | JPA Repository | `ScenarioJpaRepository` |
-| Persistence Adapter | `ScenarioPersistenceAdapter` (implements `ScenarioRepository`) |
-| Domain Mapper | `ScenarioMapper` |
-
-### Access Control — Unlock Logic
-
-Centralized in a reusable helper (e.g., `ScenarioLockService`):
-
-```
-isMissionUnlocked(userId, missionId):
-  scenarioId ← find scenario containing this mission
-  if no scenario → return true (standalone)
-  orderIndex ← find order_index of mission within scenario
-  if orderIndex == 1 → return true (first is always open)
-  previousMissionId ← find mission with order_index - 1 in same scenario
-  return progressRepository.existsByUserIdAndMissionId(userId, previousMissionId)
-```
-
-**Where the check is called:**
-
-| Endpoint | Behavior if locked |
-|----------|-------------------|
-| `GET /api/missions/{id}` | Return `403 Forbidden` |
-| `POST /api/missions/{id}/validate` | Return `403 Forbidden` before any validation |
-
-New exception: `MissionLockedException` (maps to 403).
-
-### Modified DTOs
-
-### Modified DTOs (no domain model changes)
-
-`MissionResponse` gains nullable fields (populated by the controller via `ScenarioRepository`):
-```java
-UUID scenarioId;
-String scenarioTitle;
-Integer scenarioOrderIndex;
-Integer scenarioTotalMissions;
-```
-
-`MissionSummary` gains nullable field:
-```java
-UUID scenarioId;
-```
-
-The `Mission` domain model stays unchanged. The controller (or a helper service) enriches the response by calling `ScenarioRepository.findScenarioInfoByMissionId()`.
-
-### New Repository Method
-
-```java
-// ScenarioRepository
-Optional<ScenarioInfo> findScenarioInfoByMissionId(UUID missionId);
-
-// ScenarioInfo — simple value object
-public record ScenarioInfo(UUID scenarioId, String scenarioTitle,
-                           int orderIndex, int totalMissions) {}
-```
+| Adapter | `ScenarioPersistenceAdapter` (implements `ScenarioRepository`) |
+| Mapper | `ScenarioMapper` |
 
 ### New Controller
 
@@ -185,7 +160,7 @@ public class ScenarioController {
 }
 ```
 
-#### Response shape for `GET /api/scenarios/{id}`
+#### Response shape `GET /api/scenarios/{id}`
 
 ```json
 {
@@ -200,7 +175,6 @@ public class ScenarioController {
       "techniques": ["SELECT"],
       "xpReward": 100,
       "difficulty": "BEGINNER",
-      "ordered": false,
       "status": "COMPLETED"
     },
     {
@@ -209,7 +183,6 @@ public class ScenarioController {
       "techniques": ["SELECT", "WHERE"],
       "xpReward": 100,
       "difficulty": "BEGINNER",
-      "ordered": false,
       "status": "AVAILABLE"
     },
     {
@@ -218,7 +191,6 @@ public class ScenarioController {
       "techniques": ["SELECT", "INNER JOIN"],
       "xpReward": 200,
       "difficulty": "INTERMEDIATE",
-      "ordered": false,
       "status": "LOCKED"
     }
   ],
@@ -229,58 +201,148 @@ public class ScenarioController {
 }
 ```
 
+### Modified DTOs
+
+`MissionResponse` gains nullable fields (all from `Mission` domain model now):
+```java
+UUID scenarioId;
+String scenarioTitle;
+Integer scenarioOrderIndex;
+Integer scenarioTotalMissions;
+```
+
+`MissionSummary` gains:
+```java
+UUID scenarioId;
+```
+
+### `ScenarioSummary` DTO (for list endpoint)
+
+```java
+public record ScenarioSummary(
+    UUID id,
+    String title,
+    Theme theme,
+    int totalMissions,
+    int completedMissions
+) {}
+```
+
+`completedMissions` is computed per-user: count of progress records where mission is in this scenario.
+
+### Access Control — Unlock Logic
+
+Extracted to a reusable helper method on the `Mission` domain model to avoid duplication:
+
+```java
+// Mission.java
+public boolean isLockedFor(UUID userId, ProgressRepository progressRepo, MissionRepository missionRepo) {
+    if (scenarioId == null || orderIndex == null || orderIndex == 1) return false;
+    return missionRepo.findByScenarioIdOrderByOrderIndex(scenarioId).stream()
+        .filter(m -> m.getOrderIndex() != null && m.getOrderIndex() == this.orderIndex - 1)
+        .findFirst()
+        .map(prev -> !progressRepo.existsByUserIdAndMissionId(userId, prev.getId()))
+        .orElse(false); // if prev mission doesn't exist (gap), treat as locked
+}
+```
+
+Alternatively, a simpler repository query:
+```java
+// MissionRepository
+boolean isPreviousMissionCompleted(UUID userId, UUID scenarioId, int orderIndex);
+// SQL: SELECT EXISTS(SELECT 1 FROM progress p JOIN missions m ON p.mission_id = m.id
+//      WHERE p.user_id = ? AND m.scenario_id = ? AND m.order_index = ? AND p.completed = true)
+```
+
+**Used in:**
+
+**`GetMissionsService`** — after `FindByIdQuery`:
+```
+if (mission.isLockedFor(query.userId(), progressRepo, missionRepo))
+    throw new MissionLockedException(mission.getId(), scenarioTitle);
+```
+
+**`ValidateMissionService`** — before validation:
+```
+if (mission.isLockedFor(command.userId(), progressRepo, missionRepo))
+    throw new MissionLockedException(mission.getId(), scenarioTitle);
+```
+
+**`MissionLockedException`** → 403 with body:
+```json
+{
+  "status": 403,
+  "message": "Mission locked: complete 'Madrugada Suspeita' first",
+  "code": "MISSION_LOCKED"
+}
+```
+
+Frontend parses `code === "MISSION_LOCKED"` to show the lock screen with a link to the scenario page, vs. generic 403 for auth errors.
+
 ---
 
-## Frontend Architecture
+## Frontend
 
-### New Route
+### New Routes
 
 ```typescript
-{ path: 'scenarios/:id', loadComponent: ScenarioDetailComponent }
+{ path: 'scenarios',     loadComponent: ScenarioListComponent, canActivate: [authGuard] }
+{ path: 'scenarios/:id', loadComponent: ScenarioDetailComponent, canActivate: [authGuard] }
 ```
 
-### New Component: `ScenarioDetailComponent`
+### Nav Links in Header
 
-- **Location:** `src/app/features/scenario/scenario-detail/`
-- **Layout:**
-  1. Back button → `/dashboard`
-  2. Scenario title (large heading)
-  3. Theme badge
-  4. Description narrative (styled blockquote or card)
-  5. Progress bar: `1 / 3 completed`
-  6. Vertical list of mission cards, each showing:
-     - Order number badge
-     - Title
-     - Difficulty + XP
-     - Status indicator:
-       - ✅ Completed (green, clickable → /mission/:id)
-       - ▶ Available (highlighted, clickable → /mission/:id)
-       - 🔒 Locked (dimmed, not clickable)
-- **Data fetching:** `GET /api/scenarios/{id}` returns all info in one call.
-
-### Changed Component: `DashboardComponent`
-
-- `MissionSummary` now includes `scenarioId` (nullable).
-- In the template, if `mission.scenarioId` is non-null, the `<a>` link points to `/scenarios/{scenarioId}` instead of `/mission/{id}`, and a small "Scenario" badge is shown on the card.
-
-### Changed Component: `MissionComponent`
-
-- `Mission` model gets optional fields: `scenarioId`, `scenarioTitle`, `scenarioOrderIndex`, `scenarioTotalMissions`.
-- When `mission.scenarioId` is set:
-  - The navigation strip shows `scenarioTitle` as a breadcrumb link → `/scenarios/:id`
-  - Shows "Mission X of Y" within the scenario
-  - Prev/Next navigation uses the scenario's mission order instead of the global list
-- Fetching the scenario mission list: either from cache (if user came from scenario page) or via `GET /api/scenarios/{id}`.
-- If `GET /api/missions/{id}` returns 403, display a "Mission Locked" message with a link back to the scenario page.
-
-### Changed Service: `MissionService`
-
-New method:
-```typescript
-getScenario(id: string): Observable<ScenarioDetail>
+Two links between the logo and the theme toggle:
+```
+[SQLab]  Dashboard  Scenarios  [🌙]  [avatar]
 ```
 
-New model:
+Styled as simple text links with `routerLinkActive="text-primary"` for active state.
+
+### ScenarioListComponent (`/scenarios`)
+
+Grid of scenario cards, each showing:
+- Title
+- Theme badge
+- X of Y missions completed (progress bar)
+- Click → `/scenarios/:id`
+
+Fetches data from `GET /api/scenarios`.
+
+### ScenarioDetailComponent (`/scenarios/:id`)
+
+1. Back button → `/scenarios`
+2. Scenario title (large)
+3. Theme badge
+4. Description narrative
+5. Progress bar: `1 / 3 completed`
+6. Vertical list of mission cards:
+   - Order number badge
+   - Title
+   - Difficulty + XP
+   - Status: ✅ COMPLETED (clickable → `/mission/:id`) / ▶ AVAILABLE (highlighted, clickable) / 🔒 LOCKED (dimmed, disabled)
+
+### Dashboard Changes
+
+- `MissionSummary` includes `scenarioId` (nullable)
+- Scenario missions appear individually in the grid (each as its own card), not as a group
+- If `mission.scenarioId` is set:
+  - Card shows a "Scenario" badge (label: title of the scenario)
+  - `[routerLink]` → `/scenarios/:scenarioId` instead of `/mission/:id`
+  - Checkmark icon still shows per-mission completion
+- Otherwise: unchanged behavior
+- Theme/difficulty filters work the same — scenario missions are filtered like standalone ones
+
+### MissionComponent Changes
+
+- `Mission` model gets optional fields: `scenarioId`, `scenarioTitle`, `scenarioOrderIndex`, `scenarioTotalMissions`
+- If `scenarioId` is set:
+  - Breadcrumb: `Scenarios > Noite no Blue Moon > Mission 2 of 3`
+  - Prev/next navigates within scenario. Data source: `GET /api/scenarios/{id}` fetches the ordered mission list (or cached from the scenario page). Falls back to the flat all-missions list if no scenario.
+- If `GET /missions/:id` returns 403 with `code: "MISSION_LOCKED"`: lock screen with "Complete the previous mission first" + link to scenario page
+
+### New Model Types
+
 ```typescript
 export interface ScenarioDetail {
   id: string;
@@ -297,57 +359,57 @@ export interface ScenarioMissionItem {
   techniques: string[];
   xpReward: number;
   difficulty: DifficultyLevel;
-  ordered: boolean;
   status: 'LOCKED' | 'AVAILABLE' | 'COMPLETED';
 }
 ```
 
----
+### New Service Method
 
-## Error Handling
-
-### 403 Forbidden (Locked Mission)
-
-Backend throws `MissionLockedException`. Frontend catches in interceptor or component:
-- In `MissionComponent.loadMission()`: if 403, show lock screen with "Complete the previous mission first" and a link to the scenario page.
-- In `submitSolution()`: if 403, same treatment.
-
-### No Scenarios Exist
-
-- Scenario list returns empty array.
-- Dashboard shows all missions as standalone (no scenario badges).
-- Scenario detail route can 404 if ID doesn't exist.
+```typescript
+getScenarios(): Observable<ScenarioSummary[]>
+getScenario(id: string): Observable<ScenarioDetail>
+```
 
 ---
 
 ## Seed Data
 
-### Scenario: "Noite no Blue Moon" (CRIMINAL)
+### "Noite no Blue Moon" (CRIMINAL, 3 missions)
 
-| Order | Mission | Difficulty | Purpose |
-|-------|---------|------------|---------|
-| 1 | O Último Gole | BEGINNER | SELECT all nightclub records |
-| 2 | Madrugada Suspeita | BEGINNER | Filter with WHERE (patrons after 2AM) |
-| 3 | Teia de Mentiras | INTERMEDIATE | JOIN interrogations with patrons |
+| # | Title | Difficulty | Teaches |
+|---|-------|------------|---------|
+| 1 | O Último Gole | BEGINNER | SELECT |
+| 2 | Madrugada Suspeita | BEGINNER | SELECT, WHERE |
+| 3 | Teia de Mentiras | INTERMEDIATE | SELECT, INNER JOIN |
 
-### Narrative
+---
 
-The `description` field tells the overarching story. Each mission's `briefing` picks up where the last left off, moving the detective work forward through the night.
+## Testing
+
+### Backend
+
+| Scope | What to test |
+|-------|-------------|
+| Migration | V1 schema changes apply cleanly; V2 seed creates scenario + assigns missions |
+| Repository | `findByScenarioIdOrderByOrderIndex` returns missions in correct order; `isPreviousMissionCompleted` works with/without progress |
+| Service | Lock logic: standalone mission always unlocked; first mission unlocked; subsequent mission locked without progress; locked after progress |
+| Controller | `GET /api/scenarios/{id}` returns correct mission statuses per user; `GET /api/missions/{id}` returns 403 for locked mission; `POST /.../validate` returns 403 for locked |
+| Exception | `MissionLockedException` serializes with correct status/code/message |
+
+### Frontend
+
+| Scope | What to test |
+|-------|-------------|
+| ScenarioList | Renders scenario cards; shows progress bar |
+| ScenarioDetail | Renders narrative; shows mission list with correct status icons; locked missions not clickable |
+| MissionComponent | Shows lock screen for 403 MISSION_LOCKED; shows breadcrumb for scenario missions |
+| Dashboard | Scenario mission card routes to `/scenarios/:id` instead of `/mission/:id` |
 
 ---
 
 ## Non-Goals
 
-- No branching or non-linear scenarios (linear only).
-- No shared DDL/DML between scenario missions (each mission remains self-contained).
-- No scenario editor UI (admin only via SQL for now).
-- No scenario completion rewards (XP is per-mission only).
-
----
-
-## Future Considerations
-
-- Scenario completion bonus XP (awarded when all missions in a scenario are done).
-- Scenario unlock animation / cutscene text.
-- Multiple scenarios per theme.
-- Admin CRUD for scenarios.
+- No branching/non-linear scenarios
+- No shared DDL/DML between missions
+- No scenario editor UI
+- No scenario completion bonus XP
