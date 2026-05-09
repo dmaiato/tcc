@@ -512,11 +512,70 @@ export interface UserResponse {
 - User creation after login/register now creates with `xp: 0, level: 1`
 
 ### Known Issues / TODO
-- [x] `createdAt` serialization fixed — restart backend to confirm
-- [ ] Admin page (`/admin`) still a stub
-- [ ] Leaderboard page (`/leaderboard`) still a stub
 - [x] Missions `/missions/:id` page implemented
 - [ ] Error handling improvements
+
+---
+
+## 16. Light/Dark Mode Theme Toggle + Cursor Pointer
+
+### Date: 2026-05-08
+
+### Overview
+Added a light/dark mode theme toggle button to the app header with persistence and system preference detection. Applied `cursor: pointer` globally to all clickable elements. Adjusted light theme contrast.
+
+### Files Changed
+
+#### Theme System
+- `sqlab-client/src/styles.css`
+  - Added CSS custom properties for glow/gradient colors (`--glow-*`, `--mesh-*`)
+  - Added `html[data-theme="light"]` block with all 17 color token overrides
+  - Body color transition (respects `prefers-reduced-motion`)
+  - Added `:not(:disabled)` cursor-pointer rule for buttons, links, `[role="button"]`, clickable inputs, select in `@layer base`
+
+- `sqlab-client/src/index.html` — Flash-prevention inline script in `<head>` reads localStorage and sets `data-theme` before Angular bootstraps
+
+- `sqlab-client/src/app/core/theme.service.ts` — Created ThemeService with Angular Signals (`theme`, `isDark`, `isLight`), `toggle()`, `init()` checking localStorage → `prefers-color-scheme` → default `'dark'`
+
+- `sqlab-client/src/app/app.config.ts` — Registered `lucideSun`, `lucideMoon` in `provideIcons`
+
+#### Header
+- `sqlab-client/src/app/shared/header/header.component.ts` — Injected ThemeService, added `isLight` computed, imported NgIconsModule; removed dead code (`showBackLink`, `currentPath`)
+- `sqlab-client/src/app/shared/header/header.component.html` — Added round toggle button in `<nav>` with sun/moon Lucide icons and `text-accent` color; removed `@if (showBackLink)` back-link block
+
+#### Back-link Relocation
+- `sqlab-client/src/app/features/mission/mission.component.html` — Added "← Missions" back-link in both loading and loaded navigator strips
+
+#### Light Theme Contrast Adjustments
+- `sqlab-client/src/styles.css` — Light theme foreground darkened to `hsl(220 15% 10%)`, muted-foreground to `hsl(220 10% 30%)` for better readability
+- Note: accent colors (primary, secondary, accent, destructive) were adjusted then reverted to original values per user preference
+
+#### Mission Page Container Colors (Light Theme)
+Elements changed from muted backgrounds to `bg-card` (white in light mode):
+- Mission & Schema tab header bar: `bg-muted/50` → `bg-card`
+- Tables Available container: `bg-muted/30` → `bg-card`  
+- SQL editor container: `bg-editor` → `bg-card`
+- Restore/Run/Verify buttons: `bg-muted/*` → `bg-card`
+
+### Light Theme Color Tokens (Current)
+| Token | Value |
+|---|---|
+| `--color-background` | hsl(220 20% 97%) |
+| `--color-foreground` | hsl(220 15% 10%) |
+| `--color-card` | hsl(0 0% 100%) |
+| `--color-muted` | hsl(220 15% 92%) |
+| `--color-muted-foreground` | hsl(220 10% 30%) |
+| `--color-border` | hsl(220 15% 85%) |
+| `--color-primary` | hsl(165 70% 35%) |
+| `--color-secondary` | hsl(250 55% 52%) |
+| `--color-accent` | hsl(35 90% 50%) |
+
+### Key Decisions
+- Used `data-theme="light"` on `<html>` with unlayered CSS overrides (higher priority than `@layer theme`)
+- `dataset['theme']` (bracket notation) required in TypeScript — `data-theme` not a known DOMStringMap property
+- Glow/gradient utilities refactored to CSS vars so they respond to theme changes
+- `cursor: pointer` applied globally via CSS rule, not per-element — respects `:disabled`
+- Text color consistency attempt was reverted — colored text (primary/secondary/accent) preserved for visual design
 
 ---
 
@@ -618,4 +677,52 @@ catchError((error: HttpErrorResponse) => {
     }
     return throwError(() => error);
 });
+```
+
+---
+
+## 17. Mission Content Refactor: Creative Overhaul
+
+### Date: 2026-05-09
+
+### Problem
+Seed missions were dry, generic exercises. The `briefing` and `objective` fields were nearly identical — both essentially described the SQL task. Missions lacked narrative immersion and failed to make learning feel like solving real problems.
+
+### Design Principle (Briefing vs Objective)
+| Field | Role | Example |
+|-------|------|---------|
+| `briefing` | **Narrative / stakes / atmosphere** — paints a scene, gives the "why" | A body was found at 3AM. The detective needs the nightclub log. |
+| `objective` | **Precise SQL task** — what columns, what conditions, what technique | List all records from the nightclub_log table. |
+
+Both fields are in Brazilian Portuguese. The `briefing` reads like a cinematic setup; the `objective` reads like a technical specification.
+
+### What Changed
+- **8 → 10 missions** (added BIOLOGY theme — was unused)
+- Every mission rewritten with distinct cinematic briefings
+- Distribution: CRIMINAL (3), FINANCE (2), ASTRONOMY (2), CYBERSECURITY (1), BIOLOGY (2)
+
+### New Mission Table
+
+| # | Title | Theme | Diff | Teaches | Briefing vibe |
+|---|-------|-------|------|---------|---------------|
+| 1 | O Último Gole | CRIMINAL | B | SELECT | Noir detective, body at the Blue Moon Cabaret |
+| 2 | Madrugada Suspeita | CRIMINAL | B | SELECT, WHERE | Detective wants night owls, cigarette smoke |
+| 3 | Teia de Mentiras | CRIMINAL | I | SELECT, INNER JOIN | Interrogations, a web of lies |
+| 4 | O Gavião e o Urubu | FINANCE | B | SELECT, WHERE (boolean) | Embezzlement, trembling accountant |
+| 5 | Sinais do Cosmos | ASTRONOMY | I | SELECT, ORDER BY | Radio telescope, alien signal mystery |
+| 6 | A Fortuna do Submundo | FINANCE | A | GROUP BY, HAVING, SUM, AVG | Money laundering by branch |
+| 7 | Mapa Estelar | ASTRONOMY | A | GROUP BY, HAVING, COUNT | Celestial mapping, pre-1950 discoveries |
+| 8 | O Fantasma na Matrix | CYBERSECURITY | E | GROUP BY, HAVING, COUNT | 3AM breach, internal threat |
+| 9 | O Surto | BIOLOGY | I | INNER JOIN, WHERE | Outbreak, severe symptoms triage |
+| 10 | A Cura em Gotas | BIOLOGY | E | UPDATE, WHERE, SELECT | Expired meds during epidemic |
+
+### File Changed
+- `sqlab-api/src/main/resources/db/migration/V2__seed_missions.sql` — Complete rewrite of all 10 seed missions
+
+### Key Decisions
+- All table names, column names, and data remained self-contained per mission (no cross-mission dependencies)
+- `expected_result` JSON validated against actual DML output
+- Difficulty mapped to SQL concepts: B → SELECT/filter, I → JOIN/ORDER, A → GROUP BY/aggregation, E → HAVING/subquery + DML
+- Briefings written in Brazilian Portuguese with vivid sensory details (time, weather, character reactions, objects)
+- Objectives intentionally clinical — stripped of narrative, focused on columns/tables/conditions
 ```

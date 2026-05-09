@@ -2,7 +2,7 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners, APP_INITIALIZER 
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideIcons } from '@ng-icons/core';
-import { lucideLoader, lucideChevronRight, lucideTable2, lucideHash, lucideType, lucideKey, lucideFileText, lucideDatabase, lucideCheck, lucideRotateCw, lucidePlay, lucideX, lucideRefreshCw, lucideXCircle, lucideInfo } from '@ng-icons/lucide';
+import { lucideLoader, lucideChevronRight, lucideTable2, lucideHash, lucideType, lucideKey, lucideFileText, lucideDatabase, lucideCheck, lucideRotateCw, lucidePlay, lucideX, lucideRefreshCw, lucideXCircle, lucideInfo, lucideSun, lucideMoon } from '@ng-icons/lucide';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
@@ -30,7 +30,9 @@ export const appConfig: ApplicationConfig = {
       lucideX,
       lucideRefreshCw,
       lucideXCircle,
-      lucideInfo
+      lucideInfo,
+      lucideSun,
+      lucideMoon
     })
   ]
 };

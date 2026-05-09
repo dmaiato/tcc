@@ -12,13 +12,16 @@
     </h1>
   </a>
 
-  @if (showBackLink) {
-    <a routerLink="/" class="font-mono text-xs text-muted-foreground hover:text-primary transition-colors">
-      ← Missions
-    </a>
-  }
-
   <nav class="flex items-center gap-2">
+    <button (click)="themeService.toggle()" type="button"
+      class="w-9 h-9 flex items-center justify-center rounded-full border border-border bg-muted/30 text-accent hover:bg-muted/50 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background shrink-0"
+      [attr.aria-label]="isLight() ? 'Switch to dark mode' : 'Switch to light mode'">
+      @if (isLight()) {
+        <ng-icon name="lucideMoon" class="w-4 h-4" />
+      } @else {
+        <ng-icon name="lucideSun" class="w-4 h-4" />
+      }
+    </button>
     @if (isLoggedIn) {
       <div class="relative">
         <button (click)="toggleDropdown()" type="button" class="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-muted/50 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">

@@ -1,14 +1,16 @@
-import { Component, inject, signal, HostListener, ElementRef } from '@angular/core';
+import { Component, inject, signal, computed, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router, NavigationEnd } from '@angular/router';
+import { NgIconsModule } from '@ng-icons/core';
 import { AuthService } from '../../core/auth/auth.service';
+import { ThemeService } from '../../core/theme.service';
 import { ProfileService, ProfileData } from '../../core/profile.service';
 import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, NgIconsModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
 })
@@ -17,16 +19,16 @@ export class HeaderComponent {
   private readonly profileService = inject(ProfileService);
   private readonly router = inject(Router);
   private readonly elementRef = inject(ElementRef);
+  readonly themeService = inject(ThemeService);
+  isLight = computed(() => this.themeService.isLight());
 
   isDropdownOpen = signal(false);
-  currentPath = signal('');
   profile: ProfileData | null = null;
 
   constructor() {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
-    ).subscribe((event: NavigationEnd) => {
-      this.currentPath.set(event.urlAfterRedirects);
+    ).subscribe(() => {
       this.refreshProfile();
     });
   }
@@ -81,11 +83,6 @@ export class HeaderComponent {
 
   get missionsRemaining(): number {
     return this.totalMissions - this.solvedMissions;
-  }
-
-  get showBackLink(): boolean {
-    const path = this.currentPath();
-    return path !== '/' && path !== '' && !path.startsWith('/login') && !path.startsWith('/register');
   }
 
   toggleDropdown(): void {

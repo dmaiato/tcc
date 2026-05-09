@@ -38,7 +38,7 @@ export class ActionBarComponent {
     } else if (this.verifyResult && !this.verifyResult.correct) {
       return 'border-2 border-destructive text-destructive bg-destructive/5 glow-error';
     }
-    return 'border-2 border-primary/50 text-primary hover:border-primary hover:glow-primary';
+    return 'border-2 border-primary/50 text-primary bg-card hover:border-primary hover:glow-primary';
   }
 
   get isVerifyDisabled(): boolean {
