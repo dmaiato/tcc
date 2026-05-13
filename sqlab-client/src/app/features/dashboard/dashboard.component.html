@@ -1,8 +1,8 @@
 <div class="min-h-screen flex flex-col gradient-mesh">
-  <main class="flex-1 px-6 py-8">
-    <div class="max-w-6xl mx-auto">
+  <main class="flex-1">
+    <div class="max-w-5xl mx-auto px-5 py-8">
       <div class="flex items-center gap-3 mb-6">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-primary flex items-center justify-center">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-accent-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
             <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
@@ -13,14 +13,14 @@
           </svg>
         </div>
         <div>
-          <h1 class="text-2xl font-bold tracking-tight text-foreground">Mission Select</h1>
+          <h1 class="font-sans text-2xl font-bold tracking-tight text-foreground">Mission Select</h1>
           <p class="font-mono text-xs text-muted-foreground">Choose your next SQL operation</p>
         </div>
       </div>
 
       <div class="flex items-center gap-3 mb-4">
         <div class="relative">
-          <button (click)="toggleThemeDropdown(); $event.stopPropagation()" type="button" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-card text-sm font-mono text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+          <button (click)="toggleThemeDropdown(); $event.stopPropagation()" type="button" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-mono text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
             {{ getThemeButtonLabel() }}
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M6 9l6 6 6-6"></path>
@@ -39,7 +39,7 @@
         </div>
 
         <div class="relative">
-          <button (click)="toggleDifficultyDropdown(); $event.stopPropagation()" type="button" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-card text-sm font-mono text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+          <button (click)="toggleDifficultyDropdown(); $event.stopPropagation()" type="button" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-mono text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
             {{ getDifficultyButtonLabel() }}
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M6 9l6 6 6-6"></path>
@@ -87,7 +87,7 @@
                 </div>
               }
               <div class="flex items-center gap-2 mb-2">
-                <span class="font-mono text-[10px] px-1.5 py-0.5 rounded" [ngClass]="{'bg-primary/10': mission.difficulty === 'BEGINNER', 'bg-accent/10': mission.difficulty === 'INTERMEDIATE', 'bg-destructive/10': mission.difficulty === 'ADVANCED' || mission.difficulty === 'EXPERT'}">
+                <span class="font-mono text-[10px] uppercase tracking-widest px-2 py-0.5 rounded" [ngClass]="{'bg-primary/10': mission.difficulty === 'BEGINNER', 'bg-accent/10': mission.difficulty === 'INTERMEDIATE', 'bg-destructive/10': mission.difficulty === 'ADVANCED' || mission.difficulty === 'EXPERT'}">
                   <span [ngClass]="getDifficultyClass(mission.difficulty)">{{ getDifficultyLabel(mission.difficulty) }}</span>
                 </span>
                 <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{{ getThemeLabel(mission.theme) }}</span>
@@ -97,17 +97,7 @@
               </div>
               <h3 class="font-sans text-sm font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">{{ mission.title }}</h3>
               <div class="flex items-center gap-2 text-xs">
-                <div class="flex items-center gap-1 text-muted-foreground">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-                    <path d="M4 22h16"></path>
-                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
-                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
-                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
-                  </svg>
-                  <span class="font-mono text-xs text-primary">{{ mission.xpReward }}</span>
-                </div>
+                <span class="font-mono text-[10px] text-accent">{{ mission.xpReward }} XP</span>
                 <span class="text-muted-foreground">·</span>
                 <div class="flex items-center gap-1 text-muted-foreground">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
