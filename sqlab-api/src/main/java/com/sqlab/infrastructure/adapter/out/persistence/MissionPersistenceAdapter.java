@@ -6,6 +6,7 @@ import com.sqlab.domain.model.Mission;
 import com.sqlab.domain.model.Theme;
 import com.sqlab.infrastructure.adapter.out.persistence.mapper.MissionMapper;
 import com.sqlab.infrastructure.adapter.out.persistence.repository.MissionJpaRepository;
+import com.sqlab.infrastructure.adapter.out.persistence.repository.ProgressJpaRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,10 +20,12 @@ public class MissionPersistenceAdapter implements MissionRepository {
 
     private final MissionJpaRepository jpaRepository;
     private final MissionMapper mapper;
+    private final ProgressJpaRepository progressJpaRepository;
 
-    public MissionPersistenceAdapter(MissionJpaRepository jpaRepository, MissionMapper mapper) {
+    public MissionPersistenceAdapter(MissionJpaRepository jpaRepository, MissionMapper mapper, ProgressJpaRepository progressJpaRepository) {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
+        this.progressJpaRepository = progressJpaRepository;
     }
 
     @Override
@@ -48,5 +51,23 @@ public class MissionPersistenceAdapter implements MissionRepository {
     @Override
     public List<Mission> findByThemeAndDifficulty(Theme theme, DifficultyLevel difficulty) {
         return jpaRepository.findByThemeAndDifficulty(theme, difficulty).stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
+    public List<Mission> findByScenarioIdOrderByOrderIndex(UUID scenarioId) {
+        return jpaRepository.findByScenarioIdOrderByOrderIndex(scenarioId)
+                .stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
+    public boolean isPreviousMissionCompleted(UUID userId, UUID scenarioId, int orderIndex) {
+        return jpaRepository.findByScenarioIdAndOrderIndex(scenarioId, orderIndex)
+                .map(mission -> progressJpaRepository.existsByUserIdAndMissionIdAndCompleted(userId, mission.getId(), true))
+                .orElse(false);
+    }
+
+    @Override
+    public int countByScenarioId(UUID scenarioId) {
+        return jpaRepository.countByScenarioId(scenarioId);
     }
 }

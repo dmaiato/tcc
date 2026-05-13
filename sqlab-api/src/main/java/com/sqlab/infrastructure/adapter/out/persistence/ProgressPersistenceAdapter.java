@@ -8,7 +8,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 @Transactional
@@ -70,5 +72,12 @@ public class ProgressPersistenceAdapter implements ProgressRepository {
                         e.getCompletedAt()
                 ))
                 .toList();
+    }
+
+    @Override
+    public Set<UUID> findCompletedMissionIdsByUserId(UUID userId) {
+        return jpaRepository.findByUserIdAndCompleted(userId, true).stream()
+                .map(ProgressJpaEntity::getMissionId)
+                .collect(Collectors.toSet());
     }
 }

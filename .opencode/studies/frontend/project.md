@@ -68,13 +68,20 @@
 | `/api/auth/refresh` | POST | Refresh access token |
 | `/api/auth/logout` | POST | Logout |
 
+### Scenarios
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/scenarios` | GET | List all scenarios with per-user progress |
+| `/api/scenarios/:id` | GET | Get scenario detail with per-user mission status |
+
 ### Missions
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/missions` | GET | List all missions |
-| `/api/missions/:id` | GET | Get mission details |
-| `/api/missions/:id/submit` | POST | Submit SQL results |
+| `/api/missions/:id` | GET | Get mission details (403 if locked via scenario) |
+| `/api/missions/:id/validate` | POST | Submit SQL results (403 if locked) |
 
 ### User Progress
 
@@ -125,6 +132,14 @@ Backend (Spring Boot)
 - Backend validation with ordered/unordered matching
 - XP rewards on correct submission
 
+### Phase 4: Scenario Mechanic ✅ COMPLETED
+- Scenarios table + FK on missions with order_index
+- Batch progress queries (eliminated N+1)
+- Sequential unlocking backend enforcement (403 MISSION_LOCKED)
+- Scenario list/detail pages with status icons
+- Scenario-aware mission navigation (prev/next within scenario)
+- Lock screen for direct URL access to locked missions
+
 ## Implemented Features
 
 ### Core Services
@@ -133,13 +148,13 @@ Backend (Spring Boot)
 | `src/environments/environment.ts` | API config (http://localhost:8081/api) |
 | `src/app/core/models/user.model.ts` | User, UserResponse (id, username, email, xp, level, createdAt) |
 | `src/app/core/models/auth-response.model.ts` | LoginRequest, RegisterRequest, AuthResponse DTOs |
-| `src/app/core/models/mission.model.ts` | Mission (id, title, briefing, objective, hint, theme, difficulty, etc.), MissionSummary, enums |
+| `src/app/core/models/mission.model.ts` | Mission (+scenarioId, scenarioTitle, scenarioOrderIndex, scenarioTotalMissions), MissionSummary (+scenarioId), ScenarioDetail, ScenarioMissionItem, ScenarioSummary |
 | `src/app/core/api.service.ts` | Base HTTP service with error handling |
 | `src/app/core/auth/auth.service.ts` | Login/register/logout/refresh token management with Signals |
 | `src/app/core/auth/auth.guard.ts` | authGuard, guestGuard |
 | `src/app/core/interceptors/auth.interceptor.ts` | Attaches JWT Bearer token |
 | `src/app/core/interceptors/auth-error.interceptor.ts` | Catches 401/403 → logout() → redirect to /login (EMPTY, no error propagation) |
-| `src/app/core/mission.service.ts` | Mission CRUD + validation |
+| `src/app/core/mission.service.ts` | Mission CRUD + validation + getScenarios()/getScenario() |
 | `src/app/core/profile.service.ts` | Fetch profile/progress/skills (forkJoin) |
 | `src/app/core/pglite.service.ts` | Browser PostgreSQL via WebAssembly |
 
@@ -150,8 +165,22 @@ Backend (Spring Boot)
 | RegisterComponent | /register | guestGuard | `src/app/features/register/` |
 | DashboardComponent | /dashboard | authGuard | `src/app/features/dashboard/` |
 | ProfileComponent | /profile | authGuard | `src/app/features/profile/` |
-| MissionComponent | /missions/:id | authGuard | `src/app/features/mission/` |
+| ScenarioListComponent | /scenarios | authGuard | `src/app/features/scenario/` |
+| ScenarioDetailComponent | /scenarios/:id | authGuard | `src/app/features/scenario/` |
+| MissionComponent | /mission/:id | authGuard | `src/app/features/mission/` |
 | HeaderComponent | - | - | `src/app/shared/header/` |
+
+### Scenario Models
+| Type | Fields |
+|------|--------|
+| `ScenarioSummary` | id, title, theme, totalMissions, completedMissions |
+| `ScenarioDetail` | id, title, description, theme, missions[ScenarioMissionItem], userProgress |
+| `ScenarioMissionItem` | id, title, techniques, xpReward, difficulty, status('LOCKED'\|'AVAILABLE'\|'COMPLETED') |
+
+### Scenario Lock Flow
+1. **Backend-enforced**: `GET /api/missions/{id}` and `POST /api/missions/{id}/validate` throw 403 `MISSION_LOCKED` for locked scenario missions
+2. **Frontend lock screen**: `mission.component.ts` catches 403 with `code === 'MISSION_LOCKED'` → shows lock icon + message + "Back to Scenario" button (navigates to `/scenarios/{scenarioId}`)
+3. **Scenario detail page**: LOCKED missions show dimmed with lock icon, click is blocked by `navigateToMission` guard
 
 ### Shared Components
 | Component | File |
@@ -196,6 +225,7 @@ src/
 │   │   ├── register/
 │   │   ├── dashboard/
 │   │   ├── profile/
+│   │   ├── scenario/
 │   │   └── mission/
 │   │       ├── sql-editor/
 │   │       ├── action-bar/

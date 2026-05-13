@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 public class MissionMapper {
 
     public Mission toDomain(MissionJpaEntity entity) {
+        String scenarioTitle = entity.getScenario() != null ? entity.getScenario().getTitle() : null;
         return new Mission(
                 entity.getId(),
                 entity.getTitle(),
@@ -22,7 +23,10 @@ public class MissionMapper {
                 new ExpectedTuple(entity.getExpectedResult()),
                 entity.isOrdered(),
                 entity.getTheme(),
-                entity.getDifficulty()
+                entity.getDifficulty(),
+                entity.getScenarioId(),
+                entity.getOrderIndex(),
+                scenarioTitle
         );
     }
 }

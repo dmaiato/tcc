@@ -1,7 +1,9 @@
 package com.sqlab.infrastructure.adapter.in.web;
 
 import com.sqlab.domain.exception.InvalidCredentialsException;
+import com.sqlab.domain.exception.MissionLockedException;
 import com.sqlab.domain.exception.MissionNotFoundException;
+import com.sqlab.domain.exception.ScenarioNotFoundException;
 import com.sqlab.domain.exception.UserAlreadyExistsException;
 import com.sqlab.infrastructure.adapter.in.web.dto.ErrorResponse;
 import org.springframework.http.HttpStatus;
@@ -10,6 +12,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -27,7 +31,7 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), ex.getMessage()));
     }
 
-    @ExceptionHandler({MissionNotFoundException.class})
+    @ExceptionHandler({MissionNotFoundException.class, ScenarioNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(HttpStatus.NOT_FOUND.value(), ex.getMessage()));
@@ -40,6 +44,17 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining("; "));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), message));
+    }
+
+    @ExceptionHandler(MissionLockedException.class)
+    public ResponseEntity<Map<String, Object>> handleMissionLocked(MissionLockedException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("status", 403);
+        body.put("error", "Forbidden");
+        body.put("code", "MISSION_LOCKED");
+        body.put("message", ex.getMessage());
+        body.put("scenarioId", ex.getScenarioId());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
     @ExceptionHandler(Exception.class)

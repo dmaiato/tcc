@@ -15,9 +15,17 @@ public interface GetMissionsUseCase {
         }
     }
 
-    record FindByIdQuery(UUID missionId) {}
+    record FindByIdQuery(UUID missionId, UUID userId) {
+        public FindByIdQuery(UUID missionId) {
+            this(missionId, null);
+        }
+    }
 
     List<Mission> handle(ListAllQuery query);
 
     Mission handle(FindByIdQuery query);
+
+    record MissionDetail(Mission mission, Integer scenarioTotalMissions) {}
+
+    MissionDetail handleDetail(FindByIdQuery query);
 }

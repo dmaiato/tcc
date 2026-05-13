@@ -33,6 +33,16 @@ export const routes: Routes = [
     loadComponent: () => import('./features/mission/mission.component').then(m => m.MissionComponent)
   },
   {
+    path: 'scenarios',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/scenario/scenario-list.component').then(m => m.ScenarioListComponent)
+  },
+  {
+    path: 'scenarios/:id',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/scenario/scenario-detail.component').then(m => m.ScenarioDetailComponent)
+  },
+  {
     path: '**',
     redirectTo: 'dashboard'
   }

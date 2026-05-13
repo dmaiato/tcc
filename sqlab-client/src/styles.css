@@ -185,3 +185,31 @@ html[data-theme="light"] {
   --mesh-primary: hsl(165 70% 35% / 0.08);
   --mesh-accent: hsl(35 90% 50% / 0.04);
 }
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  background: transparent;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--color-muted) / 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--color-muted));
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--color-muted-foreground));
+}
+::-webkit-scrollbar-button {
+  display: none;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--color-muted)) hsl(var(--color-muted) / 0.3);
+}

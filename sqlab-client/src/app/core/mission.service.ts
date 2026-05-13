@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { MissionSummary, Mission, MissionProgress } from './models/mission.model';
+import { MissionSummary, Mission, MissionProgress, ScenarioDetail, ScenarioSummary } from './models/mission.model';
 
 @Injectable({
   providedIn: 'root'
@@ -27,5 +27,13 @@ export class MissionService {
 
   getUserProgress(): Observable<MissionProgress[]> {
     return this.api.get<MissionProgress[]>('/users/me/progress');
+  }
+
+  getScenarios(): Observable<ScenarioSummary[]> {
+    return this.api.get<ScenarioSummary[]>('/scenarios');
+  }
+
+  getScenario(id: string): Observable<ScenarioDetail> {
+    return this.api.get<ScenarioDetail>(`/scenarios/${id}`);
   }
 }

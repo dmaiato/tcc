@@ -2,7 +2,6 @@ package com.sqlab.domain.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.UUID;
@@ -24,6 +23,9 @@ public class Mission {
     private final boolean ordered;
     private final Theme theme;
     private final DifficultyLevel difficulty;
+    private final UUID scenarioId;
+    private final Integer orderIndex;
+    private final String scenarioTitle;
 
     public boolean validate(List<java.util.Map<String, Object>> submitted) {
         return ordered

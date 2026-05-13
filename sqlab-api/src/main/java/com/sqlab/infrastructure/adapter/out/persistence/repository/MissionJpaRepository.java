@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface MissionJpaRepository extends JpaRepository<MissionJpaEntity, UUID>,
@@ -15,4 +16,7 @@ public interface MissionJpaRepository extends JpaRepository<MissionJpaEntity, UU
     List<MissionJpaEntity> findByTheme(Theme theme);
     List<MissionJpaEntity> findByDifficulty(DifficultyLevel difficulty);
     List<MissionJpaEntity> findByThemeAndDifficulty(Theme theme, DifficultyLevel difficulty);
+    List<MissionJpaEntity> findByScenarioIdOrderByOrderIndex(UUID scenarioId);
+    Optional<MissionJpaEntity> findByScenarioIdAndOrderIndex(UUID scenarioId, int orderIndex);
+    int countByScenarioId(UUID scenarioId);
 }

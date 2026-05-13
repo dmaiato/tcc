@@ -71,7 +71,14 @@ src/main/java/com/sqlab/
 - `role` (UserRole: STUDENT, ADMIN)
 - `createdAt` (LocalDateTime)
 
-### 5.2 Mission
+### 5.2 Scenario
+- `id` (UUID)
+- `title` (String) - Scenario name
+- `description` (String) - Narrative text
+- `theme` (Theme) - All scenario missions share this theme
+- `createdAt` (LocalDateTime)
+
+### 5.3 Mission
 - `id` (UUID)
 - `title` (String)
 - `briefing` (String) - Narrative context / story
@@ -85,6 +92,8 @@ src/main/java/com/sqlab/
 - `ordered` (boolean) - Whether row order matters
 - `theme` (Theme) - Mission category
 - `difficulty` (DifficultyLevel)
+- `scenarioId` (UUID, nullable) - FK to scenario
+- `orderIndex` (Integer, nullable) - Position within scenario
 - `createdAt` (LocalDateTime)
 
 ### 5.3 Progress
@@ -121,13 +130,30 @@ src/main/java/com/sqlab/
 - Register: `{ "id", "username", "email", "xp", "level", "token" }`
 - Login: `{ "id", "username", "email", "xp", "level", "token" }`
 
-### 6.2 Missions
+### 6.2 Scenarios
 
 | Method | Endpoint | Access | Description |
 |--------|---------|--------|-------------|
-| GET | /api/missions | Auth | List allmissions (optional: theme, difficulty) |
-| GET | /api/missions/{id} | Auth | Get mission details |
-| POST | /api/missions/{id}/validate | Auth | Submit SQL results for validation |
+| GET | /api/scenarios | Auth | List all scenarios with per-user progress |
+| GET | /api/scenarios/{id} | Auth | Get scenario detail with per-user mission status |
+
+**Scenario List Response:**
+```json
+[{ "id", "title", "theme", "totalMissions", "completedMissions" }]
+```
+
+**Scenario Detail Response:**
+```json
+{ "id", "title", "description", "theme", "missions": [{ "id", "title", "techniques", "xpReward", "difficulty", "status": "LOCKED|AVAILABLE|COMPLETED" }], "userProgress": { "completedCount", "totalCount" } }
+```
+
+### 6.3 Missions
+
+| Method | Endpoint | Access | Description |
+|--------|---------|--------|-------------|
+| GET | /api/missions | Auth | List all missions (optional: theme, difficulty) |
+| GET | /api/missions/{id} | Auth | Get mission details (403 if locked via scenario) |
+| POST | /api/missions/{id}/validate | Auth | Submit SQL results for validation (403 if locked) |
 
 **Query Parameters:**
 - `theme` (optional): ASTRONOMY, CYBERSECURITY, CRIMINAL, FINANCE, BIOLOGY
@@ -135,7 +161,7 @@ src/main/java/com/sqlab/
 
 **Mission Response:**
 ```json
-{ "id", "title", "briefing", "objective", "hint", "ddlScript", "dmlScript", "techniques", "xpReward", "ordered", "theme", "difficulty" }
+{ "id", "title", "briefing", "objective", "hint", "ddlScript", "dmlScript", "techniques", "xpReward", "ordered", "theme", "difficulty", "scenarioId", "scenarioTitle", "scenarioOrderIndex", "scenarioTotalMissions" }
 ```
 
 **Validation Request:**
@@ -148,7 +174,12 @@ src/main/java/com/sqlab/
 { "correct": true }
 ```
 
-### 6.3 User Profile
+**Lock Error Response (403):**
+```json
+{ "status": 403, "error": "Forbidden", "code": "MISSION_LOCKED", "message": "Mission locked: complete the previous mission in '...' first", "scenarioId": "..." }
+```
+
+### 6.4 User Profile
 
 | Method | Endpoint | Access | Description |
 |--------|---------|--------|-------------|
@@ -191,14 +222,14 @@ Invalid/expired tokens are handled by `JwtAuthenticationEntryPoint`:
 
 ### 7.3 Role-Based Access Control
 
-### 7.3 Role-Based Access Control
-
 | Endpoint | Required Role |
 |-----------|---------------|
 | POST /api/auth/* | Public |
 | GET /api/missions | STUDENT, ADMIN |
 | POST /api/missions/*/validate | STUDENT, ADMIN |
 | GET /api/users/me/* | STUDENT, ADMIN |
+| GET /api/scenarios | STUDENT, ADMIN |
+| GET /api/scenarios/* | STUDENT, ADMIN |
 | POST /api/missions | ADMIN only |
 | PUT /api/missions/* | ADMIN only |
 | DELETE /api/missions/* | ADMIN only |
@@ -215,8 +246,14 @@ Invalid/expired tokens are handled by `JwtAuthenticationEntryPoint`:
 
 ### 8.2 Tables (managed by Flyway)
 - `users` - User accounts
-- `missions` - SQL challenges
+- `missions` - SQL challenges (with optional `scenario_id` FK + `order_index`)
+- `scenarios` - Ordered mission collections with narrative
 - `user_progress` - Mission completion tracking
+
+### 8.3 Scenario Constraints
+- `UNIQUE (scenario_id, order_index)` — no duplicate positions within a scenario
+- `CHECK (scenario_id IS NULL OR order_index IS NOT NULL)` — no orphaned order_index
+- `scenario_id FK → scenarios(id) ON DELETE CASCADE` — deleting a scenario removes its missions
 
 ---
 

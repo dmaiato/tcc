@@ -15,6 +15,10 @@ export interface Mission {
   ordered: boolean;
   theme: Theme;
   difficulty: DifficultyLevel;
+  scenarioId?: string;
+  scenarioTitle?: string;
+  scenarioOrderIndex?: number;
+  scenarioTotalMissions?: number;
 }
 
 export interface MissionSummary {
@@ -25,6 +29,7 @@ export interface MissionSummary {
   ordered: boolean;
   theme: Theme;
   difficulty: DifficultyLevel;
+  scenarioId?: string;
 }
 
 export interface ValidationRequest {
@@ -39,4 +44,30 @@ export interface MissionProgress {
   missionId: string;
   completed: boolean;
   completedAt: string | null;
+}
+
+export interface ScenarioDetail {
+  id: string;
+  title: string;
+  description: string;
+  theme: Theme;
+  missions: ScenarioMissionItem[];
+  userProgress: { completedCount: number; totalCount: number };
+}
+
+export interface ScenarioMissionItem {
+  id: string;
+  title: string;
+  techniques: string[];
+  xpReward: number;
+  difficulty: DifficultyLevel;
+  status: 'LOCKED' | 'AVAILABLE' | 'COMPLETED';
+}
+
+export interface ScenarioSummary {
+  id: string;
+  title: string;
+  theme: Theme;
+  totalMissions: number;
+  completedMissions: number;
 }

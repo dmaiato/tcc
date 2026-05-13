@@ -41,3 +41,16 @@ CREATE TABLE progress
     completed_at TIMESTAMP,
     UNIQUE (user_id, mission_id)
 );
+
+CREATE TABLE scenarios (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title       VARCHAR(100) NOT NULL,
+    description TEXT         NOT NULL,
+    theme       VARCHAR(20)  NOT NULL,
+    created_at  TIMESTAMP    NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE missions ADD COLUMN scenario_id UUID REFERENCES scenarios(id) ON DELETE CASCADE;
+ALTER TABLE missions ADD COLUMN order_index INTEGER;
+ALTER TABLE missions ADD CONSTRAINT uq_scenario_order UNIQUE (scenario_id, order_index);
+ALTER TABLE missions ADD CONSTRAINT ck_scenario_consistency CHECK (scenario_id IS NULL OR order_index IS NOT NULL);

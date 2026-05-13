@@ -14,4 +14,7 @@ public interface MissionRepository {
     List<Mission> findByTheme(Theme theme);
     List<Mission> findByDifficulty(DifficultyLevel difficulty);
     List<Mission> findByThemeAndDifficulty(Theme theme, DifficultyLevel difficulty);
+    List<Mission> findByScenarioIdOrderByOrderIndex(UUID scenarioId);
+    boolean isPreviousMissionCompleted(UUID userId, UUID scenarioId, int orderIndex);
+    int countByScenarioId(UUID scenarioId);
 }

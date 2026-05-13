@@ -3,6 +3,7 @@ package com.sqlab.application.port.out;
 import com.sqlab.domain.model.Progress;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public interface ProgressRepository {
@@ -10,4 +11,5 @@ public interface ProgressRepository {
     List<Progress> findByUserId(UUID userId);
     List<Progress> findCompletedByUserId(UUID userId);
     boolean existsByUserIdAndMissionId(UUID userId, UUID missionId);
+    Set<UUID> findCompletedMissionIdsByUserId(UUID userId);
 }

@@ -64,6 +64,16 @@ public class MissionJpaEntity {
     @Column(nullable = false, length = 20)
     private DifficultyLevel difficulty;
 
+    @Column(name = "scenario_id")
+    private UUID scenarioId;
+
+    @Column(name = "order_index")
+    private Integer orderIndex;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "scenario_id", insertable = false, updatable = false)
+    private ScenarioJpaEntity scenario;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

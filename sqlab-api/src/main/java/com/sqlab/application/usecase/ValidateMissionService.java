@@ -4,6 +4,7 @@ import com.sqlab.application.port.in.ValidateMissionUseCase;
 import com.sqlab.application.port.out.MissionRepository;
 import com.sqlab.application.port.out.ProgressRepository;
 import com.sqlab.application.port.out.UserRepository;
+import com.sqlab.domain.exception.MissionLockedException;
 import com.sqlab.domain.exception.MissionNotFoundException;
 import com.sqlab.domain.model.Mission;
 import com.sqlab.domain.model.Progress;
@@ -29,6 +30,16 @@ public class ValidateMissionService implements ValidateMissionUseCase {
     public boolean handle(Command command) {
         Mission mission = missionRepository.findById(command.missionId())
                 .orElseThrow(() -> new MissionNotFoundException(command.missionId()));
+
+        if (mission.getScenarioId() != null) {
+            if (mission.getOrderIndex() != null && mission.getOrderIndex() > 1) {
+                boolean prevCompleted = missionRepository.isPreviousMissionCompleted(
+                        command.userId(), mission.getScenarioId(), mission.getOrderIndex() - 1);
+                if (!prevCompleted) {
+                    throw new MissionLockedException(mission.getId(), mission.getScenarioId(), mission.getScenarioTitle());
+                }
+            }
+        }
 
         boolean correct = mission.validate(command.submittedTuples());
 

@@ -78,7 +78,7 @@
       } @else {
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           @for (mission of filteredMissions(); track mission.id) {
-            <a [routerLink]="['/mission', mission.id]" class="group relative rounded-xl border border-border bg-card p-4 hover:bg-muted/30 transition-colors card-shine focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+            <a [routerLink]="mission.scenarioId ? ['/scenarios', mission.scenarioId] : ['/mission', mission.id]" class="group relative rounded-xl border border-border bg-card p-4 hover:bg-muted/30 transition-colors card-shine focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
               @if (isCompleted(mission.id)) {
                 <div class="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -91,6 +91,9 @@
                   <span [ngClass]="getDifficultyClass(mission.difficulty)">{{ getDifficultyLabel(mission.difficulty) }}</span>
                 </span>
                 <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{{ getThemeLabel(mission.theme) }}</span>
+                @if (mission.scenarioId) {
+                  <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-accent/10 text-accent">Scenario</span>
+                }
               </div>
               <h3 class="font-sans text-sm font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">{{ mission.title }}</h3>
               <div class="flex items-center gap-2 text-xs">

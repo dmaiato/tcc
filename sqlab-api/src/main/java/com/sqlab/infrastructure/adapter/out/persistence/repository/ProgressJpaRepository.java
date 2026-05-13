@@ -10,4 +10,5 @@ public interface ProgressJpaRepository extends JpaRepository<ProgressJpaEntity, 
     List<ProgressJpaEntity> findByUserId(UUID userId);
     List<ProgressJpaEntity> findByUserIdAndCompleted(UUID userId, boolean completed);
     boolean existsByUserIdAndMissionId(UUID userId, UUID missionId);
+    boolean existsByUserIdAndMissionIdAndCompleted(UUID userId, UUID missionId, boolean completed);
 }

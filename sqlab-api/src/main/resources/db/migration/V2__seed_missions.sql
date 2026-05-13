@@ -9,7 +9,7 @@ VALUES
 -- Teaches: SELECT
 -- ========================================================================
 (
-    gen_random_uuid(),
+    '00000000-0000-0000-0000-000000000001',
     'O Último Gole',
 
     'SÃO 3H DA MANHÃ no Blue Moon Cabaret. Um corpo foi encontrado no beco ao lado —
@@ -60,7 +60,7 @@ VALUES
 -- Teaches: SELECT, WHERE
 -- ========================================================================
 (
-    gen_random_uuid(),
+    '00000000-0000-0000-0000-000000000002',
     'Madrugada Suspeita',
 
     'O legista estima que a morte ocorreu entre 1h e 3h da manhã. O delegado Estranho
@@ -108,7 +108,7 @@ VALUES
 -- Teaches: SELECT, INNER JOIN
 -- ========================================================================
 (
-    gen_random_uuid(),
+    '00000000-0000-0000-0000-000000000003',
     'Teia de Mentiras',
 
     'Três pessoas foram chamadas para depor na delegacia. O delegado Estranho ouviu
@@ -165,7 +165,7 @@ VALUES
 -- Teaches: SELECT, WHERE (boolean)
 -- ========================================================================
 (
-    gen_random_uuid(),
+    '00000000-0000-0000-0000-000000000004',
     'O Gavião e o Urubu',
 
     'A Mendes & Filhos amanheceu em alvoroço. O contador-chefe, seu Valentim, está
@@ -215,7 +215,7 @@ VALUES
 -- Teaches: SELECT, ORDER BY
 -- ========================================================================
 (
-    gen_random_uuid(),
+    '00000000-0000-0000-0000-000000000005',
     'Sinais do Cosmos',
 
     'O radiotelescópio captou algo inexplicável. Uma sequência de pulsos eletromagnéticos
@@ -272,7 +272,7 @@ VALUES
 -- Teaches: SELECT, GROUP BY, HAVING, SUM, AVG
 -- ========================================================================
 (
-    gen_random_uuid(),
+    '00000000-0000-0000-0000-000000000006',
     'A Fortuna do Submundo',
 
     'O desvio de recursos na Mendes & Filhos revelou um padrão suspeito: certas
@@ -323,7 +323,7 @@ VALUES
 -- Teaches: SELECT, WHERE, GROUP BY, HAVING, COUNT
 -- ========================================================================
 (
-    gen_random_uuid(),
+    '00000000-0000-0000-0000-000000000007',
     'Mapa Estelar',
 
     'A Dra. Tavares está construindo um mapa astrofísico atualizado. Ela passou
@@ -376,7 +376,7 @@ VALUES
 -- Teaches: SELECT, WHERE, GROUP BY, HAVING, COUNT, ORDER BY
 -- ========================================================================
 (
-    gen_random_uuid(),
+    '00000000-0000-0000-0000-000000000008',
     'O Fantasma na Matrix',
 
     'O relógio marca 3h14 da manhã quando o alarme dispara na NexusCorp. As telas
@@ -432,7 +432,7 @@ VALUES
 -- Teaches: SELECT, INNER JOIN, WHERE
 -- ========================================================================
 (
-    gen_random_uuid(),
+    '00000000-0000-0000-0000-000000000009',
     'O Surto',
 
     'A Unidade de Resposta Rápida foi mobilizada. Um surto de origem desconhecida
@@ -510,7 +510,7 @@ VALUES
 -- Teaches: UPDATE, WHERE, SELECT (DML + DQL)
 -- ========================================================================
 (
-    gen_random_uuid(),
+    '00000000-0000-0000-0000-000000000010',
     'A Cura em Gotas',
 
     'O surto está se alastrando e a farmácia do hospital está com estoque crítico.
@@ -557,3 +557,15 @@ VALUES
     'BIOLOGY',
     'EXPERT'
 );
+
+-- Scenario: Noite no Blue Moon (groups missions 1, 2, 3)
+INSERT INTO scenarios (id, title, description, theme) VALUES (
+    '00000000-0000-0000-0000-0000000000a1',
+    'Noite no Blue Moon',
+    'São 3h da manhã e o detetive Estranho acaba de chegar ao Blue Moon Cabaret. Um corpo foi encontrado no beco, e as pistas estão no livro de registro. Conforme você investiga, descobre que essa noite guarda mais segredos que um simples assassinato — uma teia de mentiras envolvendo frequentadores, interrogatórios e álibis que não se sustentam.',
+    'CRIMINAL'
+);
+
+UPDATE missions SET scenario_id = '00000000-0000-0000-0000-0000000000a1', order_index = 1 WHERE id = '00000000-0000-0000-0000-000000000001';
+UPDATE missions SET scenario_id = '00000000-0000-0000-0000-0000000000a1', order_index = 2 WHERE id = '00000000-0000-0000-0000-000000000002';
+UPDATE missions SET scenario_id = '00000000-0000-0000-0000-0000000000a1', order_index = 3 WHERE id = '00000000-0000-0000-0000-000000000003';

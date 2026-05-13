@@ -45,6 +45,11 @@ export class MissionComponent implements OnInit, OnDestroy {
   totalMissions = signal(0);
   runId = signal(0);
 
+  scenarioMissionIds = signal<string[]>([]);
+  isLocked = signal(false);
+  lockedMessage = signal('');
+  lockedScenarioId = signal<string | null>(null);
+
   schema = signal<{ name: string; columns: { name: string; type: string }[] }[]>([]);
 
   ngOnInit(): void {
@@ -74,14 +79,34 @@ export class MissionComponent implements OnInit, OnDestroy {
     });
   }
 
+  private loadScenarioMissions(scenarioId: string): void {
+    this.missionService.getScenario(scenarioId).subscribe({
+      next: (scenario) => {
+        this.scenarioMissionIds.set(scenario.missions.map(m => m.id));
+        this.updateNavigation();
+      }
+    });
+  }
+
   private updateNavigation(): void {
     const current = this.mission();
     if (!current) return;
-    const all = this.allMissions();
-    const idx = all.findIndex(m => m.id === current.id);
-    this.currentIndex.set(idx);
-    this.prevMission.set(idx > 0 ? all[idx - 1] : null);
-    this.nextMission.set(idx < all.length - 1 ? all[idx + 1] : null);
+
+    const scenarioIds = this.scenarioMissionIds();
+    if (scenarioIds.length > 0 && current.scenarioId) {
+      const idx = scenarioIds.indexOf(current.id);
+      this.currentIndex.set(idx);
+      this.totalMissions.set(scenarioIds.length);
+      this.prevMission.set(idx > 0 ? { id: scenarioIds[idx - 1] } as Mission : null);
+      this.nextMission.set(idx < scenarioIds.length - 1 ? { id: scenarioIds[idx + 1] } as Mission : null);
+    } else {
+      const all = this.allMissions();
+      const idx = all.findIndex(m => m.id === current.id);
+      this.currentIndex.set(idx);
+      this.totalMissions.set(all.length);
+      this.prevMission.set(idx > 0 ? all[idx - 1] : null);
+      this.nextMission.set(idx < all.length - 1 ? all[idx + 1] : null);
+    }
   }
 
   private async refreshSchemaIfNeeded(): Promise<void> {
@@ -126,15 +151,25 @@ export class MissionComponent implements OnInit, OnDestroy {
 
   private loadMission(id: string): void {
     this.isLoading.set(true);
+    this.isLocked.set(false);
     this.missionService.getMissionById(id).subscribe({
       next: (mission) => {
         this.mission.set(mission);
         this.initializePglite(mission);
         this.updateNavigation();
+        if (mission.scenarioId) {
+          this.loadScenarioMissions(mission.scenarioId);
+        }
       },
-      error: () => {
+      error: (err) => {
         this.isLoading.set(false);
-        this.router.navigate(['/dashboard']);
+        if (err.status === 403 && err.error?.code === 'MISSION_LOCKED') {
+          this.isLocked.set(true);
+          this.lockedMessage.set(err.error?.message || 'This mission is locked.');
+          this.lockedScenarioId.set(err.error?.scenarioId || null);
+        } else {
+          this.router.navigate(['/dashboard']);
+        }
       }
     });
   }

@@ -725,4 +725,117 @@ Both fields are in Brazilian Portuguese. The `briefing` reads like a cinematic s
 - Difficulty mapped to SQL concepts: B → SELECT/filter, I → JOIN/ORDER, A → GROUP BY/aggregation, E → HAVING/subquery + DML
 - Briefings written in Brazilian Portuguese with vivid sensory details (time, weather, character reactions, objects)
 - Objectives intentionally clinical — stripped of narrative, focused on columns/tables/conditions
+
+---
+
+## 18. Scenario Mechanic + Code Review Fixes
+
+### Date: 2026-05-09
+
+### Overview
+Added ordered mission groupings (scenarios) with sequential unlocking and continuous narrative. 19 tasks created 21 files across the full stack. Followed by a senior dev code review that identified 10 issues (4 critical, 6 important, minor) — all fixed.
+
+### Design Principles
+- **No join table** — `scenario_id` + `order_index` directly on `missions` table, KISS
+- **No ScenarioLockService** — unlock check is inline in services (5 lines)
+- **Backend-enforced lock** — 403 with `{"code":"MISSION_LOCKED"}` for locked missions
+- **Sequential unlocking** — must complete mission N to unlock N+1 within a scenario
+- **Standalone missions unchanged** — scenario fields nullable, no impact on non-scenario missions
+
+### Database Changes
+
+**V1 migration** (`V1__init_schema.sql`):
+- New `scenarios` table: `id UUID PK`, `title VARCHAR(100)`, `description TEXT`, `theme VARCHAR(20)`, `created_at TIMESTAMP`
+- ALTER `missions`: added `scenario_id UUID FK → scenarios(id) ON DELETE CASCADE`, `order_index INTEGER`
+- `UNIQUE (scenario_id, order_index)` — prevents duplicate positions
+- `CHECK (scenario_id IS NULL OR order_index IS NOT NULL)` — prevents orphaned order_index
+
+**V2 migration** (`V2__seed_missions.sql`):
+- All 10 missions changed from `gen_random_uuid()` to fixed UUIDs (`000...001` to `000...010`)
+- Seed scenario "Noite no Blue Moon" (UUID `000...0a1`, theme CRIMINAL)
+- UPDATE missions 1-3 to belong to this scenario with `order_index` 1, 2, 3
+
+### Backend Architecture
+
+**New files (11):**
+- `domain/model/Scenario.java` — Domain entity (id, title, description, theme)
+- `domain/exception/MissionLockedException.java` — carries missionId, scenarioId, scenarioTitle
+- `domain/exception/ScenarioNotFoundException.java` — 404 for missing scenarios
+- `application/port/in/GetScenariosUseCase.java` — Use case interface
+- `application/port/out/ScenarioRepository.java` — Output port (findAll, findById)
+- `application/usecase/GetScenariosService.java` — Service implementation
+- `infrastructure/.../entity/ScenarioJpaEntity.java` — JPA entity
+- `infrastructure/.../repository/ScenarioJpaRepository.java` — Spring Data repo
+- `infrastructure/.../mapper/ScenarioMapper.java` — Entity → domain mapper
+- `infrastructure/.../ScenarioPersistenceAdapter.java` — Port adapter
+- `infrastructure/.../web/ScenarioController.java` — REST controller (`/api/scenarios`, `/api/scenarios/{id}`)
+- `infrastructure/.../web/dto/ScenarioDto.java` — ScenarioSummary, ScenarioMissionItem, ScenarioDetail
+
+**Modified files (12):**
+- `domain/model/Mission.java` — Added scenarioId, orderIndex, scenarioTitle fields
+- `MissionJpaEntity.java` — Added scenario_id, order_index columns + @ManyToOne to ScenarioJpaEntity
+- `MissionMapper.java` — Maps scenario fields
+- `MissionJpaRepository.java` — Added `findByScenarioIdOrderByOrderIndex`, `findByScenarioIdAndOrderIndex`, `countByScenarioId`
+- `MissionPersistenceAdapter.java` — Implements new repo methods + `isPreviousMissionCompleted` (now checks `completed` flag)
+- `MissionRepository.java` — Added `findByScenarioIdOrderByOrderIndex`, `isPreviousMissionCompleted`, `countByScenarioId`
+- `ProgressRepository.java` — Added `findCompletedMissionIdsByUserId` (batch query)
+- `ProgressJpaRepository.java` — Added `existsByUserIdAndMissionIdAndCompleted`
+- `ProgressPersistenceAdapter.java` — Implements batch progress fetch
+- `GetMissionsUseCase.java` — Added `userId` to `FindByIdQuery`, added `MissionDetail` record + `handleDetail()` method
+- `GetMissionsService.java` — Lock check (throws 403), computes `scenarioTotalMissions` via `countByScenarioId`
+- `ValidateMissionService.java` — Lock check before validating
+- `MissionController.java` — Passes userId, uses `handleDetail()` (no direct out-port dependency)
+- `MissionDto.java` — MissionResponse (+scenarioId, scenarioTitle, scenarioOrderIndex, scenarioTotalMissions), MissionSummary (+scenarioId), @JsonInclude(NON_NULL)
+- `GlobalExceptionHandler.java` — Handles MissionLockedException (403 with scenarioId), ScenarioNotFoundException (404)
+- `GetScenariosService.java` — Uses `ScenarioNotFoundException` instead of `NoSuchElementException`
+
+### Frontend Changes
+
+**New files (2 single-file components):**
+- `features/scenario/scenario-list.component.ts` — Grid of scenario cards with progress bars, theme badges
+- `features/scenario/scenario-detail.component.ts` — Narrative description, progress bar, vertical mission list with ✅/▶/🔒 status icons
+
+**Modified files (8):**
+- `core/models/mission.model.ts` — Added ScenarioDetail, ScenarioMissionItem, ScenarioSummary types; Mission/MissionSummary gain optional scenario fields
+- `core/mission.service.ts` — Added `getScenarios()`, `getScenario()`
+- `app.routes.ts` — Added `/scenarios` and `/scenarios/:id` with authGuard
+- `shared/header/header.component.html` — Added "Dashboard" and "Scenarios" nav links between logo and theme toggle
+- `features/dashboard/dashboard.component.html` — Scenario mission cards link to `/scenarios/:id`, show "Scenario" badge
+- `features/mission/mission.component.ts` — Handles 403 MISSION_LOCKED (lock screen with scenarioId for "Back to Scenario" navigation), loads scenario missions for prev/next
+- `features/mission/mission.component.html` — Lock screen (lock icon + message + "Back to Scenario" button), scenario breadcrumb in nav strip
+
+### Frontend Lock Flow
+1. User navigates to `/mission/:id` for a locked (non-completed, non-first) scenario mission
+2. Backend returns 403 with `{"code":"MISSION_LOCKED","scenarioId":"...","message":"..."}`
+3. Frontend catches the 403 → shows lock screen with lock icon, explanation message, and "Back to Scenario" button
+4. Scenario detail page prevents clicking LOCKED missions (cursor: not-allowed, click guard on `navigateToMission`)
+
+### Routes and Navigation
+| Path | Component | Guard | Description |
+|------|-----------|-------|-------------|
+| `/scenarios` | ScenarioListComponent | authGuard | Scenario catalog with progress |
+| `/scenarios/:id` | ScenarioDetailComponent | authGuard | Scenario detail + mission list |
+| `/mission/:id` | MissionComponent | authGuard | Lock screen if mission locked |
+
+### Code Review: 10 Issues Fixed
+
+#### Critical (4)
+1. **scenarioId missing from 403 response** — Added to `MissionLockedException` + `GlobalExceptionHandler` response body. Frontend now navigates to specific scenario, not just `/scenarios` list.
+2. **N+1 queries in ScenarioController** — Replaced per-mission `existsByUserIdAndMissionId()` with batch `findCompletedMissionIdsByUserId()` — single query per endpoint.
+3. **Loading all missions just for `.size()`** — Added `countByScenarioId()` to repository, used in `GetMissionsService` instead of loading full mission list.
+4. **Architecture violation (controller using out-port)** — Moved `scenarioTotalMissions` to `GetMissionsService.handleDetail()`, removed `MissionRepository` from `MissionController`.
+
+#### Important (4)
+5. **500 instead of 404 for missing scenario** — Created `ScenarioNotFoundException`, added to `GlobalExceptionHandler` 404 handler.
+6. **No null guard on `@AuthenticationPrincipal`** — Added `userId != null ? UUID.fromString(userId) : null` in `ScenarioController`.
+7. **Progress check ignoring `completed` flag** — Changed to `existsByUserIdAndMissionIdAndCompleted(..., true)` in `MissionPersistenceAdapter`.
+8. **`NoSuchElementException` instead of domain exception** — Replaced with `ScenarioNotFoundException`.
+
+#### Minor (2)
+9. **Null fields serializing for standalone missions** — Added `@JsonInclude(NON_NULL)` to `MissionResponse`/`MissionSummary`.
+10. **Redundant signal calls in template** — Changed `mission()` to `mission` alias inside `@if as` block.
+
+### Compilation
+- Backend compiles cleanly: `BUILD SUCCESS` (62 source files, JDK 25, Maven 3.9.12)
+- Pre-existing issue: `$JAVA_HOME` pointed to JDK 21, fixed by running `JAVA_HOME=/path/to/zulu25-jdk/current mvn compile`
 ```

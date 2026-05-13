@@ -18,66 +18,70 @@
       </div>
     </div>
   } @else if (result()!.rows.length === 0 && result()!.fields.length > 0) {
-    <div class="h-full overflow-auto p-4">
-      <div class="rounded-lg border border-border overflow-hidden">
-        <table class="w-full font-mono text-xs">
-          @if (showHeaders()) {
-            <thead>
-              <tr class="bg-muted/50">
+    <div class="h-full flex flex-col p-4">
+      <div class="flex-1 min-h-0 overflow-auto scrollable">
+        <div class="rounded-lg border border-border inline-block min-w-full">
+          <table class="w-full font-mono text-xs border-spacing-0">
+            @if (showHeaders()) {
+              <thead class="sticky top-0 z-10">
+                <tr>
+                  @for (col of getColumnNames(); track col) {
+                    <th class="text-left py-2 px-3 font-medium text-muted-foreground border-b border-border whitespace-nowrap bg-muted first:rounded-tl-lg last:rounded-tr-lg">
+                      {{ col }}
+                    </th>
+                  }
+                </tr>
+              </thead>
+            }
+            <tbody>
+              <tr>
                 @for (col of getColumnNames(); track col) {
-                  <th class="text-left py-2 px-3 font-medium text-muted-foreground border-b border-border whitespace-nowrap">
-                    {{ col }}
-                  </th>
+                  <td class="py-2 px-3 text-muted-foreground/50">---</td>
                 }
               </tr>
-            </thead>
-          }
-          <tbody>
-            <tr>
-              @for (col of getColumnNames(); track col) {
-                <td class="py-2 px-3 text-muted-foreground/50">---</td>
-              }
-            </tr>
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   } @else {
-    <div class="h-full overflow-auto p-4">
-      <div class="rounded-lg border border-border overflow-hidden">
-        <table class="w-full font-mono text-xs">
-          @if (showHeaders()) {
-            <thead>
-              <tr class="bg-muted/50">
-                @for (col of getColumnNames(); track col) {
-                  <th class="text-left py-2 px-3 font-medium text-muted-foreground border-b border-border whitespace-nowrap">
-                    {{ col }}
-                  </th>
-                }
-              </tr>
-            </thead>
-          }
-          <tbody>
-            @for (row of getRows(); track $index; let i = $index) {
-              <tr 
-                class="border-b border-border/50 last:border-0 hover:bg-muted/20 transition-colors"
-                [class.opacity-0]="i >= visibleRows()"
-                [class.animate-fade-in]="i < visibleRows()"
-                [style.animation-delay.ms]="i * 50"
-              >
-                @for (cell of row; track $index) {
-                  <td class="py-2 px-3">
-                    @if (cell === null) {
-                      <span class="text-muted-foreground/40">NULL</span>
-                    } @else {
-                      {{ cell }}
-                    }
-                  </td>
-                }
-              </tr>
+    <div class="h-full flex flex-col p-4">
+      <div class="flex-1 min-h-0 overflow-auto scrollable">
+        <div class="rounded-lg border border-border inline-block min-w-full">
+          <table class="w-full font-mono text-xs border-spacing-0">
+            @if (showHeaders()) {
+              <thead class="sticky top-0 z-10">
+                <tr>
+                  @for (col of getColumnNames(); track col) {
+                    <th class="text-left py-2 px-3 font-medium text-muted-foreground border-b border-border whitespace-nowrap bg-muted first:rounded-tl-lg last:rounded-tr-lg">
+                      {{ col }}
+                    </th>
+                  }
+                </tr>
+              </thead>
             }
-          </tbody>
-        </table>
+            <tbody>
+              @for (row of getRows(); track $index; let i = $index) {
+                <tr
+                  class="border-b border-border/50 last:border-0 hover:bg-muted/20 transition-colors"
+                  [class.opacity-0]="i >= visibleRows()"
+                  [class.animate-fade-in]="i < visibleRows()"
+                  [style.animation-delay.ms]="i * 50"
+                >
+                  @for (cell of row; track $index) {
+                    <td class="py-2 px-3">
+                      @if (cell === null) {
+                        <span class="text-muted-foreground/40">NULL</span>
+                      } @else {
+                        {{ cell }}
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   }

@@ -42,9 +42,13 @@ public class MissionController {
     }
 
     @GetMapping("/{missionId}")
-    public ResponseEntity<MissionDto.MissionResponse> findById(@PathVariable UUID missionId) {
-        Mission mission = getMissionsUseCase.handle(new GetMissionsUseCase.FindByIdQuery(missionId));
-        return ResponseEntity.ok(toResponse(mission));
+    public ResponseEntity<MissionDto.MissionResponse> findById(
+            @PathVariable UUID missionId,
+            @AuthenticationPrincipal String userId) {
+        UUID userUuid = userId != null ? UUID.fromString(userId) : null;
+        GetMissionsUseCase.MissionDetail detail = getMissionsUseCase.handleDetail(
+                new GetMissionsUseCase.FindByIdQuery(missionId, userUuid));
+        return ResponseEntity.ok(toResponse(detail));
     }
 
     @PostMapping("/{missionId}/validate")
@@ -62,14 +66,18 @@ public class MissionController {
     private MissionDto.MissionSummary toSummary(Mission m) {
         return new MissionDto.MissionSummary(
                 m.getId(), m.getTitle(), m.getTechniques(),
-                m.getXpReward(), m.isOrdered(), m.getTheme(), m.getDifficulty());
+                m.getXpReward(), m.isOrdered(), m.getTheme(), m.getDifficulty(),
+                m.getScenarioId());
     }
 
-    private MissionDto.MissionResponse toResponse(Mission m) {
+    private MissionDto.MissionResponse toResponse(GetMissionsUseCase.MissionDetail detail) {
+        Mission m = detail.mission();
         return new MissionDto.MissionResponse(
                 m.getId(), m.getTitle(), m.getBriefing(),
                 m.getObjective(), m.getHint(),
                 m.getDdlScript(), m.getDmlScript(), m.getTechniques(),
-                m.getXpReward(), m.isOrdered(), m.getTheme(), m.getDifficulty());
+                m.getXpReward(), m.isOrdered(), m.getTheme(), m.getDifficulty(),
+                m.getScenarioId(), m.getScenarioTitle(), m.getOrderIndex(),
+                detail.scenarioTotalMissions());
     }
 }
