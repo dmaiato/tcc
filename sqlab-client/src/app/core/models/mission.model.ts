@@ -44,6 +44,9 @@ export interface MissionProgress {
   missionId: string;
   completed: boolean;
   completedAt: string | null;
+  missionTitle: string;
+  scenarioId?: string;
+  scenarioTitle?: string;
 }
 
 export interface ScenarioDetail {

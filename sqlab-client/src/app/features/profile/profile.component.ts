@@ -2,6 +2,7 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ProfileService, ProfileData } from '../../core/profile.service';
+import { MissionProgress } from '../../core/models/mission.model';
 
 @Component({
   selector: 'app-profile',
@@ -54,6 +55,10 @@ export class ProfileComponent {
       return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     }
     return String(dateStr);
+  }
+
+  getMissionTitle(m: MissionProgress): string {
+    return m.missionTitle || `Mission ${m.missionId.slice(0, 8)}`;
   }
 
   constructor() {
