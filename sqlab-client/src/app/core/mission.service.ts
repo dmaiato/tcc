@@ -21,8 +21,8 @@ export class MissionService {
     return this.api.get<Mission>(`/missions/${id}`);
   }
 
-  validateMission(id: string, tuples: Record<string, unknown>[]): Observable<{ correct: boolean }> {
-    return this.api.post<{ correct: boolean }>(`/missions/${id}/validate`, { tuples });
+  validateMission(id: string, tuples: Record<string, unknown>[]): Observable<{ correct: boolean; feedback?: string }> {
+    return this.api.post<{ correct: boolean; feedback?: string }>(`/missions/${id}/validate`, { tuples });
   }
 
   getUserProgress(): Observable<MissionProgress[]> {

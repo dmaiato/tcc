@@ -44,5 +44,6 @@ public class MissionDto {
 
     public record ValidationRequest(@NotNull List<Map<String, Object>> tuples) {}
 
-    public record ValidationResponse(boolean correct) {}
+    @JsonInclude(Include.NON_NULL)
+    public record ValidationResponse(boolean correct, String feedback) {}
 }

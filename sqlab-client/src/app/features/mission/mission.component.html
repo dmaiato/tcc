@@ -63,6 +63,23 @@
 
       <app-action-bar [query]="query()" [running]="isRunning()" [restoring]="isRestoring()" [verifying]="isValidating()" [verifyResult]="validationResult()" [dbModified]="isDbModified()" (restore)="resetDatabase()" (run)="executeQuery()" (verify)="submitSolution()" />
 
+      @if (validationFeedback(); as feedback) {
+        <div class="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 animate-fade-in">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-destructive shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <p class="font-mono text-xs text-foreground flex-1">{{ feedback }}</p>
+          <button (click)="dismissFeedback()" type="button" class="text-muted-foreground hover:text-foreground transition-colors shrink-0" aria-label="Dismiss">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      }
+
       <app-results-pane [result]="queryResultWithError" [runId]="runId()" />
     </div>
   </div>

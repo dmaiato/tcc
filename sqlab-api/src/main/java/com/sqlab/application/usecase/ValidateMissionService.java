@@ -8,6 +8,7 @@ import com.sqlab.domain.exception.MissionLockedException;
 import com.sqlab.domain.exception.MissionNotFoundException;
 import com.sqlab.domain.model.Mission;
 import com.sqlab.domain.model.Progress;
+import com.sqlab.domain.model.ValidationResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +28,7 @@ public class ValidateMissionService implements ValidateMissionUseCase {
     }
 
     @Override
-    public boolean handle(Command command) {
+    public ValidationResult handle(Command command) {
         Mission mission = missionRepository.findById(command.missionId())
                 .orElseThrow(() -> new MissionNotFoundException(command.missionId()));
 
@@ -41,9 +42,9 @@ public class ValidateMissionService implements ValidateMissionUseCase {
             }
         }
 
-        boolean correct = mission.validate(command.submittedTuples());
+        ValidationResult result = mission.validate(command.submittedTuples());
 
-        if (correct && !progressRepository.existsByUserIdAndMissionId(command.userId(), command.missionId())) {
+        if (result.correct() && !progressRepository.existsByUserIdAndMissionId(command.userId(), command.missionId())) {
             progressRepository.save(Progress.complete(command.userId(), command.missionId()));
 
             userRepository.findById(command.userId()).ifPresent(user -> {
@@ -52,6 +53,6 @@ public class ValidateMissionService implements ValidateMissionUseCase {
             });
         }
 
-        return correct;
+        return result;
     }
 }

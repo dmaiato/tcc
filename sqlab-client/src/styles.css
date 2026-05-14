@@ -115,16 +115,16 @@
 
 @layer utilities {
   .glow-success {
-    box-shadow: 0 0 20px var(--glow-success-1), 0 0 60px var(--glow-success-2);
+    box-shadow: 0 0 12px var(--glow-success-1), 0 0 30px var(--glow-success-2);
   }
   .glow-error {
-    box-shadow: 0 0 20px var(--glow-error-1), 0 0 60px var(--glow-error-2);
+    box-shadow: 0 0 12px var(--glow-error-1), 0 0 30px var(--glow-error-2);
   }
   .glow-primary {
-    box-shadow: 0 0 15px var(--glow-primary);
+    box-shadow: 0 0 10px var(--glow-primary);
   }
   .glow-accent {
-    box-shadow: 0 0 15px var(--glow-accent);
+    box-shadow: 0 0 10px var(--glow-accent);
   }
   .gradient-mesh {
     background:

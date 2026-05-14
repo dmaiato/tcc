@@ -10,7 +10,7 @@ import { ToastService, Toast } from './toast.service';
   template: `
     <div class="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
       @for (toast of toastService.toasts(); track toast.id) {
-        <div class="flex items-center justify-between gap-3 px-4 py-3 rounded-lg shadow-lg border bg-muted/90 border-border animate-in slide-in-from-right min-w-[280px]">
+        <div class="flex items-center justify-between gap-3 px-4 py-3 rounded-lg shadow-lg border bg-card animate-in slide-in-from-right min-w-[280px]" [class.glow-success]="toast.type === 'success'" [class.glow-error]="toast.type === 'error'" [class.glow-primary]="toast.type === 'info'" [class.border-primary/50]="toast.type === 'success'" [class.border-destructive/50]="toast.type === 'error'" [class.border-border]="toast.type === 'info'">
           <div class="flex items-center gap-3">
             @switch (toast.type) {
               @case ('success') {

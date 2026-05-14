@@ -5,6 +5,7 @@ import com.sqlab.application.port.in.ValidateMissionUseCase;
 import com.sqlab.domain.model.DifficultyLevel;
 import com.sqlab.domain.model.Mission;
 import com.sqlab.domain.model.Theme;
+import com.sqlab.domain.model.ValidationResult;
 import com.sqlab.infrastructure.adapter.in.web.dto.MissionDto;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -57,10 +58,10 @@ public class MissionController {
             @AuthenticationPrincipal String userId,
             @Valid @RequestBody MissionDto.ValidationRequest request) {
 
-        boolean correct = validateMissionUseCase.handle(
+        ValidationResult result = validateMissionUseCase.handle(
                 new ValidateMissionUseCase.Command(UUID.fromString(userId), missionId, request.tuples())
         );
-        return ResponseEntity.ok(new MissionDto.ValidationResponse(correct));
+        return ResponseEntity.ok(new MissionDto.ValidationResponse(result.correct(), result.feedback()));
     }
 
     private MissionDto.MissionSummary toSummary(Mission m) {

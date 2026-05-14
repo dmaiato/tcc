@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -28,9 +28,13 @@ export class MissionComponent implements OnInit, OnDestroy {
   mission = signal<Mission | null>(null);
   isLoading = signal(true);
   isInitializing = signal(false);
-  validationResult = signal<{ correct: boolean } | null>(null);
+  validationResult = signal<{ correct: boolean; feedback?: string } | null>(null);
   isValidating = signal(false);
   submitError = signal<string | null>(null);
+  validationFeedback = computed(() => {
+    const r = this.validationResult();
+    return r && !r.correct && r.feedback ? r.feedback : null;
+  });
 
   query = signal('');
   queryResult = signal<QueryResult | null>(null);
@@ -287,6 +291,8 @@ export class MissionComponent implements OnInit, OnDestroy {
         this.validationResult.set(response);
         if (response.correct) {
           this.toastService.success('Mission complete!');
+        } else if (response.feedback) {
+          this.toastService.error(response.feedback);
         } else {
           this.toastService.error('Incorrect result. Try again.');
         }
@@ -298,6 +304,10 @@ export class MissionComponent implements OnInit, OnDestroy {
       },
       complete: () => this.isValidating.set(false)
     });
+  }
+
+  dismissFeedback(): void {
+    this.validationResult.set(null);
   }
 
   getThemeLabel(theme: Theme): string {

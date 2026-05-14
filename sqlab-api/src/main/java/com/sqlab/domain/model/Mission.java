@@ -27,7 +27,7 @@ public class Mission {
     private final Integer orderIndex;
     private final String scenarioTitle;
 
-    public boolean validate(List<java.util.Map<String, Object>> submitted) {
+    public ValidationResult validate(List<java.util.Map<String, Object>> submitted) {
         return ordered
                 ? expectedResult.matchesOrdered(submitted)
                 : expectedResult.matchesUnordered(submitted);
