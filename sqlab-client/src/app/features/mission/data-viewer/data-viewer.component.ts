@@ -1,11 +1,18 @@
 import { Component, Input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgIconsModule } from '@ng-icons/core';
-import { lucideChevronRight, lucideTable2, lucideHash, lucideType, lucideKey } from '@ng-icons/lucide';
+import { lucideChevronRight, lucideTable2, lucideHash, lucideType, lucideKey, lucideToggleLeft, lucideCalendar, lucideFingerprint, lucideCode, lucideHelpCircle } from '@ng-icons/lucide';
+
+export interface ColumnInfo {
+  name: string;
+  type: string;
+  isPrimaryKey: boolean;
+  isForeignKey: boolean;
+}
 
 interface TableSchema {
   name: string;
-  columns: { name: string; type: string }[];
+  columns: ColumnInfo[];
   sampleData?: Record<string, unknown>[];
 }
 
@@ -28,11 +35,23 @@ export class DataViewerComponent {
     return this.expandedTable() === tableName;
   }
 
-  getTypeIcon(type: string): string {
-    const t = type.toUpperCase();
-    if (t.includes('INT') || t.includes('DECIMAL')) return 'hash';
-    if (t.includes('TEXT') || t.includes('VARCHAR')) return 'type';
-    return 'key';
+  getTypeIcon(col: ColumnInfo): string {
+    if (col.isPrimaryKey || col.isForeignKey) return 'key';
+    const t = col.type;
+    if (t.includes('INT') || t.includes('DECIMAL') || t.includes('NUMERIC')
+        || t.includes('REAL') || t.includes('MONEY') || t.includes('FLOAT'))
+      return 'hash';
+    if (t.includes('TEXT') || t.includes('VARCHAR') || t.includes('CHAR'))
+      return 'type';
+    if (t.includes('BOOL'))
+      return 'toggle-left';
+    if (t.includes('DATE') || t.includes('TIMESTAMP') || t.includes('TIME'))
+      return 'calendar';
+    if (t.includes('UUID'))
+      return 'fingerprint';
+    if (t.includes('JSON'))
+      return 'code';
+    return 'help-circle';
   }
 
   getColumns(table: TableSchema): string {

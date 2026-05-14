@@ -117,29 +117,59 @@ export class PgliteService {
            trimmed.startsWith('ALTER');
   }
 
-  async getSchema(): Promise<{ name: string; columns: { name: string; type: string }[] }[]> {
+  async getSchema(): Promise<{ name: string; columns: { name: string; type: string; isPrimaryKey: boolean; isForeignKey: boolean }[] }[]> {
     if (!this.db || !this.isReady()) {
       return [];
     }
 
     try {
-      const result = await this.db.query(`
+      const colResult = await this.db.query(`
         SELECT table_name, column_name, data_type, is_nullable
         FROM information_schema.columns
         WHERE table_schema = 'public'
         ORDER BY table_name, ordinal_position
       `);
 
-      const tableMap = new Map<string, { name: string; columns: { name: string; type: string }[] }>();
+      const pkResult = await this.db.query(`
+        SELECT tc.table_name, kcu.column_name
+        FROM information_schema.table_constraints tc
+        JOIN information_schema.key_column_usage kcu
+          ON tc.constraint_name = kcu.constraint_name
+          AND tc.table_schema = kcu.table_schema
+        WHERE tc.table_schema = 'public'
+          AND tc.constraint_type = 'PRIMARY KEY'
+      `);
 
-      for (const row of result.rows as Record<string, unknown>[]) {
+      const fkResult = await this.db.query(`
+        SELECT tc.table_name, kcu.column_name
+        FROM information_schema.table_constraints tc
+        JOIN information_schema.key_column_usage kcu
+          ON tc.constraint_name = kcu.constraint_name
+          AND tc.table_schema = kcu.table_schema
+        WHERE tc.table_schema = 'public'
+          AND tc.constraint_type = 'FOREIGN KEY'
+      `);
+
+      const pkSet = new Set((pkResult.rows as Record<string, unknown>[]).map(
+        r => `${r['table_name']}.${r['column_name']}`
+      ));
+      const fkSet = new Set((fkResult.rows as Record<string, unknown>[]).map(
+        r => `${r['table_name']}.${r['column_name']}`
+      ));
+
+      const tableMap = new Map<string, { name: string; columns: { name: string; type: string; isPrimaryKey: boolean; isForeignKey: boolean }[] }>();
+
+      for (const row of colResult.rows as Record<string, unknown>[]) {
         const tableName = row['table_name'] as string;
+        const columnName = row['column_name'] as string;
         if (!tableMap.has(tableName)) {
           tableMap.set(tableName, { name: tableName, columns: [] });
         }
         tableMap.get(tableName)!.columns.push({
-          name: row['column_name'] as string,
-          type: (row['data_type'] as string).toUpperCase()
+          name: columnName,
+          type: (row['data_type'] as string).toUpperCase(),
+          isPrimaryKey: pkSet.has(`${tableName}.${columnName}`),
+          isForeignKey: fkSet.has(`${tableName}.${columnName}`)
         });
       }
 

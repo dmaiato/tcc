@@ -120,11 +120,11 @@ export class DashboardComponent {
 
   getThemeLabel(theme: Theme): string {
     const labels: Record<Theme, string> = {
-      'ASTRONOMY': 'Astronomy',
-      'CYBERSECURITY': 'Cybersecurity',
-      'CRIMINAL': 'Criminal',
-      'FINANCE': 'Finance',
-      'BIOLOGY': 'Biology'
+      'ASTRONOMY': '🔭 Astronomy',
+      'CYBERSECURITY': '🔒 Cybersecurity',
+      'CRIMINAL': '🔍 Criminal',
+      'FINANCE': '💰 Finance',
+      'BIOLOGY': '🧬 Biology'
     };
     return labels[theme] || theme;
   }

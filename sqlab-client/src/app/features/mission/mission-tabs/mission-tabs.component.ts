@@ -1,11 +1,11 @@
 import { Component, Input, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DataViewerComponent } from '../data-viewer/data-viewer.component';
+import { DataViewerComponent, ColumnInfo } from '../data-viewer/data-viewer.component';
 import { NgIconsModule } from '@ng-icons/core';
 
 interface MissionSchema {
   name: string;
-  columns: { name: string; type: string }[];
+  columns: ColumnInfo[];
   sampleData?: Record<string, unknown>[];
 }
 
@@ -34,7 +34,7 @@ export class MissionTabsComponent {
   missionSignal = signal<Mission | null>(null);
   activeTab = signal<'mission' | 'schema'>('mission');
   showHint = signal(false);
-  schemaInput = signal<{ name: string; columns: { name: string; type: string }[] }[] | null>(null);
+  schemaInput = signal<MissionSchema[] | null>(null);
 
   derivedSchema = computed(() => {
     const dynamicSchema = this.schemaInput();
@@ -60,7 +60,7 @@ export class MissionTabsComponent {
     this.missionSignal.set(value);
   }
 
-  @Input() set schema(value: { name: string; columns: { name: string; type: string }[] }[] | null) {
+  @Input() set schema(value: MissionSchema[] | null) {
     this.schemaInput.set(value);
   }
 
@@ -106,15 +106,18 @@ export class MissionTabsComponent {
     while ((match = createTableRegex.exec(ddl)) !== null) {
       const tableName = match[1];
       const columnsStr = match[2];
-      const columns: { name: string; type: string }[] = [];
+      const columns: ColumnInfo[] = [];
 
       const columnRegex = /["']?(\w+)["']?\s+([A-Z][A-Z0-9_()]+(?:\([^)]+\))?)\s*(?:NOT\s+NULL|NULL|PRIMARY\s+KEY|REFERENCES|UNIQUE|CONSTRAINT|$)/gi;
       let colMatch: RegExpExecArray | null;
 
       while ((colMatch = columnRegex.exec(columnsStr)) !== null) {
+        const fullMatch = colMatch[0].toUpperCase();
         columns.push({
           name: colMatch[1],
-          type: colMatch[2].toUpperCase()
+          type: colMatch[2].toUpperCase(),
+          isPrimaryKey: fullMatch.includes('PRIMARY KEY'),
+          isForeignKey: fullMatch.includes('REFERENCES')
         });
       }
 

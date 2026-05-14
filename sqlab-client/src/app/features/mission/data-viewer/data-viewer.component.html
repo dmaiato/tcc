@@ -29,12 +29,22 @@
               @for (col of table.columns; track col.name) {
                 <div class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted/30">
                   <span class="text-muted-foreground">
-                    @if (getTypeIcon(col.type) === 'hash') {
-                      <ng-icon name="lucideHash" class="w-3 h-3" />
-                    } @else if (getTypeIcon(col.type) === 'type') {
-                      <ng-icon name="lucideType" class="w-3 h-3" />
-                    } @else {
+                    @if (getTypeIcon(col) === 'key') {
                       <ng-icon name="lucideKey" class="w-3 h-3" />
+                    } @else if (getTypeIcon(col) === 'hash') {
+                      <ng-icon name="lucideHash" class="w-3 h-3" />
+                    } @else if (getTypeIcon(col) === 'type') {
+                      <ng-icon name="lucideType" class="w-3 h-3" />
+                    } @else if (getTypeIcon(col) === 'toggle-left') {
+                      <ng-icon name="lucideToggleLeft" class="w-3 h-3" />
+                    } @else if (getTypeIcon(col) === 'calendar') {
+                      <ng-icon name="lucideCalendar" class="w-3 h-3" />
+                    } @else if (getTypeIcon(col) === 'fingerprint') {
+                      <ng-icon name="lucideFingerprint" class="w-3 h-3" />
+                    } @else if (getTypeIcon(col) === 'code') {
+                      <ng-icon name="lucideCode" class="w-3 h-3" />
+                    } @else {
+                      <ng-icon name="lucideHelpCircle" class="w-3 h-3" />
                     }
                   </span>
                   <span class="font-mono text-xs font-medium">{{ col.name }}</span>

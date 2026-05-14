@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -11,6 +11,7 @@ import { MissionTabsComponent } from './mission-tabs/mission-tabs.component';
 import { SqlEditorComponent } from './sql-editor/sql-editor.component';
 import { ActionBarComponent } from './action-bar/action-bar.component';
 import { ResultsPaneComponent } from './results-pane/results-pane.component';
+import { ColumnInfo } from './data-viewer/data-viewer.component';
 
 @Component({
   selector: 'app-mission',
@@ -49,7 +50,7 @@ export class MissionComponent implements OnInit, OnDestroy {
   lockedMessage = signal('');
   lockedScenarioId = signal<string | null>(null);
 
-  schema = signal<{ name: string; columns: { name: string; type: string }[] }[]>([]);
+  schema = signal<{ name: string; columns: ColumnInfo[] }[]>([]);
 
   ngOnInit(): void {
     this.loadMissions();
@@ -65,6 +66,15 @@ export class MissionComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.pgliteService.disposeSession();
+  }
+
+  @HostListener('document:keydown.control.enter', ['$event'])
+  @HostListener('document:keydown.meta.enter', ['$event'])
+  onGlobalCtrlEnter(event: Event): void {
+    if (!this.isRunning() && !this.isRestoring() && this.query().trim()) {
+      event.preventDefault();
+      this.executeQuery();
+    }
   }
 
   private loadMissions(): void {

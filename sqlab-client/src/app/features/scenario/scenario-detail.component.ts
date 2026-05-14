@@ -45,12 +45,12 @@ import { ScenarioDetail, ScenarioMissionItem, Theme, DifficultyLevel } from '../
                   {{ s.userProgress.completedCount }} of {{ s.userProgress.totalCount }} missions completed
                 </span>
                 <span class="font-mono text-xs text-primary font-semibold">
-                  {{ s.userProgress.totalCount > 0 ? (s.userProgress.completedCount / s.userProgress.totalCount * 100) : 0 }}%
+                  {{ getProgressPercent(s.userProgress.completedCount, s.userProgress.totalCount) }}%
                 </span>
               </div>
               <div class="flex-1 h-2 rounded-full bg-muted overflow-hidden">
                 <div class="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
-                     [style.width.%]="s.userProgress.totalCount > 0 ? (s.userProgress.completedCount / s.userProgress.totalCount * 100) : 0"></div>
+                     [style.width.%]="getProgressPercent(s.userProgress.completedCount, s.userProgress.totalCount)"></div>
               </div>
             </div>
 
@@ -157,6 +157,11 @@ export class ScenarioDetailComponent implements OnInit {
     if (mission.status !== 'LOCKED') {
       this.router.navigate(['/mission', mission.id]);
     }
+  }
+
+  getProgressPercent(completed: number, total: number): number {
+    if (total <= 0) return 0;
+    return Math.round((completed / total) * 100);
   }
 
   getThemeLabel(theme: Theme): string {

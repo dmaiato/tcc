@@ -44,7 +44,7 @@ import { ScenarioSummary, Theme } from '../../core/models/mission.model';
                   <div class="space-y-2">
                     <div class="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
                       <div class="h-full rounded-full bg-gradient-to-r from-primary to-accent"
-                           [style.width.%]="scenario.totalMissions > 0 ? (scenario.completedMissions / scenario.totalMissions * 100) : 0"></div>
+                           [style.width.%]="getProgressPercent(scenario.completedMissions, scenario.totalMissions)"></div>
                     </div>
                     <p class="font-mono text-[10px] text-muted-foreground">{{ scenario.completedMissions }} / {{ scenario.totalMissions }} completed</p>
                   </div>
@@ -79,5 +79,10 @@ export class ScenarioListComponent implements OnInit {
       'CRIMINAL': 'Criminal', 'FINANCE': 'Finance', 'BIOLOGY': 'Biology'
     };
     return labels[theme] || theme;
+  }
+
+  getProgressPercent(completed: number, total: number): number {
+    if (total <= 0) return 0;
+    return Math.round((completed / total) * 100);
   }
 }
