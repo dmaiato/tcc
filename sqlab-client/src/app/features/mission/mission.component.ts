@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -31,11 +31,6 @@ export class MissionComponent implements OnInit, OnDestroy {
   validationResult = signal<{ correct: boolean; feedback?: string } | null>(null);
   isValidating = signal(false);
   submitError = signal<string | null>(null);
-  validationFeedback = computed(() => {
-    const r = this.validationResult();
-    return r && !r.correct && r.feedback ? r.feedback : null;
-  });
-
   query = signal('');
   queryResult = signal<QueryResult | null>(null);
   queryError = signal<string | null>(null);
@@ -304,10 +299,6 @@ export class MissionComponent implements OnInit, OnDestroy {
       },
       complete: () => this.isValidating.set(false)
     });
-  }
-
-  dismissFeedback(): void {
-    this.validationResult.set(null);
   }
 
   getThemeLabel(theme: Theme): string {
