@@ -20,9 +20,9 @@ public class AuthDto {
 
     public record TokenResponse(String token) {}
 
-    public record AuthResponseWithUser(String token, UUID id, String username, String email) {
+    public record AuthResponseWithUser(String token, UUID id, String username, String email, String role) {
         public AuthResponseWithUser(String token) {
-            this(token, null, null, null);
+            this(token, null, null, null, null);
         }
     }
 }

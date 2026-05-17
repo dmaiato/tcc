@@ -29,4 +29,24 @@ public class MissionMapper {
                 scenarioTitle
         );
     }
+
+    public MissionJpaEntity toJpa(Mission domain) {
+        return MissionJpaEntity.builder()
+                .id(domain.getId())
+                .title(domain.getTitle())
+                .briefing(domain.getBriefing())
+                .objective(domain.getObjective())
+                .hint(domain.getHint())
+                .ddlScript(domain.getDdlScript())
+                .dmlScript(domain.getDmlScript())
+                .techniques(domain.getTechniques())
+                .xpReward(domain.getXpReward())
+                .expectedResult(domain.getExpectedResult().rows())
+                .ordered(domain.isOrdered())
+                .theme(domain.getTheme())
+                .difficulty(domain.getDifficulty())
+                .scenarioId(domain.getScenarioId())
+                .orderIndex(domain.getOrderIndex())
+                .build();
+    }
 }

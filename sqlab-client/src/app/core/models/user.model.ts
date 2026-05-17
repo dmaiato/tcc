@@ -1,19 +1,21 @@
 export interface User {
-  id: number;
+  id: string;
   email: string;
   username: string;
   createdAt: string;
   xp: number;
   level: number;
+  role: 'USER' | 'ADMIN';
 }
 
 export interface UserResponse {
-  id: number;
+  id: string;
   email: string;
   username: string;
   createdAt: string;
   xp: number;
   level: number;
+  role: string;
 }
 
 export interface SkillsResponse {

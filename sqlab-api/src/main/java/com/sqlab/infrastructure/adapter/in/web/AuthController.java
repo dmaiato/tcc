@@ -30,18 +30,18 @@ public class AuthController {
         User user = registerUserUseCase.handle(
                 new RegisterUserUseCase.Command(request.username(), request.email(), request.password())
         );
-        String token = authenticateUserUseCase.handle(
+        AuthenticateUserUseCase.AuthResult auth = authenticateUserUseCase.handle(
                 new AuthenticateUserUseCase.Command(request.email(), request.password())
         );
-        return ResponseEntity.ok(new AuthDto.AuthResponseWithUser(token, user.getId(), user.getUsername(), user.getEmail()));
+        return ResponseEntity.ok(new AuthDto.AuthResponseWithUser(auth.token(), user.getId(), user.getUsername(), user.getEmail(), auth.role().name()));
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthDto.AuthResponseWithUser> login(@Valid @RequestBody AuthDto.LoginRequest request) {
-        String token = authenticateUserUseCase.handle(
+        AuthenticateUserUseCase.AuthResult auth = authenticateUserUseCase.handle(
                 new AuthenticateUserUseCase.Command(request.email(), request.password())
         );
         var user = userRepository.findByEmail(request.email()).orElseThrow();
-        return ResponseEntity.ok(new AuthDto.AuthResponseWithUser(token, user.getId(), user.getUsername(), user.getEmail()));
+        return ResponseEntity.ok(new AuthDto.AuthResponseWithUser(auth.token(), user.getId(), user.getUsername(), user.getEmail(), auth.role().name()));
     }
 }

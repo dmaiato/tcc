@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.sqlab.domain.model.DifficultyLevel;
 import com.sqlab.domain.model.Theme;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
@@ -11,6 +13,38 @@ import java.util.Map;
 import java.util.UUID;
 
 public class MissionDto {
+
+    public record CreateMissionRequest(
+            @NotBlank String title,
+            @NotBlank String briefing,
+            @NotBlank String objective,
+            String hint,
+            @NotBlank String ddlScript,
+            String dmlScript,
+            List<String> techniques,
+            int xpReward,
+            boolean ordered,
+            @NotNull Theme theme,
+            @NotNull DifficultyLevel difficulty,
+            @NotEmpty List<Map<String, Object>> expectedResult,
+            UUID scenarioId,
+            Integer orderIndex) {}
+
+    public record UpdateMissionRequest(
+            @NotBlank String title,
+            @NotBlank String briefing,
+            @NotBlank String objective,
+            String hint,
+            @NotBlank String ddlScript,
+            String dmlScript,
+            List<String> techniques,
+            int xpReward,
+            boolean ordered,
+            @NotNull Theme theme,
+            @NotNull DifficultyLevel difficulty,
+            @NotEmpty List<Map<String, Object>> expectedResult,
+            UUID scenarioId,
+            Integer orderIndex) {}
 
     @JsonInclude(Include.NON_NULL)
     public record MissionResponse(
@@ -29,12 +63,14 @@ public class MissionDto {
             UUID scenarioId,
             String scenarioTitle,
             Integer scenarioOrderIndex,
-            Integer scenarioTotalMissions) {}
+            Integer scenarioTotalMissions,
+            List<Map<String, Object>> expectedResult) {}
 
     @JsonInclude(Include.NON_NULL)
     public record MissionSummary(
             UUID id,
             String title,
+            String scenarioTitle,
             List<String> techniques,
             int xpReward,
             boolean ordered,

@@ -1,0 +1,222 @@
+<div class="p-6 overflow-y-auto h-full">
+  <div class="max-w-5xl mx-auto">
+    <div class="overflow-hidden mb-6">
+      <div class="rounded-xl border-2 border-primary/30 bg-card p-5 space-y-3">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-primary"><ng-icon name="lucideSparkles" class="w-4 h-4" /></span>
+          <h2 class="font-sans text-sm font-semibold text-foreground">{{ formTitleText }}</h2>
+        </div>
+
+        <!-- Section: Details -->
+        <div class="border border-border rounded-lg overflow-hidden">
+          <button (click)="toggleSection('details')" type="button"
+            class="w-full flex items-center justify-between px-4 py-3 bg-muted/20 hover:bg-muted/40 transition-colors">
+            <span class="flex items-center gap-2 font-mono text-xs text-foreground">
+              <span class="text-primary"><ng-icon name="lucideSparkles" class="w-3.5 h-3.5" /></span>
+              Details
+            </span>
+            <span class="text-muted-foreground">
+              @if (expandedSection().has('details')) {
+                <ng-icon name="lucideChevronUp" class="w-3.5 h-3.5" />
+              } @else {
+                <ng-icon name="lucideChevronDown" class="w-3.5 h-3.5" />
+              }
+            </span>
+          </button>
+          @if (expandedSection().has('details')) {
+            <div class="p-4 space-y-3">
+              <div>
+                <label class="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">Title *</label>
+                <input [value]="formTitle()" (input)="formTitle.set($any($event.target).value)" placeholder="e.g., The Lost Archives"
+                  class="w-full font-mono text-xs bg-muted/30 border border-border rounded-md px-3 py-2 text-foreground placeholder:text-muted-foreground/50 focus:border-primary outline-none" />
+              </div>
+              <div>
+                <label class="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">Briefing *</label>
+                <textarea [value]="formBriefing()" (input)="formBriefing.set($any($event.target).value)" placeholder="Narrative context"
+                  rows="3" class="w-full font-mono text-xs bg-muted/30 border border-border rounded-md px-3 py-2 text-foreground placeholder:text-muted-foreground/50 focus:border-primary outline-none resize-y min-h-[66px]"></textarea>
+              </div>
+              <div>
+                <label class="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">Objective *</label>
+                <textarea [value]="formObjective()" (input)="formObjective.set($any($event.target).value)" placeholder="Explicit SQL task description"
+                  rows="4" class="w-full font-mono text-xs bg-muted/30 border border-border rounded-md px-3 py-2 text-foreground placeholder:text-muted-foreground/50 focus:border-primary outline-none resize-y min-h-[82px]"></textarea>
+              </div>
+              <div>
+                <label class="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">Hint</label>
+                <input [value]="formHint()" (input)="formHint.set($any($event.target).value)" placeholder="SQL command hint (optional)"
+                  class="w-full font-mono text-xs bg-muted/30 border border-border rounded-md px-3 py-2 text-foreground placeholder:text-muted-foreground/50 focus:border-primary outline-none" />
+              </div>
+              <div class="grid grid-cols-3 gap-3">
+                <div>
+                  <label class="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">Difficulty</label>
+                  <select [value]="formDifficulty()" (change)="formDifficulty.set($any($event.target).value)"
+                    class="w-full font-mono text-xs bg-muted/30 border border-border rounded-md px-3 py-2 text-foreground focus:border-primary outline-none">
+                    @for (d of difficulties; track d) {
+                      <option [value]="d" class="bg-card text-foreground">{{ d }}</option>
+                    }
+                  </select>
+                </div>
+                <div>
+                  <label class="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">Theme</label>
+                  <select [value]="formTheme()" (change)="formTheme.set($any($event.target).value)"
+                    class="w-full font-mono text-xs bg-muted/30 border border-border rounded-md px-3 py-2 text-foreground focus:border-primary outline-none">
+                    @for (t of themes; track t) {
+                      <option [value]="t" class="bg-card text-foreground">{{ t }}</option>
+                    }
+                  </select>
+                </div>
+                <div>
+                  <label class="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">XP Reward</label>
+                  <input [value]="formXpReward()" (input)="onXpInput($any($event.target).value)" type="number" min="0"
+                    class="w-full font-mono text-xs bg-muted/30 border border-border rounded-md px-3 py-2 text-foreground focus:border-primary outline-none" />
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <input [checked]="formOrdered()" (change)="formOrdered.set($any($event.target).checked)" type="checkbox" id="ordered" class="rounded border-border bg-muted/30 text-primary" />
+                <label for="ordered" class="font-mono text-xs text-muted-foreground">Order matters (ORDER BY)</label>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Section: Scripts -->
+        <div class="border border-border rounded-lg overflow-hidden">
+          <button (click)="toggleSection('scripts')" type="button"
+            class="w-full flex items-center justify-between px-4 py-3 bg-muted/20 hover:bg-muted/40 transition-colors">
+            <span class="flex items-center gap-2 font-mono text-xs text-foreground">
+              <span class="text-accent"><ng-icon name="lucideDatabase" class="w-3.5 h-3.5" /></span>
+              Scripts
+            </span>
+            <span class="text-muted-foreground">
+              @if (expandedSection().has('scripts')) {
+                <ng-icon name="lucideChevronUp" class="w-3.5 h-3.5" />
+              } @else {
+                <ng-icon name="lucideChevronDown" class="w-3.5 h-3.5" />
+              }
+            </span>
+          </button>
+          @if (expandedSection().has('scripts')) {
+            <div class="p-4 space-y-3">
+              <div>
+                <label class="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">DDL Script *</label>
+                <div class="relative">
+                  <textarea [value]="formDdlScript()" (input)="formDdlScript.set($any($event.target).value)" placeholder="CREATE TABLE statements"
+                    rows="12" class="w-full font-mono text-xs bg-muted/30 border border-border rounded-md px-3 py-2 text-foreground placeholder:text-muted-foreground/50 focus:border-primary outline-none resize-y min-h-[210px]"></textarea>
+                  <button (click)="openDialog('ddl')" type="button"
+                    class="absolute top-2 right-2 px-2 py-0.5 rounded bg-card border-2 border-border hover:bg-primary/10 hover:border-primary/40 hover:text-primary text-muted-foreground transition-colors">
+                    <ng-icon name="lucideTerminal" class="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label class="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">DML Script</label>
+                <div class="relative">
+                  <textarea [value]="formDmlScript()" (input)="formDmlScript.set($any($event.target).value)" placeholder="INSERT statements (optional)"
+                    rows="12" class="w-full font-mono text-xs bg-muted/30 border border-border rounded-md px-3 py-2 text-foreground placeholder:text-muted-foreground/50 focus:border-primary outline-none resize-y min-h-[210px]"></textarea>
+                  <button (click)="openDialog('dml')" type="button"
+                    class="absolute top-2 right-2 px-2 py-0.5 rounded bg-card border-2 border-border hover:bg-primary/10 hover:border-primary/40 hover:text-primary text-muted-foreground transition-colors">
+                    <ng-icon name="lucideTerminal" class="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Section: Techniques -->
+        <div class="border border-border rounded-lg overflow-hidden">
+          <button (click)="toggleSection('techniques')" type="button"
+            class="w-full flex items-center justify-between px-4 py-3 bg-muted/20 hover:bg-muted/40 transition-colors">
+            <span class="flex items-center gap-2 font-mono text-xs text-foreground">
+              <span class="text-secondary"><ng-icon name="lucideDatabase" class="w-3.5 h-3.5" /></span>
+              Techniques
+            </span>
+            <span class="text-muted-foreground">
+              @if (expandedSection().has('techniques')) {
+                <ng-icon name="lucideChevronUp" class="w-3.5 h-3.5" />
+              } @else {
+                <ng-icon name="lucideChevronDown" class="w-3.5 h-3.5" />
+              }
+            </span>
+          </button>
+          @if (expandedSection().has('techniques')) {
+            <div class="p-4">
+              <div class="flex flex-wrap gap-1.5">
+                @for (tech of allTechniques; track tech) {
+                  <button (click)="toggleTechnique(tech)" type="button"
+                    class="font-mono text-[10px] px-2 py-1 rounded-md border transition-all"
+                    [class.bg-primary/15]="formTechniques().includes(tech)"
+                    [class.border-primary/40]="formTechniques().includes(tech)"
+                    [class.text-primary]="formTechniques().includes(tech)"
+                    [class.bg-muted/20]="!formTechniques().includes(tech)"
+                    [class.border-border]="!formTechniques().includes(tech)"
+                    [class.text-muted-foreground]="!formTechniques().includes(tech)"
+                    [class.hover:border-muted-foreground/30]="!formTechniques().includes(tech)">
+                    {{ tech }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Section: Expected Result -->
+        <div class="border border-border rounded-lg overflow-hidden">
+          <button (click)="toggleSection('result')" type="button"
+            class="w-full flex items-center justify-between px-4 py-3 bg-muted/20 hover:bg-muted/40 transition-colors">
+            <span class="flex items-center gap-2 font-mono text-xs text-foreground">
+              <span class="text-primary"><ng-icon name="lucideDatabase" class="w-3.5 h-3.5" /></span>
+              Expected Result
+            </span>
+            <span class="text-muted-foreground">
+              @if (expandedSection().has('result')) {
+                <ng-icon name="lucideChevronUp" class="w-3.5 h-3.5" />
+              } @else {
+                <ng-icon name="lucideChevronDown" class="w-3.5 h-3.5" />
+              }
+            </span>
+          </button>
+          @if (expandedSection().has('result')) {
+            <div class="p-4">
+              <label class="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">Expected Result (JSON)</label>
+              <div class="relative">
+                <textarea [value]="formExpectedResult()" (input)="formExpectedResult.set($any($event.target).value)"
+                  placeholder='[{"column1": "value1", "column2": "value2"}]'
+                    rows="8" class="w-full font-mono text-xs bg-muted/30 border border-border rounded-md px-3 py-2 text-foreground placeholder:text-muted-foreground/50 focus:border-primary outline-none resize-y min-h-[146px]"></textarea>
+                <button (click)="openDialog('result')" type="button"
+                  class="absolute top-2 right-2 px-2 py-0.5 rounded bg-card border-2 border-border hover:bg-primary/10 hover:border-primary/40 hover:text-primary text-muted-foreground transition-colors">
+                  <ng-icon name="lucideTerminal" class="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Submit Row -->
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-border">
+          <button (click)="cancel()" type="button"
+            class="font-mono text-xs text-muted-foreground hover:text-foreground transition-colors px-4 py-2">
+            Cancel
+          </button>
+          <button (click)="submitForm()" [disabled]="submitting()" type="button"
+            class="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-mono text-xs font-medium hover:bg-primary/90 glow-primary transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+            @if (submitting()) {
+              <ng-icon name="lucideLoader" class="w-3.5 h-3.5 animate-spin" />
+            } @else {
+              <ng-icon name="lucideSparkles" class="w-3.5 h-3.5" />
+            }
+            {{ submitting() ? 'Saving...' : (isEditing ? 'Update Mission' : 'Create Mission') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    @if (dialogField()) {
+      <app-code-editor-dialog
+        [title]="dialogField() === 'ddl' ? 'DDL Script' : dialogField() === 'dml' ? 'DML Script' : 'Expected Result'"
+        [value]="dialogField() === 'ddl' ? formDdlScript() : dialogField() === 'dml' ? formDmlScript() : formExpectedResult()"
+        (valueChange)="onDialogChange($event)"
+        (close)="onDialogClose()"
+      />
+    }
+  </div>
+</div>

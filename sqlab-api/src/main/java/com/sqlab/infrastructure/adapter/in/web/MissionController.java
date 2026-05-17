@@ -1,6 +1,7 @@
 package com.sqlab.infrastructure.adapter.in.web;
 
 import com.sqlab.application.port.in.GetMissionsUseCase;
+import com.sqlab.application.port.in.ManageMissionUseCase;
 import com.sqlab.application.port.in.ValidateMissionUseCase;
 import com.sqlab.domain.model.DifficultyLevel;
 import com.sqlab.domain.model.Mission;
@@ -8,11 +9,13 @@ import com.sqlab.domain.model.Theme;
 import com.sqlab.domain.model.ValidationResult;
 import com.sqlab.infrastructure.adapter.in.web.dto.MissionDto;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -21,11 +24,14 @@ public class MissionController {
 
     private final GetMissionsUseCase getMissionsUseCase;
     private final ValidateMissionUseCase validateMissionUseCase;
+    private final ManageMissionUseCase manageMissionUseCase;
 
     public MissionController(GetMissionsUseCase getMissionsUseCase,
-                             ValidateMissionUseCase validateMissionUseCase) {
+                             ValidateMissionUseCase validateMissionUseCase,
+                             ManageMissionUseCase manageMissionUseCase) {
         this.getMissionsUseCase = getMissionsUseCase;
         this.validateMissionUseCase = validateMissionUseCase;
+        this.manageMissionUseCase = manageMissionUseCase;
     }
 
     @GetMapping
@@ -64,9 +70,50 @@ public class MissionController {
         return ResponseEntity.ok(new MissionDto.ValidationResponse(result.correct(), result.feedback()));
     }
 
+    @PostMapping
+    public ResponseEntity<MissionDto.MissionResponse> create(
+            @Valid @RequestBody MissionDto.CreateMissionRequest request) {
+        ManageMissionUseCase.CreateMissionCommand command = new ManageMissionUseCase.CreateMissionCommand(
+                request.title(), request.briefing(), request.objective(),
+                request.hint(), request.ddlScript(), request.dmlScript(),
+                request.techniques(), request.xpReward(), request.ordered(),
+                request.theme(), request.difficulty(), request.expectedResult(),
+                request.scenarioId(), request.orderIndex());
+        Mission mission = manageMissionUseCase.create(command);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(toMissionResponse(mission));
+    }
+
+    @PutMapping("/{missionId}")
+    public ResponseEntity<MissionDto.MissionResponse> update(
+            @PathVariable UUID missionId,
+            @Valid @RequestBody MissionDto.UpdateMissionRequest request) {
+        ManageMissionUseCase.UpdateMissionCommand command = new ManageMissionUseCase.UpdateMissionCommand(
+                missionId,
+                request.title(), request.briefing(), request.objective(),
+                request.hint(), request.ddlScript(), request.dmlScript(),
+                request.techniques(), request.xpReward(), request.ordered(),
+                request.theme(), request.difficulty(), request.expectedResult(),
+                request.scenarioId(), request.orderIndex());
+        Mission mission = manageMissionUseCase.update(command);
+        return ResponseEntity.ok(toMissionResponse(mission));
+    }
+
+    @GetMapping("/{missionId}/admin")
+    public ResponseEntity<MissionDto.MissionResponse> findByIdAdmin(@PathVariable UUID missionId) {
+        Mission mission = manageMissionUseCase.findById(missionId);
+        return ResponseEntity.ok(toMissionResponse(mission));
+    }
+
+    @DeleteMapping("/{missionId}")
+    public ResponseEntity<Void> delete(@PathVariable UUID missionId) {
+        manageMissionUseCase.delete(missionId);
+        return ResponseEntity.noContent().build();
+    }
+
     private MissionDto.MissionSummary toSummary(Mission m) {
         return new MissionDto.MissionSummary(
-                m.getId(), m.getTitle(), m.getTechniques(),
+                m.getId(), m.getTitle(), m.getScenarioTitle(), m.getTechniques(),
                 m.getXpReward(), m.isOrdered(), m.getTheme(), m.getDifficulty(),
                 m.getScenarioId());
     }
@@ -79,6 +126,16 @@ public class MissionController {
                 m.getDdlScript(), m.getDmlScript(), m.getTechniques(),
                 m.getXpReward(), m.isOrdered(), m.getTheme(), m.getDifficulty(),
                 m.getScenarioId(), m.getScenarioTitle(), m.getOrderIndex(),
-                detail.scenarioTotalMissions());
+                detail.scenarioTotalMissions(), null);
+    }
+
+    private MissionDto.MissionResponse toMissionResponse(Mission m) {
+        return new MissionDto.MissionResponse(
+                m.getId(), m.getTitle(), m.getBriefing(),
+                m.getObjective(), m.getHint(),
+                m.getDdlScript(), m.getDmlScript(), m.getTechniques(),
+                m.getXpReward(), m.isOrdered(), m.getTheme(), m.getDifficulty(),
+                m.getScenarioId(), m.getScenarioTitle(), m.getOrderIndex(),
+                null, m.getExpectedResult().rows());
     }
 }

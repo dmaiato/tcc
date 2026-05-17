@@ -22,7 +22,8 @@ export interface RefreshRequest {
 
 export interface AuthResponseWithUser {
   token: string;
-  id: number;
+  id: string;
   username: string;
   email: string;
+  role: string;
 }

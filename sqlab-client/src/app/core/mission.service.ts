@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { MissionSummary, Mission, MissionProgress, ScenarioDetail, ScenarioSummary } from './models/mission.model';
+import { MissionSummary, Mission, MissionProgress, ScenarioDetail, ScenarioSummary, CreateMissionRequest, UpdateMissionRequest } from './models/mission.model';
 
 @Injectable({
   providedIn: 'root'
@@ -21,6 +21,10 @@ export class MissionService {
     return this.api.get<Mission>(`/missions/${id}`);
   }
 
+  getMissionAdmin(id: string): Observable<Mission> {
+    return this.api.get<Mission>(`/missions/${id}/admin`);
+  }
+
   validateMission(id: string, tuples: Record<string, unknown>[]): Observable<{ correct: boolean; feedback?: string }> {
     return this.api.post<{ correct: boolean; feedback?: string }>(`/missions/${id}/validate`, { tuples });
   }
@@ -35,5 +39,17 @@ export class MissionService {
 
   getScenario(id: string): Observable<ScenarioDetail> {
     return this.api.get<ScenarioDetail>(`/scenarios/${id}`);
+  }
+
+  createMission(data: CreateMissionRequest): Observable<Mission> {
+    return this.api.post<Mission>('/missions', data);
+  }
+
+  updateMission(id: string, data: UpdateMissionRequest): Observable<Mission> {
+    return this.api.put<Mission>(`/missions/${id}`, data);
+  }
+
+  deleteMission(id: string): Observable<void> {
+    return this.api.delete<void>(`/missions/${id}`);
   }
 }

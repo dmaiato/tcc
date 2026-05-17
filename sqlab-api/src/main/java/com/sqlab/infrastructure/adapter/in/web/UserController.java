@@ -36,7 +36,7 @@ public class UserController {
     @GetMapping
     public ResponseEntity<UserDto.ProfileResponse> getProfile(@AuthenticationPrincipal String userId) {
         return userRepository.findById(UUID.fromString(userId))
-                .map(u -> ResponseEntity.ok(new UserDto.ProfileResponse(u.getId(), u.getUsername(), u.getEmail(), u.getXp(), computeLevel(u.getXp()), u.getCreatedAt())))
+                .map(u -> ResponseEntity.ok(new UserDto.ProfileResponse(u.getId(), u.getUsername(), u.getEmail(), u.getXp(), computeLevel(u.getXp()), u.getRole().name(), u.getCreatedAt())))
                 .orElse(ResponseEntity.notFound().build());
     }
 

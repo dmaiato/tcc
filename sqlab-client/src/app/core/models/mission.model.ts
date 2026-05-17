@@ -19,6 +19,7 @@ export interface Mission {
   scenarioTitle?: string;
   scenarioOrderIndex?: number;
   scenarioTotalMissions?: number;
+  expectedResult?: Record<string, unknown>[];
 }
 
 export interface MissionSummary {
@@ -73,4 +74,38 @@ export interface ScenarioSummary {
   theme: Theme;
   totalMissions: number;
   completedMissions: number;
+}
+
+export interface CreateMissionRequest {
+  title: string;
+  briefing: string;
+  objective: string;
+  hint?: string;
+  ddlScript: string;
+  dmlScript?: string;
+  techniques: string[];
+  xpReward: number;
+  ordered: boolean;
+  theme: Theme;
+  difficulty: DifficultyLevel;
+  expectedResult: Record<string, unknown>[];
+  scenarioId?: string;
+  orderIndex?: number;
+}
+
+export interface UpdateMissionRequest {
+  title: string;
+  briefing: string;
+  objective: string;
+  hint?: string;
+  ddlScript: string;
+  dmlScript?: string;
+  techniques: string[];
+  xpReward: number;
+  ordered: boolean;
+  theme: Theme;
+  difficulty: DifficultyLevel;
+  expectedResult: Record<string, unknown>[];
+  scenarioId?: string;
+  orderIndex?: number;
 }

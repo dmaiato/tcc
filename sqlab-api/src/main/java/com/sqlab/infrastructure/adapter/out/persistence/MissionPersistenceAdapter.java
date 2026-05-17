@@ -4,6 +4,7 @@ import com.sqlab.application.port.out.MissionRepository;
 import com.sqlab.domain.model.DifficultyLevel;
 import com.sqlab.domain.model.Mission;
 import com.sqlab.domain.model.Theme;
+import com.sqlab.infrastructure.adapter.out.persistence.entity.MissionJpaEntity;
 import com.sqlab.infrastructure.adapter.out.persistence.mapper.MissionMapper;
 import com.sqlab.infrastructure.adapter.out.persistence.repository.MissionJpaRepository;
 import com.sqlab.infrastructure.adapter.out.persistence.repository.ProgressJpaRepository;
@@ -75,5 +76,22 @@ public class MissionPersistenceAdapter implements MissionRepository {
     @Override
     public int countByScenarioId(UUID scenarioId) {
         return jpaRepository.countByScenarioId(scenarioId);
+    }
+
+    @Override
+    @Transactional
+    public Mission save(Mission mission) {
+        MissionJpaEntity entity = mapper.toJpa(mission);
+        if (mission.getId() != null) {
+            jpaRepository.findById(mission.getId()).ifPresent(existing ->
+                    entity.setCreatedAt(existing.getCreatedAt()));
+        }
+        return mapper.toDomain(jpaRepository.save(entity));
+    }
+
+    @Override
+    @Transactional
+    public void deleteById(UUID id) {
+        jpaRepository.deleteById(id);
     }
 }

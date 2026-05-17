@@ -24,13 +24,14 @@ public class AuthenticateUserService implements AuthenticateUserUseCase {
     }
 
     @Override
-    public String handle(Command command) {
+    public AuthResult handle(Command command) {
         var user = userRepository.findByEmail(command.email()).orElseThrow(InvalidCredentialsException::new);
 
         if (!passwordEncoder.matches(command.rawPassword(), user.getPasswordHash())) {
             throw new InvalidCredentialsException();
         }
 
-        return tokenProvider.generate(user.getId(), user.getUsername());
+        String token = tokenProvider.generate(user.getId(), user.getUsername(), user.getRole());
+        return new AuthResult(token, user.getRole());
     }
 }

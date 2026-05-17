@@ -838,4 +838,227 @@ Added ordered mission groupings (scenarios) with sequential unlocking and contin
 ### Compilation
 - Backend compiles cleanly: `BUILD SUCCESS` (62 source files, JDK 25, Maven 3.9.12)
 - Pre-existing issue: `$JAVA_HOME` pointed to JDK 21, fixed by running `JAVA_HOME=/path/to/zulu25-jdk/current mvn compile`
+
+---
+
+## 19. Session 2026-05-13: Dashboard Design Fidelity + Validation Feedback + Bug Fixes
+
+### Dashboard Fidelity Fixes (per STYLING_GUIDE_v3)
+
+**§1 Layout:** Container width `max-w-6xl` → `max-w-5xl`, padding `px-6` → `px-5`
+
+**Header:**
+- h1 added `font-sans`, removed `tracking-tight`
+- Icon tile gradient `from-accent to-primary` → `from-primary to-secondary`
+- Filter buttons `text-sm` → `text-xs`
+
+**Difficulty badges:** Added `uppercase tracking-widest`, padding `px-1.5` → `px-2`
+
+**XP display:** Removed trophy icon, changed `text-primary text-xs` → `text-accent text-[10px]`, appended " XP" text
+
+**Theme badges:** Added emoji icons to category labels (🔭 Astronomy, 🔒 Cybersecurity, 🔍 Criminal, 💰 Finance, 🧬 Biology)
+
+### Profile: Mission Names via API
+
+**Backend:**
+- `UserDto.ProgressResponse` gained `missionTitle`, `scenarioId`, `scenarioTitle`
+- `MissionRepository.findAllById(Set<UUID>)` — batch fetch to avoid N+1
+- `UserController` does enrichment with batch load (no use case change)
+
+**Frontend:**
+- `MissionProgress` interface gained `missionTitle`, `scenarioId?`, `scenarioTitle?`
+- Profile table shows mission name + scenario badge instead of truncated UUID
+- `ProfileService` simplified (no extra missions fetch needed)
+
+### Validation Detailed Feedback
+
+**New domain model:** `ValidationResult(boolean correct, String feedback)` with factory `failed(String)`
+
+**`ExpectedTuple.java`:**
+- `matchesUnordered()` and `matchesOrdered()` return `ValidationResult` instead of `boolean`
+- Feedback priority for ordered missions: count → columns → order check → values
+- Feedback messages in English
+
+**Frontend feedback flow:**
+- `POST /api/missions/{id}/validate` response: `{ correct: boolean, feedback?: string }`
+- Toast shows feedback text on error (feedback bar was added then removed per user preference)
+- Action bar Verify button uses `verifyResult.correct` (unchanged)
+
+### Validation Bug Fix: NUMERIC Type Mismatch
+
+**Root cause:** PGlite returns PostgreSQL `NUMERIC(14,2)` as JavaScript string (`"487250.00"`), while JSONB expected result has it as a number (`487250.00`). `Map.equals()` → `Double(487250.0).equals(String("487250.00"))` → false.
+
+**Fix in `ExpectedTuple.java`:** Added `toBigDecimal()` that converts both `Number` and numeric `String` to `BigDecimal`, then compares with `BigDecimal.compareTo()` (ignores scale). Single function covers Integer, Long, Double, Float, BigInteger, BigDecimal, and numeric strings.
+
+### Results Pane Layout Fix
+
+**Problem:** Inner table wrapper border scrolled with data inside `overflow-auto`.
+
+**Fix:** Three-level nesting:
+1. Outer card chrome: `rounded-lg border border-border bg-card overflow-hidden`
+2. Fixed padding: `h-full p-4`
+3. Inner wrapper: `h-full rounded-lg border border-border overflow-hidden` (border fixed, clips children)
+4. Scroll container: `h-full overflow-auto scrollable` (data scrolls inside)
+
+Rows stagger removed — all content fades in simultaneously via `animate-fade-in`.
+
+### Toast Styling
+- Background: `bg-muted/90` → `bg-card` (solid)
+- Border: conditional per type (`border-primary/50` success, `border-destructive/50` error, `border-border` info)
+- Glow: smaller shadows (`12+30px` instead of `20+60px`)
+- Conditional glow classes on toast type
+
+### Mission Page Loading Flow
+
+Three-phase loading:
+1. **HTTP fetch** (`isLoading && !mission`): centered "Loading mission..."
+2. **PGlite init** (`isLoading && mission`): same centered screen, text changes to "Initializing database..."
+3. **Ready** (`!isLoading`): full page with all components
+
+Removed `isInitializing` branch inside the template — loading is atomic (waits for both mission data and PGlite).
+
+### Ctrl+Enter Global
+- `@HostListener('document:keydown.control.enter')` and `meta.enter` added to `MissionComponent`
+- Executes `executeQuery()` if query is non-empty and not already running/restoring
+
+### Data Viewer Icons
+
+**New `ColumnInfo` interface:** `{ name, type, isPrimaryKey, isForeignKey }`
+
+**`pglite.service.ts`:** `getSchema()` now queries `information_schema.table_constraints` for PK/FK detection. Builds lookup sets.
+
+**Icon map:**
+| Condition | Icon |
+|-----------|------|
+| PK or FK | `lucideKey` |
+| INT, DECIMAL, NUMERIC, REAL, MONEY, FLOAT | `lucideHash` |
+| TEXT, VARCHAR, CHAR | `lucideType` |
+| BOOLEAN | `lucideToggleLeft` |
+| DATE, TIMESTAMP, TIME | `lucideCalendar` |
+| UUID | `lucideFingerprint` |
+| JSON, JSONB | `lucideCode` |
+| fallback | `lucideHelpCircle` |
+
+**`mission-tabs.parseDDL()`** also detects `PRIMARY KEY` and `REFERENCES` from DDL text for the fallback schema display.
+
+### Scenario Progress Bar
+- Progress percentage rounded to whole number via `getProgressPercent()` using `Math.round(completed/total * 100)`
+- Applied to both `ScenarioListComponent` and `ScenarioDetailComponent`
+
+---
+
+## 20. Session 2026-05-16: Admin Panel — Full CRUD for Missions & Scenarios
+
+### Overview
+Built a complete admin panel with Dashboard (`/admin`), Mission Control (`/admin/missions`), and Scenario Control (`/admin/scenarios`). All admin pages use flat routes (not child routes). Backend admin endpoints under `/api/admin/` prefix.
+
+### Key Architecture Decisions
+- **Flat routes**: `/admin/missions`, `/admin/mission/new`, `/admin/mission/:id/edit`, `/admin/scenarios`, `/admin/scenario/new`, `/admin/scenario/:id/edit` — avoids Angular routing prefix conflicts
+- **Hexagonal admin pattern**: `ManageMissionUseCase`/`ManageScenarioUseCase` interfaces with `ManageMissionService`/`ManageScenarioService` implementations, `MissionPersistenceAdapter`/`ScenarioPersistenceAdapter` as output ports
+- **Backend endpoints** under `/api/admin/` — separate from public API
+- **Dashboard** at `/admin` (pathMatch: full) with two cards linking to Mission Control and Scenario Control
+- **Accordion sections** use `signal<Set<string>>` (multi-open) instead of single-string pattern from STYLING_GUIDE_v3
+- **@angular/cdk drag-drop** for scenario mission reorder — installed as new dependency via `package.json` `exports` map
+- **ConfirmDialogComponent** in `shared/confirm-dialog/` — reusable modal with destructive theme tokens (`bg-destructive`, `text-destructive`, `text-destructive-foreground`)
+- **CodeEditorDialogComponent** in `shared/code-editor-dialog/` — terminal-style fullscreen modal for DDL/DML/ExpectedResult with live sync, Tab indent, Esc close
+
+### Backend Changes
+
+**New files (admin use cases + services):**
+- `ManageMissionUseCase.java` — Port interface: `create()`, `update()`, `delete()`
+- `ManageScenarioUseCase.java` — Port interface: `create()`, `update()`, `delete()`, `reorderMissions()`
+- `ManageMissionService.java` — Creates mission via `MissionRepository.save()`, auto-calculates `orderIndex = countByScenarioId(scenarioId) + 1` when `scenarioId` provided
+- `ManageScenarioService.java` — Two-phase reorder: sets negative temp indices → correct positive indices atomically in `@Transactional` to avoid unique constraint violation during swap
+
+**Modified files:**
+- `MissionRepository.java` — Added `countByScenarioId()`
+- `ScenarioRepository.java` — Added `save()`, `delete()`, `findMissionsByScenarioIdOrdered()`
+- `MissionPersistenceAdapter.java` — `save()` preserves `createdAt` from existing entity to prevent Hibernate merge issues during reorder
+- `ScenarioPersistenceAdapter.java` — Full CRUD implementation
+- `ScenarioController.java` — Added admin endpoints: `POST /api/admin/scenarios`, `PUT /api/admin/scenarios/{id}`, `DELETE /api/admin/scenarios/{id}`, `PUT /api/admin/scenarios/{scenarioId}/missions/reorder`
+- `MissionController.java` — Added admin endpoints: `POST /api/admin/missions`, `PUT /api/admin/missions/{id}`, `DELETE /api/admin/missions/{id}`, `GET /api/missions/{id}/admin`
+- `MissionDto.java` — Added `CreateMissionRequest`, `UpdateMissionRequest`, `MissionAdminDetail` DTOs
+- `ScenarioDto.java` — Added `CreateScenarioRequest`, `UpdateScenarioRequest`, `ScenarioAdminDetail`, `ScenarioMissionSummary`, `ReorderMissionsRequest` DTOs
+- `V1__init_schema.sql` — Removed `uq_scenario_order UNIQUE (scenario_id, order_index)` — CHECK constraint and application logic are sufficient
+
+**Database:**
+- `V3__seed_admin.sql` — Seeds an admin user
+
+### Frontend Changes
+
+**New files:**
+- `admin/admin.component.ts/.html` — Admin Dashboard with two cards (Mission Control + Scenario Control)
+- `admin/admin-mission-list.component.ts/.html` — Mission Control — themed cards with accent bar, Lucide icons by theme, difficulty/theme/XP badges, expandable with details
+- `admin/admin-scenario-list.component.ts/.html` — Scenario Control — themed cards with accent bar, Lucide icons by theme, theme badge + mission count, expandable with missions list
+- `admin/mission-form.component.ts/.html` — Create/edit mission form with accordion sections (Details, DDL, DML, Expected Result), CodeEditorDialog integration, scenarioId query param support
+- `admin/scenario-form.component.ts/.html/.css` — Scenario form with missions drag-drop reorder (`cdkDragLockAxis="y"`), statistics dashboard, "Add Mission" button, delete mission from scenario
+- `core/models/scenario.model.ts` — All scenario types: `ScenarioSummary`, `ScenarioAdminDetail`, `ScenarioMissionSummary`, `CreateScenarioRequest`, `UpdateScenarioRequest`, `ReorderMissionsRequest`
+- `core/scenario.service.ts` — Scenario CRUD + `getAdminDetail()` + `reorderMissions()`
+- `core/auth/admin.guard.ts` — `adminGuard` checking `user().role === 'ADMIN'`
+- `shared/code-editor-dialog/` — Terminal-style fullscreen modal for editing DDL/DML/ExpectedResult
+- `shared/confirm-dialog/` — Reusable confirmation modal with destructive theme tokens
+
+**Modified files:**
+- `app.config.ts` — Registered all used Lucide icons including `lucideAlertTriangle`, `lucidePen`, `lucideShield`, `lucideSword`, etc.
+- `app.routes.ts` — Added flat admin routes with `pathMatch: 'full'` and `adminGuard`
+- `auth.service.ts` — Added `userRole` getter for admin guard
+- `mission.service.ts` — Added admin CRUD methods (`getAdminDetail()`, `createMission()`, `updateMission()`, `deleteMission()`)
+- `mission.model.ts` — Added `MissionAdminDetail`, `MissionDifficulty` enum, `difficultyConfig` map with `difficultyLabels`
+- `header.component.html/.ts` — Changed "Mission Control" link → "Admin Dashboard" (navigates to `/admin`), added `adminGuard` check
+
+### ConfirmDialogComponent
+- Reusable modal in `shared/confirm-dialog/` with project theme colors
+- `bg-destructive`, `text-destructive`, `text-destructive-foreground` tokens
+- `animate-scale-in` entrance animation, Esc/backdrop close
+- `confirm`/`close` outputs for parent communication
+- Uses `lucideAlertTriangle` icon (color on wrapper, never on `<ng-icon>`)
+
+### CodeEditorDialogComponent
+- Terminal-style fullscreen overlay with traffic light dots
+- Live sync between textarea and dialog content
+- Tab inserts 2 spaces (no focus loss), Esc closes
+- Appears when user clicks terminal expand button on DDL/DML/ExpectedResult textareas
+- Expand button: `border-2 bg-card`, positioned top-right of textarea
+
+### Mission Form
+- Routes: `/admin/mission/new`, `/admin/mission/:id/edit`
+- Reads `scenarioId` from query params when creating from scenario edit page
+- Pre-fills Theme via `getAdminDetail()` when `scenarioId` present
+- Includes `scenarioId` in create request
+- Redirects back to `/admin/scenario/:id/edit` on save/cancel when coming from scenario
+- Auto-calculates `orderIndex` on backend when `scenarioId` provided without `orderIndex`
+- All accordion sections multi-open (`Set<string>` signal)
+- Textareas: `rows={12}` DDL/DML, `rows={4}` Objective, `rows={3}` Briefing, `rows={8}` ExpectedResult; all with `resize-y` and `min-h`
+
+### Scenario Form
+- Routes: `/admin/scenario/new`, `/admin/scenario/:id/edit`
+- Missions list fetched via `getAdminDetail()`
+- @angular/cdk drag-drop reorder with `cdkDragLockAxis="y"`
+- `drop()` calls `hasOrderChanged()` for dynamic change tracking
+- "Order changed" message on far left of bottom buttons bar (`justify-between`)
+- `transition: none` on non-placeholder drag items prevents directional flicker
+- All CDK drag styles use `::ng-deep` to pierce View Encapsulation (preview element appended to `<body>`)
+- "Add Mission" button navigates to `/admin/mission/new?scenarioId=xxx`
+- Header shows "X missions" count
+- Delete mission via trash button → `ConfirmDialogComponent` → `DELETE /api/missions/{id}` → re-fetch `getAdminDetail()`
+- Reorder sends `PUT /api/admin/scenarios/{scenarioId}/missions/reorder` with ordered UUID list
+
+### Key Design Decisions
+- `scenarioTitle` added to `MissionSummary` instead of N+1 queries
+- `orderIndex` auto-calculated by `ManageMissionService.create()` when `scenarioId` provided
+- Two-phase reorder (negative temp indices → correct positive indices) atomically in `@Transactional`
+- `MissionPersistenceAdapter.save()` preserves `createdAt` from existing entity
+- `uq_scenario_order` removed — CHECK constraint `(scenario_id IS NULL OR order_index IS NOT NULL)` is sufficient
+- Icon color classes always on wrapper element (`<a>`, `<div>`), never on `<ng-icon>` directly
+- `tsconfig.app.json` requires `"moduleResolution": "bundler"` for `@angular/cdk` exports map
+- Color classes via `text-destructive` on wrapper, `text-white` on gradient divs — never on `<ng-icon>`
+
+### Component Conventions
+- `@ng-icons/lucide` icons throughout — no hand-drawn SVGs (replaced 4 edit pencil SVGs with `lucidePen`)
+- Square icon containers: `flex items-center justify-center size-*` instead of inline `p-*`
+- Difficulty labels use `difficultyLabels` (full names: "Beginner") instead of `difficultyShort` (abbreviations: "B")
+
+### Compilation
+- Frontend builds clean: `Application bundle generation complete` (no errors)
+- Backend compiles clean: `BUILD SUCCESS` (Lombok deprecation warnings only)
 ```

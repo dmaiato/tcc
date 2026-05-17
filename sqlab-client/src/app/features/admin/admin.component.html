@@ -1,0 +1,62 @@
+<div class="p-8 overflow-y-auto h-full">
+  <div class="max-w-4xl mx-auto">
+
+    <div class="flex items-center gap-4 mb-10">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-destructive to-accent flex items-center justify-center text-destructive-foreground shadow-lg shadow-accent/20">
+        <ng-icon name="lucideShield" class="w-6 h-6" />
+      </div>
+      <div>
+        <h1 class="font-sans text-2xl font-bold text-foreground tracking-tight">Admin Dashboard</h1>
+        <p class="font-mono text-[11px] text-muted-foreground/70 mt-0.5">Manage missions and scenarios</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <a routerLink="/admin/missions"
+        class="group relative block rounded-2xl border border-border/60 bg-card hover:bg-muted/10 transition-all p-6 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+        <div class="relative">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground shadow-md shadow-primary/20">
+              <ng-icon name="lucideSword" class="w-5 h-5" />
+            </div>
+            <div>
+              <h2 class="font-sans text-base font-bold text-foreground tracking-tight">Mission Control</h2>
+              <p class="font-mono text-[10px] text-muted-foreground/60">SQL challenge management</p>
+            </div>
+          </div>
+          <p class="font-mono text-[11px] text-muted-foreground/80 leading-relaxed">
+            Create, edit, and organize SQL missions. Define DDL/DML scripts, set difficulty, assign techniques, and configure expected results.
+          </p>
+          <div class="mt-3 pt-3 border-t border-border/40 flex items-center gap-2 text-xs font-mono text-primary group-hover:gap-3 transition-all">
+            <span>Enter Mission Control</span>
+            <ng-icon name="lucideArrowRight" class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </div>
+      </a>
+
+      <a routerLink="/admin/scenarios"
+        class="group relative block rounded-2xl border border-border/60 bg-card hover:bg-muted/10 transition-all p-6 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-accent/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+        <div class="relative">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-secondary flex items-center justify-center text-accent-foreground shadow-md shadow-accent/20">
+              <ng-icon name="lucideBookOpen" class="w-5 h-5" />
+            </div>
+            <div>
+              <h2 class="font-sans text-base font-bold text-foreground tracking-tight">Scenario Control</h2>
+              <p class="font-mono text-[10px] text-muted-foreground/60">Themed collection management</p>
+            </div>
+          </div>
+          <p class="font-mono text-[11px] text-muted-foreground/80 leading-relaxed">
+            Create and organize scenarios that group missions into themed collections. Define titles, descriptions, and themes.
+          </p>
+          <div class="mt-3 pt-3 border-t border-border/40 flex items-center gap-2 text-xs font-mono text-accent group-hover:gap-3 transition-all">
+            <span>Enter Scenario Control</span>
+            <ng-icon name="lucideArrowRight" class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>

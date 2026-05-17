@@ -19,4 +19,6 @@ public interface MissionRepository {
     List<Mission> findByScenarioIdOrderByOrderIndex(UUID scenarioId);
     boolean isPreviousMissionCompleted(UUID userId, UUID scenarioId, int orderIndex);
     int countByScenarioId(UUID scenarioId);
+    Mission save(Mission mission);
+    void deleteById(UUID id);
 }

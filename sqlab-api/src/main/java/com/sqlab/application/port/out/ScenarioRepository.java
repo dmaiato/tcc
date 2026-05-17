@@ -9,4 +9,7 @@ import java.util.UUID;
 public interface ScenarioRepository {
     List<Scenario> findAll();
     Optional<Scenario> findById(UUID id);
+    Scenario save(Scenario scenario);
+    void deleteById(UUID id);
+    int countMissionsByScenarioId(UUID scenarioId);
 }

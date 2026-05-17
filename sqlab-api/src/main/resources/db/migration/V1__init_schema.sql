@@ -52,5 +52,4 @@ CREATE TABLE scenarios (
 
 ALTER TABLE missions ADD COLUMN scenario_id UUID REFERENCES scenarios(id) ON DELETE CASCADE;
 ALTER TABLE missions ADD COLUMN order_index INTEGER;
-ALTER TABLE missions ADD CONSTRAINT uq_scenario_order UNIQUE (scenario_id, order_index);
 ALTER TABLE missions ADD CONSTRAINT ck_scenario_consistency CHECK (scenario_id IS NULL OR order_index IS NOT NULL);

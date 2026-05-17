@@ -1,5 +1,7 @@
 package com.sqlab.application.port.out;
 
+import com.sqlab.domain.model.UserRole;
+
 import java.util.UUID;
 
 /**
@@ -7,5 +9,5 @@ import java.util.UUID;
  * Desacopla o caso de uso da implementação concreta (ex: JWT).
  */
 public interface TokenProvider {
-    String generate(UUID userId, String username);
+    String generate(UUID userId, String username, UserRole role);
 }

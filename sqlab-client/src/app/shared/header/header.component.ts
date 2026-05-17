@@ -54,6 +54,10 @@ export class HeaderComponent {
     return this.authService.isLoggedIn();
   }
 
+  get isAdmin(): boolean {
+    return this.authService.isAdmin();
+  }
+
   get userName(): string {
     const userSignal = this.authService.user();
     const user = userSignal();

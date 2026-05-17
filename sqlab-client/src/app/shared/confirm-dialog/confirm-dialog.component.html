@@ -1,0 +1,31 @@
+<div class="fixed inset-0 z-[100] flex items-center justify-center p-4 dialog-backdrop bg-black/60" (click)="onBackdropClick($event)">
+  <div class="w-full max-w-sm bg-card border border-border rounded-xl shadow-2xl overflow-hidden animate-scale-in">
+    <div class="p-5 space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="flex items-center justify-center size-9 rounded-full bg-destructive/10 shrink-0 text-destructive">
+          <ng-icon name="lucideAlertTriangle" class="size-4.5" />
+        </div>
+        <div>
+          <h3 class="font-sans text-sm font-semibold text-foreground">{{ title() }}</h3>
+          <p class="font-mono text-[11px] text-muted-foreground mt-0.5">{{ message() }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="flex items-center justify-end gap-2 px-5 py-3 border-t border-border bg-muted/10">
+      <button (click)="close.emit()" type="button"
+        class="font-mono text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-muted/30">
+        {{ cancelLabel() }}
+      </button>
+      <button (click)="confirm.emit()" type="button"
+        class="font-mono text-xs font-medium px-4 py-1.5 rounded-md transition-all"
+        [class.bg-destructive]="confirmDanger()"
+        [class.hover:bg-destructive/90]="confirmDanger()"
+        [class.text-destructive-foreground]="confirmDanger()"
+        [class.bg-primary]="!confirmDanger()"
+        [class.hover:bg-primary/90]="!confirmDanger()"
+        [class.text-primary-foreground]="!confirmDanger()">
+        {{ confirmLabel() }}
+      </button>
+    </div>
+  </div>
+</div>

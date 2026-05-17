@@ -10,19 +10,18 @@ VALUES
 -- ========================================================================
 (
     '00000000-0000-0000-0000-000000000001',
-    'O Último Gole',
+    'The Last Drink',
 
-    'SÃO 3H DA MANHÃ no Blue Moon Cabaret. Um corpo foi encontrado no beco ao lado —
-    um tiro, nenhum documento, nenhuma testemunha. O delegado Estranho acaba de chegar
-    com o chapéu enterrado nos olhos e um cigarro apagado entre os lábios. Ele aponta
-    para o livro de registro na sua mesa sem dizer uma palavra. Você entende: quer
-    todos os frequentadores da noite. Nomes, apelidos, o que beberam, a hora que
-    foram embora. Cada linha desse livro pode ser a peça que falta. O cinzeiro já
-    transborda. O relógio não para.',
+    'IT''S 3 AM at the Blue Moon Cabaret. A body was found in the alley next door —
+    a gunshot, no ID, no witnesses. Detective Estranho just walked in, hat pulled low
+    over his eyes, a dead cigarette between his lips. He points at the register book
+    on your desk without a word. You understand: he wants every patron from tonight.
+    Names, aliases, what they drank, what time they left. Every line in that book
+    could be the missing piece. The ashtray is overflowing. The clock never stops.',
 
-    'Liste todos os registros da tabela nightclub_log — nome, apelido, bebida e horário de saída.',
+    'Retrieve all records from the nightclub_log table. Show the id, patron_name, alias, drink, and left_at columns.',
 
-    'SELECT * FROM nightclub_log;',
+    'Use SELECT * followed by the table name to retrieve all columns and rows from a table.',
 
     '
         CREATE TABLE nightclub_log (
@@ -35,20 +34,20 @@ VALUES
     ',
     '
         INSERT INTO nightclub_log (patron_name, alias, drink, left_at) VALUES
-            (''Carlos Mendes'', ''Carlão'',       ''Whisky'',       ''23:15''),
-            (''Ana Lima'',      ''Aninha'',       ''Martini'',      ''02:30''),
-            (''Pedro Costa'',   ''Pé de Chumbo'', ''Cerveja'',      ''00:45''),
-            (''Julia Ramos'',   ''Jujuba'',       ''Gim Tônica'',   ''01:20''),
-            (''Miguel Torres'', ''Mick'',          ''Água com Gás'', ''22:50'');
+            (''Charles Mendes'',  ''Big C'',        ''Whiskey'',         ''23:15''),
+            (''Anna Lima'',       ''Little A'',     ''Martini'',         ''02:30''),
+            (''Peter Costa'',     ''Leadfoot'',     ''Beer'',            ''00:45''),
+            (''Julia Ramos'',     ''Jellybean'',    ''Gin and Tonic'',   ''01:20''),
+            (''Michael Torres'',  ''Mick'',          ''Sparkling Water'', ''22:50'');
     ',
     ARRAY['SELECT'],
     100,
     '[
-        {"id": 1, "patron_name": "Carlos Mendes", "alias": "Carlão",       "drink": "Whisky",       "left_at": "23:15"},
-        {"id": 2, "patron_name": "Ana Lima",      "alias": "Aninha",       "drink": "Martini",      "left_at": "02:30"},
-        {"id": 3, "patron_name": "Pedro Costa",   "alias": "Pé de Chumbo", "drink": "Cerveja",      "left_at": "00:45"},
-        {"id": 4, "patron_name": "Julia Ramos",   "alias": "Jujuba",       "drink": "Gim Tônica",   "left_at": "01:20"},
-        {"id": 5, "patron_name": "Miguel Torres", "alias": "Mick",          "drink": "Água com Gás", "left_at": "22:50"}
+        {"id": 1, "patron_name": "Charles Mendes",  "alias": "Big C",        "drink": "Whiskey",         "left_at": "23:15"},
+        {"id": 2, "patron_name": "Anna Lima",       "alias": "Little A",     "drink": "Martini",         "left_at": "02:30"},
+        {"id": 3, "patron_name": "Peter Costa",     "alias": "Leadfoot",     "drink": "Beer",            "left_at": "00:45"},
+        {"id": 4, "patron_name": "Julia Ramos",     "alias": "Jellybean",    "drink": "Gin and Tonic",   "left_at": "01:20"},
+        {"id": 5, "patron_name": "Michael Torres",  "alias": "Mick",          "drink": "Sparkling Water", "left_at": "22:50"}
     ]',
     FALSE,
     'CRIMINAL',
@@ -61,18 +60,18 @@ VALUES
 -- ========================================================================
 (
     '00000000-0000-0000-0000-000000000002',
-    'Madrugada Suspeita',
+    'Suspicious Dawn',
 
-    'O legista estima que a morte ocorreu entre 1h e 3h da manhã. O delegado Estranho
-    se inclina sobre sua mesa — o olhar pesado, a voz rouca de cigarro e café.
-    "Quem ainda estava aqui depois da meia-noite?" Ele aperta o palito na boca.
-    "O corpo não apareceu sozinho. Alguém viu. Alguém sabe de algo. Me traz os
-    nomes de todos que ficaram até mais tarde — e rápido." A fumaça do cigarro
-    dele sobe em espiral enquanto ele espera, imóvel como uma estátua.',
+    'The coroner estimates the death occurred between 1 AM and 3 AM. Detective Estranho
+    leans over your desk — his gaze heavy, voice hoarse from cigarettes and coffee.
+    "Who was still here after midnight?" He bites down on a toothpick.
+    "The body didn''t walk in alone. Someone saw something. Someone knows something.
+    Get me the names of everyone who stayed late — and make it quick." The cigarette
+    smoke curls upward as he waits, motionless as a statue.',
 
-    'Selecione todos os frequentadores que estavam no clube depois da meia-noite (left_at maior que ''00:00'').',
+    'Find all patrons who were still at the club after midnight (left_at greater than ''00:00''). Show the id, patron_name, alias, drink, and left_at columns.',
 
-    'SELECT * FROM nightclub_log WHERE left_at > ''00:00'';',
+    'Add a WHERE clause to filter rows. Use the > operator to compare the left_at column against ''00:00''.',
 
     '
         CREATE TABLE nightclub_log (
@@ -85,18 +84,18 @@ VALUES
     ',
     '
         INSERT INTO nightclub_log (patron_name, alias, drink, left_at) VALUES
-            (''Carlos Mendes'', ''Carlão'',       ''Whisky'',       ''23:15''),
-            (''Ana Lima'',      ''Aninha'',       ''Martini'',      ''02:30''),
-            (''Pedro Costa'',   ''Pé de Chumbo'', ''Cerveja'',      ''00:45''),
-            (''Julia Ramos'',   ''Jujuba'',       ''Gim Tônica'',   ''01:20''),
-            (''Miguel Torres'', ''Mick'',          ''Água com Gás'', ''22:50'');
+            (''Charles Mendes'',  ''Big C'',        ''Whiskey'',         ''23:15''),
+            (''Anna Lima'',       ''Little A'',     ''Martini'',         ''02:30''),
+            (''Peter Costa'',     ''Leadfoot'',     ''Beer'',            ''00:45''),
+            (''Julia Ramos'',     ''Jellybean'',    ''Gin and Tonic'',   ''01:20''),
+            (''Michael Torres'',  ''Mick'',          ''Sparkling Water'', ''22:50'');
     ',
     ARRAY['SELECT', 'WHERE'],
     100,
     '[
-        {"id": 2, "patron_name": "Ana Lima",    "alias": "Aninha",       "drink": "Martini",    "left_at": "02:30"},
-        {"id": 3, "patron_name": "Pedro Costa", "alias": "Pé de Chumbo", "drink": "Cerveja",    "left_at": "00:45"},
-        {"id": 4, "patron_name": "Julia Ramos", "alias": "Jujuba",       "drink": "Gim Tônica", "left_at": "01:20"}
+        {"id": 2, "patron_name": "Anna Lima",    "alias": "Little A",  "drink": "Martini",       "left_at": "02:30"},
+        {"id": 3, "patron_name": "Peter Costa",  "alias": "Leadfoot",  "drink": "Beer",          "left_at": "00:45"},
+        {"id": 4, "patron_name": "Julia Ramos",  "alias": "Jellybean", "drink": "Gin and Tonic", "left_at": "01:20"}
     ]',
     FALSE,
     'CRIMINAL',
@@ -109,18 +108,18 @@ VALUES
 -- ========================================================================
 (
     '00000000-0000-0000-0000-000000000003',
-    'Teia de Mentiras',
+    'Web of Lies',
 
-    'Três pessoas foram chamadas para depor na delegacia. O delegado Estranho ouviu
-    cada uma em silêncio, fumando atrás da mesa, os olhos semicerrados. Agora ele
-    encara você. "Cruza a lista do clube com os depoimentos," ele rosna, virando-se
-    para a janela escura. "Quem foi interrogado e quem ficou de fora? As respostas
-    estão na intersecção. E não quero chute — quero dados." A noite está longe de
-    acabar, e a verdade está em algum lugar entre duas tabelas.',
+    'Three people were called to the station for questioning. Detective Estranho
+    listened to each in silence, smoking behind his desk, eyes half-closed. Now he
+    stares at you. "Cross-reference the club register with the depositions," he growls,
+    turning to the dark window. "Who was interrogated and who was left out? The answers
+    are at the intersection. And I don''t want guesses — I want data." The night is
+    far from over, and the truth lies somewhere between two tables.',
 
-    'Descubra quais frequentadores do Blue Moon foram chamados para depor, combinando as tabelas nightclub_log e interrogations.',
+    'Find which Blue Moon patrons were called for questioning. Show all columns from the nightclub_log table (id, patron_name, alias, drink, left_at).',
 
-    'SELECT n.* FROM nightclub_log n INNER JOIN interrogations i ON n.patron_name = i.patron_name;',
+    'Use an INNER JOIN to combine nightclub_log with interrogations on the patron_name column.',
 
     '
         CREATE TABLE nightclub_log (
@@ -139,21 +138,21 @@ VALUES
     ',
     '
         INSERT INTO nightclub_log (patron_name, alias, drink, left_at) VALUES
-            (''Carlos Mendes'', ''Carlão'',       ''Whisky'',       ''23:15''),
-            (''Ana Lima'',      ''Aninha'',       ''Martini'',      ''02:30''),
-            (''Pedro Costa'',   ''Pé de Chumbo'', ''Cerveja'',      ''00:45''),
-            (''Julia Ramos'',   ''Jujuba'',       ''Gim Tônica'',   ''01:20'');
+            (''Charles Mendes'', ''Big C'',        ''Whiskey'',         ''23:15''),
+            (''Anna Lima'',      ''Little A'',     ''Martini'',         ''02:30''),
+            (''Peter Costa'',    ''Leadfoot'',     ''Beer'',            ''00:45''),
+            (''Julia Ramos'',    ''Jellybean'',    ''Gin and Tonic'',   ''01:20'');
         INSERT INTO interrogations (patron_name, statement, verdict) VALUES
-            (''Ana Lima'',    ''Disse que estava no banheiro na hora do crime.'',  ''Inconclusivo''),
-            (''Pedro Costa'', ''Afirmou que viu um homem de chapéu saindo pelo beco.'', ''Verdadeiro''),
-            (''Julia Ramos'', ''Tremeu ao ser perguntada sobre o horário.'' ,        ''Inconclusivo'');
+            (''Anna Lima'',   ''Claimed to be in the bathroom at the time of the crime.'', ''Inconclusive''),
+            (''Peter Costa'', ''Reported seeing a man in a hat leaving through the alley.'', ''Truthful''),
+            (''Julia Ramos'', ''Trembled when asked about the time.'', ''Inconclusive'');
     ',
     ARRAY['SELECT', 'INNER JOIN'],
     200,
     '[
-        {"id": 2, "patron_name": "Ana Lima",    "alias": "Aninha",       "drink": "Martini",    "left_at": "02:30"},
-        {"id": 3, "patron_name": "Pedro Costa", "alias": "Pé de Chumbo", "drink": "Cerveja",    "left_at": "00:45"},
-        {"id": 4, "patron_name": "Julia Ramos", "alias": "Jujuba",       "drink": "Gim Tônica", "left_at": "01:20"}
+        {"id": 2, "patron_name": "Anna Lima",   "alias": "Little A",  "drink": "Martini",       "left_at": "02:30"},
+        {"id": 3, "patron_name": "Peter Costa", "alias": "Leadfoot",  "drink": "Beer",          "left_at": "00:45"},
+        {"id": 4, "patron_name": "Julia Ramos", "alias": "Jellybean", "drink": "Gin and Tonic", "left_at": "01:20"}
     ]',
     FALSE,
     'CRIMINAL',
@@ -166,19 +165,18 @@ VALUES
 -- ========================================================================
 (
     '00000000-0000-0000-0000-000000000004',
-    'O Gavião e o Urubu',
+    'The Hawk and the Vulture',
 
-    'A Mendes & Filhos amanheceu em alvoroço. O contador-chefe, seu Valentim, está
-    pálido como cera de vela, segurando um punhado de papéis com mãos trêmulas.
-    "Alguém desviou quase meio milhão!" ele gagueja. O delegado Estranho — que
-    nunca dorme — já está lá, com um café que esfria na mão. "Quero ver todas as
-    contas ativas da empresa. Nomes, departamentos, saldos. Não podemos começar
-    uma caça ao tesouro sem saber onde procurar." Ele vira a xícara e bebe o café
-    frio de um gole só.',
+    'Mendes & Sons started the morning in turmoil. The chief accountant, Mr. Valentim,
+    is pale as candle wax, clutching a stack of papers with trembling hands.
+    "Someone embezzled nearly half a million!" he stammers. Detective Estranho — who
+    never sleeps — is already there, coffee cooling in his hand. "I want to see every
+    active account. Names, departments, balances. We can''t start a treasure hunt
+    without knowing where to look." He tips the cup and downs the cold coffee in one gulp.',
 
-    'Liste todas as contas ativas (is_active = TRUE) da tabela company_accounts.',
+    'List all active accounts (is_active = TRUE) from the company_accounts table. Show the id, holder_name, department, balance, and is_active columns.',
 
-    'SELECT * FROM company_accounts WHERE is_active = TRUE;',
+    'Add a WHERE clause filtering for is_active = TRUE. Boolean columns can be compared directly to TRUE.',
 
     '
         CREATE TABLE company_accounts (
@@ -191,19 +189,19 @@ VALUES
     ',
     '
         INSERT INTO company_accounts (holder_name, department, balance, is_active) VALUES
-            (''Mendes & Filhos Ltda.'',        ''Operacional'',  487250.00, TRUE),
-            (''Transportadora Rapidão S.A.'',  ''Logística'',   1230450.00, TRUE),
-            (''Distribuidora Aurora'',          ''Suprimentos'',  823700.00, TRUE),
-            (''Contabilidade Central'',         ''Serviços'',     312000.00, TRUE),
-            (''Depósito Inativo'',              ''Encerrado'',       500.00, FALSE);
+            (''Mendes & Sons Ltd.'',       ''Operations'', 487250.00, TRUE),
+            (''Rapidão Transport S.A.'',   ''Logistics'', 1230450.00, TRUE),
+            (''Aurora Distributors'',       ''Supplies'',  823700.00, TRUE),
+            (''Central Accounting'',        ''Services'',   312000.00, TRUE),
+            (''Inactive Warehouse'',        ''Closed'',         500.00, FALSE);
     ',
     ARRAY['SELECT', 'WHERE'],
     100,
     '[
-        {"id": 1, "holder_name": "Mendes & Filhos Ltda.",       "department": "Operacional",  "balance": 487250.00,  "is_active": true},
-        {"id": 2, "holder_name": "Transportadora Rapidão S.A.", "department": "Logística",    "balance": 1230450.00, "is_active": true},
-        {"id": 3, "holder_name": "Distribuidora Aurora",        "department": "Suprimentos",  "balance": 823700.00,  "is_active": true},
-        {"id": 4, "holder_name": "Contabilidade Central",       "department": "Serviços",     "balance": 312000.00,  "is_active": true}
+        {"id": 1, "holder_name": "Mendes & Sons Ltd.",       "department": "Operations", "balance": 487250.00,  "is_active": true},
+        {"id": 2, "holder_name": "Rapidão Transport S.A.",   "department": "Logistics",  "balance": 1230450.00, "is_active": true},
+        {"id": 3, "holder_name": "Aurora Distributors",       "department": "Supplies",  "balance": 823700.00,  "is_active": true},
+        {"id": 4, "holder_name": "Central Accounting",        "department": "Services",  "balance": 312000.00,  "is_active": true}
     ]',
     FALSE,
     'FINANCE',
@@ -216,20 +214,19 @@ VALUES
 -- ========================================================================
 (
     '00000000-0000-0000-0000-000000000005',
-    'Sinais do Cosmos',
+    'Signals from the Cosmos',
 
-    'O radiotelescópio captou algo inexplicável. Uma sequência de pulsos eletromagnéticos
-    vindos de diferentes sistemas estelares — alguns conhecidos, outros que nem constam
-    nos mapas. A astrônoma-chefe Dra. Tavares está tensa, os olhos fixos no espectrógrafo.
-    "Pode ser interferência de satélite," ela murmura, "ou pode ser a descoberta do
-    século." Ela se vira para você: "Organize todas as leituras por frequência, da
-    mais grave à mais aguda. Quero enxergar padrões. Se for inteligente, vai se
-    repetir." O silêncio da sala de controle é cortado apenas pelo zumbido dos
-    servidores.',
+    'The radio telescope picked up something inexplicable. A sequence of electromagnetic
+    pulses coming from different star systems — some known, others not even on the
+    charts. Chief astronomer Dr. Tavares is tense, eyes fixed on the spectrograph.
+    "Could be satellite interference," she murmurs, "or it could be the discovery of
+    the century." She turns to you: "Sort all readings by frequency, from lowest to
+    highest. I need to see patterns. If it''s intelligent, it will repeat." The control
+    room silence is broken only by the hum of servers.',
 
-    'Liste todas as leituras do telescópio ordenadas pela frequência em ordem crescente.',
+    'List all telescope readings ordered by frequency_mhz in ascending order. Show the id, star_system, signal_type, frequency_mhz, strength, and recorded_at columns.',
 
-    'SELECT * FROM telescope_readings ORDER BY frequency_mhz ASC;',
+    'Append ORDER BY followed by the column name. Use ASC to sort from lowest to highest.',
 
     '
         CREATE TABLE telescope_readings (
@@ -243,24 +240,24 @@ VALUES
     ',
     '
         INSERT INTO telescope_readings (star_system, signal_type, frequency_mhz, strength, recorded_at) VALUES
-            (''Alpha Centauri'',  ''Rádio'',        1420.00, 8.5, ''2025-03-15 22:30:00''),
-            (''Betelgeuse'',      ''Infravermelho'', 350.50, 4.2, ''2025-03-15 22:35:00''),
-            (''Proxima Centauri'', ''Rádio'',        1420.05, 9.1, ''2025-03-15 22:40:00''),
-            (''Sirius'',          ''Óptico'',        520.75, 6.8, ''2025-03-15 22:45:00''),
-            (''Andrômeda'',       ''Rádio'',        1420.10, 7.3, ''2025-03-15 22:50:00''),
-            (''Vega'',            ''Infravermelho'', 310.20, 3.9, ''2025-03-15 22:55:00''),
-            (''Alpha Centauri'',  ''Óptico'',        480.00, 7.8, ''2025-03-15 23:00:00'');
+            (''Alpha Centauri'',  ''Radio'',    1420.00, 8.5, ''2025-03-15 22:30:00''),
+            (''Betelgeuse'',      ''Infrared'', 350.50, 4.2, ''2025-03-15 22:35:00''),
+            (''Proxima Centauri'', ''Radio'',    1420.05, 9.1, ''2025-03-15 22:40:00''),
+            (''Sirius'',          ''Optical'',  520.75, 6.8, ''2025-03-15 22:45:00''),
+            (''Andromeda'',       ''Radio'',    1420.10, 7.3, ''2025-03-15 22:50:00''),
+            (''Vega'',            ''Infrared'', 310.20, 3.9, ''2025-03-15 22:55:00''),
+            (''Alpha Centauri'',  ''Optical'',  480.00, 7.8, ''2025-03-15 23:00:00'');
     ',
     ARRAY['SELECT', 'ORDER BY'],
     200,
     '[
-        {"id": 6, "star_system": "Vega",            "signal_type": "Infravermelho", "frequency_mhz": 310.20, "strength": 3.9, "recorded_at": "2025-03-15 22:55:00"},
-        {"id": 2, "star_system": "Betelgeuse",      "signal_type": "Infravermelho", "frequency_mhz": 350.50, "strength": 4.2, "recorded_at": "2025-03-15 22:35:00"},
-        {"id": 7, "star_system": "Alpha Centauri",  "signal_type": "Óptico",        "frequency_mhz": 480.00, "strength": 7.8, "recorded_at": "2025-03-15 23:00:00"},
-        {"id": 4, "star_system": "Sirius",          "signal_type": "Óptico",        "frequency_mhz": 520.75, "strength": 6.8, "recorded_at": "2025-03-15 22:45:00"},
-        {"id": 1, "star_system": "Alpha Centauri",  "signal_type": "Rádio",         "frequency_mhz": 1420.00,"strength": 8.5, "recorded_at": "2025-03-15 22:30:00"},
-        {"id": 3, "star_system": "Proxima Centauri","signal_type": "Rádio",         "frequency_mhz": 1420.05,"strength": 9.1, "recorded_at": "2025-03-15 22:40:00"},
-        {"id": 5, "star_system": "Andrômeda",       "signal_type": "Rádio",         "frequency_mhz": 1420.10,"strength": 7.3, "recorded_at": "2025-03-15 22:50:00"}
+        {"id": 6, "star_system": "Vega",            "signal_type": "Infrared", "frequency_mhz": 310.20, "strength": 3.9, "recorded_at": "2025-03-15 22:55:00"},
+        {"id": 2, "star_system": "Betelgeuse",      "signal_type": "Infrared", "frequency_mhz": 350.50, "strength": 4.2, "recorded_at": "2025-03-15 22:35:00"},
+        {"id": 7, "star_system": "Alpha Centauri",  "signal_type": "Optical",  "frequency_mhz": 480.00, "strength": 7.8, "recorded_at": "2025-03-15 23:00:00"},
+        {"id": 4, "star_system": "Sirius",          "signal_type": "Optical",  "frequency_mhz": 520.75, "strength": 6.8, "recorded_at": "2025-03-15 22:45:00"},
+        {"id": 1, "star_system": "Alpha Centauri",  "signal_type": "Radio",    "frequency_mhz": 1420.00,"strength": 8.5, "recorded_at": "2025-03-15 22:30:00"},
+        {"id": 3, "star_system": "Proxima Centauri","signal_type": "Radio",    "frequency_mhz": 1420.05,"strength": 9.1, "recorded_at": "2025-03-15 22:40:00"},
+        {"id": 5, "star_system": "Andromeda",       "signal_type": "Radio",    "frequency_mhz": 1420.10,"strength": 7.3, "recorded_at": "2025-03-15 22:50:00"}
     ]',
     TRUE,
     'ASTRONOMY',
@@ -273,20 +270,19 @@ VALUES
 -- ========================================================================
 (
     '00000000-0000-0000-0000-000000000006',
-    'A Fortuna do Submundo',
+    'The Underworld''s Fortune',
 
-    'O desvio de recursos na Mendes & Filhos revelou um padrão suspeito: certas
-    agências bancárias concentram valores muito acima do esperado. A promotora
-    de justiça — uma mulher de olhar afiado que não dorme há dois dias — joga
-    uma pasta na sua mesa. "Agrupe por agência. Quero o saldo total e a média
-    de cada uma. E só me interessa ver as agências onde a média ultrapassa
-    setecentos mil reais. É lá que o cheiro de dinheiro sujo é mais forte."
-    Ela cruza os braços. "Vamos descobrir quem está lavando dinheiro na
-    calada da noite."',
+    'The embezzlement probe at Mendes & Sons revealed a suspicious pattern: certain
+    bank branches hold balances far above expectations. The prosecutor — a sharp-eyed
+    woman who hasn''t slept in two days — slams a folder on your desk. "Group by branch.
+    I want the total balance and the average for each. And I only want to see branches
+    where the average exceeds seven hundred thousand. That''s where the dirty money
+    smells strongest." She crosses her arms. "Let''s find out who''s been laundering
+    money under cover of night.",
 
-    'Calcule o saldo total e a média por agência bancária. Mostre apenas as agências com saldo médio superior a 700.000.',
+    'Calculate the total balance and the average balance per bank branch. Show only branches with an average balance greater than 700,000. Display the branch, total, and average columns.',
 
-    'SELECT branch, SUM(balance) AS total, AVG(balance) AS media FROM accounts GROUP BY branch HAVING AVG(balance) > 700000 ORDER BY total DESC;',
+    'Use GROUP BY branch with SUM(balance) AS total and AVG(balance) AS average. Filter grouped results with HAVING, not WHERE.',
 
     '
         CREATE TABLE accounts (
@@ -298,20 +294,20 @@ VALUES
     ',
     '
         INSERT INTO accounts (holder_name, branch, balance) VALUES
-            (''Mendes & Filhos Ltda.'',       ''Centro'',    950000.00),
-            (''Transportadora Rapidão S.A.'', ''Centro'',   1250000.00),
-            (''Distribuidora Aurora'',         ''Centro'',    180000.00),
-            (''Tech Solutions Ltda.'',         ''Centro'',   2200000.00),
-            (''Auto Peças Brasil'',            ''Zona Sul'',  720000.00),
-            (''Imobiliária Nova Era'',         ''Zona Sul'',  860000.00),
-            (''Mercado Popular'',              ''Zona Norte'',320000.00),
-            (''Farmácia Saúde'',               ''Zona Norte'',450000.00);
+            (''Mendes & Sons Ltd.'',     ''Downtown'',      950000.00),
+            (''Rapidão Transport S.A.'', ''Downtown'',     1250000.00),
+            (''Aurora Distributors'',     ''Downtown'',      180000.00),
+            (''Tech Solutions Ltd.'',     ''Downtown'',     2200000.00),
+            (''Auto Parts Brazil'',       ''South District'', 720000.00),
+            (''Nova Era Realty'',         ''South District'', 860000.00),
+            (''Popular Market'',          ''North District'', 320000.00),
+            (''Health Pharmacy'',         ''North District'', 450000.00);
     ',
     ARRAY['SELECT', 'GROUP BY', 'HAVING', 'SUM', 'AVG'],
     350,
     '[
-        {"branch": "Centro",  "total": 4580000.00, "media": 1145000.00},
-        {"branch": "Zona Sul", "total": 1580000.00, "media": 790000.00}
+        {"branch": "Downtown",       "total": 4580000.00, "average": 1145000.00},
+        {"branch": "South District", "total": 1580000.00, "average": 790000.00}
     ]',
     FALSE,
     'FINANCE',
@@ -324,19 +320,19 @@ VALUES
 -- ========================================================================
 (
     '00000000-0000-0000-0000-000000000007',
-    'Mapa Estelar',
+    'Stellar Map',
 
-    'A Dra. Tavares está construindo um mapa astrofísico atualizado. Ela passou
-    semanas catalogando corpos celestes e agora precisa de um resumo. "Classifiquei
-    dezenas de objetos entre estrelas, exoplanetas, nebulosas e outros," ela diz,
-    esfregando os olhos cansados. "Preciso saber quantos de cada tipo foram descobertos
-    antes de 1950 — antes da era espacial, quando tudo era feito com telescópio e
-    paciência. E quero ver apenas os tipos com mais de um corpo. Categorias com um
-    só item são exceções, não padrões." Ela se recosta na cadeira e espera.',
+    'Dr. Tavares is building an updated astrophysical map. She spent weeks cataloging
+    celestial bodies and now needs a summary. "I''ve classified dozens of objects —
+    stars, exoplanets, nebulae, and more," she says, rubbing her tired eyes. "I need
+    to know how many of each type were discovered before 1950 — before the space age,
+    when everything was done with telescopes and patience. And I only want types with
+    more than one body. Single-item categories are exceptions, not patterns." She leans
+    back in her chair and waits.',
 
-    'Conte quantos corpos celestes de cada tipo foram descobertos antes de 1950, mostrando apenas os tipos com mais de 1 corpo.',
+    'Count how many celestial bodies of each type were discovered before 1950. Show only types with more than 1 body. Display the body_type and count columns.',
 
-    'SELECT body_type, COUNT(*) AS quantidade FROM celestial_bodies WHERE discovered_year < 1950 GROUP BY body_type HAVING COUNT(*) > 1;',
+    'Filter pre-1950 discoveries with WHERE, GROUP BY body_type with COUNT(*) AS count, then HAVING COUNT(*) > 1.',
 
     '
         CREATE TABLE celestial_bodies (
@@ -350,21 +346,21 @@ VALUES
     ',
     '
         INSERT INTO celestial_bodies (name, body_type, distance_ly, discovered_year, is_anomalous) VALUES
-            (''Proxima Centauri b'', ''Exoplaneta'',   4.25,       2016, FALSE),
-            (''Betelgeuse'',         ''Estrela'',      642.50,     1835, FALSE),
-            (''Andrômeda XXXI'',     ''Galáxia'',      2500000.00, 1923, FALSE),
-            (''Kepler-442b'',        ''Exoplaneta'',   1206.00,    2015, FALSE),
-            (''Sirius'',             ''Estrela'',      8.60,       1750, FALSE),
-            (''Nebulosa do Caranguejo'', ''Nebulosa'', 6500.00,    1731, FALSE),
-            (''TRAPPIST-1e'',        ''Exoplaneta'',   39.50,      2017, TRUE),
-            (''Halley'',             ''Cometa'',       0.00,       1705, FALSE),
-            (''Vela Pulsar'',        ''Estrela'',      959.00,     1968, FALSE),
-            (''M87*'',               ''Buraco Negro'', 55000000.00, 2019, TRUE);
+            (''Proxima Centauri b'', ''Exoplanet'',   4.25,       2016, FALSE),
+            (''Betelgeuse'',         ''Star'',        642.50,     1835, FALSE),
+            (''Andromeda XXXI'',     ''Galaxy'',      2500000.00, 1923, FALSE),
+            (''Kepler-442b'',        ''Exoplanet'',   1206.00,    2015, FALSE),
+            (''Sirius'',             ''Star'',        8.60,       1750, FALSE),
+            (''Crab Nebula'',        ''Nebula'',      6500.00,    1731, FALSE),
+            (''TRAPPIST-1e'',        ''Exoplanet'',   39.50,      2017, TRUE),
+            (''Halley'',             ''Comet'',       0.00,       1705, FALSE),
+            (''Vela Pulsar'',        ''Star'',        959.00,     1968, FALSE),
+            (''M87*'',               ''Black Hole'',  55000000.00, 2019, TRUE);
     ',
     ARRAY['SELECT', 'WHERE', 'GROUP BY', 'HAVING', 'COUNT'],
     350,
     '[
-        {"body_type": "Estrela", "quantidade": 2}
+        {"body_type": "Star", "count": 2}
     ]',
     FALSE,
     'ASTRONOMY',
@@ -377,20 +373,20 @@ VALUES
 -- ========================================================================
 (
     '00000000-0000-0000-0000-000000000008',
-    'O Fantasma na Matrix',
+    'The Ghost in the Matrix',
 
-    'O relógio marca 3h14 da manhã quando o alarme dispara na NexusCorp. As telas
-    do centro de monitoramento piscam em vermelho. O CTO, um homem calvo de olheiras
-    profundas, agarra o mouse com mão trêmula: "Alguém está acessando dados
-    classificados de dentro da rede — de madrugada, quando ninguém deveria estar
-    aqui." Ele aponta para os logs. "IPs internos. Acessos a recursos sensíveis.
-    Hora morta. Mais de três acessos suspeitos por funcionário. Descubra quem
-    são." O único som na sala é o zumbido dos servidores e o seu coração
-    acelerado enquanto você encara a tela.',
+    'The clock reads 3:14 AM when the alarm goes off at NexusCorp. The monitoring
+    center screens flash red. The CTO — a balding man with deep dark circles —
+    grips the mouse with a trembling hand: "Someone is accessing classified data
+    from inside the network — in the dead of night, when nobody should be here."
+    He points at the logs. "Internal IPs. Sensitive resource access. Witching hour.
+    More than three suspicious accesses per employee. Find out who they are."
+    The only sound in the room is the hum of servers and your racing heart as you
+    stare at the screen.',
 
-    'Identifique os funcionários que realizaram mais de 3 acessos classificados como suspeitos (is_suspicious = TRUE). Mostre o nome e a contagem.',
+    'Identify employees who performed more than 3 suspicious accesses (is_suspicious = TRUE). Show the employee_name and access_count. Order results alphabetically by name.',
 
-    'SELECT employee_name, COUNT(*) AS acesso_count FROM access_logs WHERE is_suspicious = TRUE GROUP BY employee_name HAVING COUNT(*) > 3 ORDER BY employee_name;',
+    'Filter suspicious accesses with WHERE is_suspicious = TRUE, GROUP BY employee_name with COUNT(*) AS access_count. Use HAVING COUNT(*) > 3. Order alphabetically with ORDER BY employee_name.',
 
     '
         CREATE TABLE access_logs (
@@ -404,23 +400,23 @@ VALUES
     ',
     '
         INSERT INTO access_logs (employee_name, ip_address, resource_accessed, access_time, is_suspicious) VALUES
-            (''Alex Silva'',  ''10.0.0.15'', ''/financeiro/balanco'',    ''03:14'', TRUE),
-            (''Alex Silva'',  ''10.0.0.15'', ''/rh/dados_pessoais'',     ''03:16'', TRUE),
-            (''Alex Silva'',  ''10.0.0.15'', ''/admin/users'',           ''03:18'', TRUE),
-            (''Alex Silva'',  ''10.0.0.15'', ''/servidores/config'',     ''03:20'', TRUE),
-            (''João Lima'',   ''10.0.0.45'', ''/admin/backup'',          ''02:00'', TRUE),
-            (''João Lima'',   ''10.0.0.45'', ''/admin/logs'',            ''02:05'', TRUE),
-            (''João Lima'',   ''10.0.0.45'', ''/financeiro/balanco'',    ''02:10'', TRUE),
-            (''João Lima'',   ''10.0.0.45'', ''/admin/usuarios'',        ''02:15'', TRUE),
-            (''Maria Santos'', ''192.168.1.10'', ''/dashboard'',         ''09:00'', FALSE),
-            (''Maria Santos'', ''192.168.1.10'', ''/relatorios'',        ''09:15'', FALSE),
-            (''Carla Dias'',  ''192.168.1.50'', ''/email'',              ''08:30'', FALSE);
+            (''Alex Silva'',  ''10.0.0.15'', ''/financial/balance'',   ''03:14'', TRUE),
+            (''Alex Silva'',  ''10.0.0.15'', ''/hr/personal_data'',    ''03:16'', TRUE),
+            (''Alex Silva'',  ''10.0.0.15'', ''/admin/users'',         ''03:18'', TRUE),
+            (''Alex Silva'',  ''10.0.0.15'', ''/servers/config'',      ''03:20'', TRUE),
+            (''João Lima'',   ''10.0.0.45'', ''/admin/backup'',        ''02:00'', TRUE),
+            (''João Lima'',   ''10.0.0.45'', ''/admin/logs'',          ''02:05'', TRUE),
+            (''João Lima'',   ''10.0.0.45'', ''/financial/balance'',   ''02:10'', TRUE),
+            (''João Lima'',   ''10.0.0.45'', ''/admin/users'',         ''02:15'', TRUE),
+            (''Maria Santos'', ''192.168.1.10'', ''/dashboard'',       ''09:00'', FALSE),
+            (''Maria Santos'', ''192.168.1.10'', ''/reports'',         ''09:15'', FALSE),
+            (''Carla Dias'',  ''192.168.1.50'', ''/email'',            ''08:30'', FALSE);
     ',
     ARRAY['SELECT', 'WHERE', 'GROUP BY', 'HAVING', 'COUNT', 'ORDER BY'],
     500,
     '[
-        {"employee_name": "Alex Silva", "acesso_count": 4},
-        {"employee_name": "João Lima",  "acesso_count": 4}
+        {"employee_name": "Alex Silva", "access_count": 4},
+        {"employee_name": "João Lima",  "access_count": 4}
     ]',
     FALSE,
     'CYBERSECURITY',
@@ -433,20 +429,19 @@ VALUES
 -- ========================================================================
 (
     '00000000-0000-0000-0000-000000000009',
-    'O Surto',
+    'The Outbreak',
 
-    'A Unidade de Resposta Rápida foi mobilizada. Um surto de origem desconhecida
-    se espalha pelo bairro da Lapa com uma velocidade assustadora. A doutora Moraes
-    está exausta — jaleco amarrotado, cabelo grisalho escapando do coque — mas os
-    olhos ainda têm fogo. "Os pacientes com sintomas graves precisam de isolamento
-    imediato. Severidade acima de 7," ela diz, virando-se para o monitor. "Cruza
-    a ficha dos pacientes com o relatório de sintomas. Quero nomes, idades e quais
-    sintomas cada um apresentou. Tempo é vida agora, e eu não vou perder mais
-    ninguém."',
+    'The Rapid Response Unit has been mobilized. An outbreak of unknown origin is
+    spreading through the Lapa neighborhood at an alarming rate. Dr. Moraes is
+    exhausted — wrinkled lab coat, graying hair escaping her bun — but her eyes
+    still burn with fire. "Patients with severe symptoms need immediate isolation.
+    Severity above 7," she says, turning to the monitor. "Cross-reference the patient
+    records with the symptom reports. I need names, ages, and which symptoms each one
+    presented. Time is life now, and I''m not losing anyone else.",
 
-    'Encontre os pacientes que apresentam pelo menos um sintoma com severidade maior que 7. Mostre o nome, a idade e o nome do sintoma.',
+    'Find patients who have at least one symptom with severity greater than 7. Show the patient''s name, age, and symptom_name columns.',
 
-    'SELECT p.name, p.age, s.symptom_name FROM patients p INNER JOIN symptoms s ON p.id = s.patient_id WHERE s.severity > 7;',
+    'Use INNER JOIN to combine patients with symptoms on patient_id, then filter with WHERE for severity > 7.',
 
     '
         CREATE TABLE patients (
@@ -465,40 +460,40 @@ VALUES
     ',
     '
         INSERT INTO patients (name, age, neighborhood, vaccination_status) VALUES
-            (''Seu Jorge'',   67, ''Lapa'', TRUE),
-            (''Dona Maria'',  72, ''Lapa'', TRUE),
-            (''Cláudio'',     34, ''Lapa'', FALSE),
+            (''Mr. George'',  67, ''Lapa'', TRUE),
+            (''Mrs. Maria'',  72, ''Lapa'', TRUE),
+            (''Claudio'',     34, ''Lapa'', FALSE),
             (''Renata'',      28, ''Lapa'', TRUE),
-            (''Sr. Ambrósio'', 81, ''Lapa'', FALSE);
+            (''Mr. Ambrose'', 81, ''Lapa'', FALSE);
         INSERT INTO symptoms (patient_id, symptom_name, severity) VALUES
-            (1, ''Febre Alta'',   9),
-            (1, ''Tosse Seca'',   6),
-            (1, ''Falta de Ar'',  8),
-            (2, ''Febre Alta'',   8),
-            (2, ''Confusão Mental'', 7),
-            (3, ''Febre Alta'',   9),
-            (3, ''Falta de Ar'',  9),
-            (3, ''Náusea'',      5),
-            (3, ''Cefaleia'',    6),
-            (4, ''Dor de Garganta'', 4),
-            (5, ''Febre Alta'',   9),
-            (5, ''Tosse Seca'',   7),
-            (5, ''Falta de Ar'', 10),
-            (5, ''Cianose'',     9),
-            (5, ''Convulsão'',  10);
+            (1, ''High Fever'',           9),
+            (1, ''Dry Cough'',            6),
+            (1, ''Shortness of Breath'',  8),
+            (2, ''High Fever'',           8),
+            (2, ''Mental Confusion'',     7),
+            (3, ''High Fever'',           9),
+            (3, ''Shortness of Breath'',  9),
+            (3, ''Nausea'',              5),
+            (3, ''Headache'',            6),
+            (4, ''Sore Throat'',          4),
+            (5, ''High Fever'',           9),
+            (5, ''Dry Cough'',            7),
+            (5, ''Shortness of Breath'', 10),
+            (5, ''Cyanosis'',            9),
+            (5, ''Seizure'',            10);
     ',
     ARRAY['SELECT', 'INNER JOIN', 'WHERE'],
     250,
     '[
-        {"name": "Seu Jorge",   "age": 67, "symptom_name": "Febre Alta"},
-        {"name": "Seu Jorge",   "age": 67, "symptom_name": "Falta de Ar"},
-        {"name": "Dona Maria",  "age": 72, "symptom_name": "Febre Alta"},
-        {"name": "Cláudio",     "age": 34, "symptom_name": "Febre Alta"},
-        {"name": "Cláudio",     "age": 34, "symptom_name": "Falta de Ar"},
-        {"name": "Sr. Ambrósio","age": 81, "symptom_name": "Febre Alta"},
-        {"name": "Sr. Ambrósio","age": 81, "symptom_name": "Falta de Ar"},
-        {"name": "Sr. Ambrósio","age": 81, "symptom_name": "Cianose"},
-        {"name": "Sr. Ambrósio","age": 81, "symptom_name": "Convulsão"}
+        {"name": "Mr. George",  "age": 67, "symptom_name": "High Fever"},
+        {"name": "Mr. George",  "age": 67, "symptom_name": "Shortness of Breath"},
+        {"name": "Mrs. Maria",  "age": 72, "symptom_name": "High Fever"},
+        {"name": "Claudio",     "age": 34, "symptom_name": "High Fever"},
+        {"name": "Claudio",     "age": 34, "symptom_name": "Shortness of Breath"},
+        {"name": "Mr. Ambrose", "age": 81, "symptom_name": "High Fever"},
+        {"name": "Mr. Ambrose", "age": 81, "symptom_name": "Shortness of Breath"},
+        {"name": "Mr. Ambrose", "age": 81, "symptom_name": "Cyanosis"},
+        {"name": "Mr. Ambrose", "age": 81, "symptom_name": "Seizure"}
     ]',
     FALSE,
     'BIOLOGY',
@@ -511,19 +506,19 @@ VALUES
 -- ========================================================================
 (
     '00000000-0000-0000-0000-000000000010',
-    'A Cura em Gotas',
+    'A Cure in Drops',
 
-    'O surto está se alastrando e a farmácia do hospital está com estoque crítico.
-    A doutora Moraes está pálida, os lábios apertados. Ela segura uma prancheta
-    com a listagem de medicamentos e a voz falha ao falar: "Vários lotes venceram
-    e ninguém atualizou o sistema. Remédios vencidos são pior que remédio nenhum
-    — podem mascarar sintomas, causar reações adversas, custar vidas." Ela enfia
-    a caneta na sua mão. "Zera o estoque de tudo que venceu antes de 2025. Depois
-    me mostra como ficou. Precisamos saber o que realmente temos para lutar."',
+    'The outbreak is spreading and the hospital pharmacy is running critically low.
+    Dr. Moraes is pale, lips pressed tight. She holds a clipboard with the medication
+    list, her voice faltering: "Several batches expired and nobody updated the system.
+    Expired meds are worse than no meds at all — they can mask symptoms, cause adverse
+    reactions, cost lives." She shoves the pen into your hand. "Zero out the stock
+    for everything that expired before 2025. Then show me what''s left. We need to
+    know what we actually have to fight with.",
 
-    'Atualize a quantidade (quantity) para 0 dos medicamentos com data de validade (expiry_date) anterior a 2025-01-01. Depois liste todos os registros.',
+    'Set the quantity to 0 for medications with an expiry_date before 2025-01-01. Then list all records from the medication_stock table to verify.',
 
-    'UPDATE medication_stock SET quantity = 0 WHERE expiry_date < ''2025-01-01''; SELECT * FROM medication_stock;',
+    'Use an UPDATE statement with a WHERE clause filtering by expiry_date. Then run a SELECT to see the updated stock.',
 
     '
         CREATE TABLE medication_stock (
@@ -536,21 +531,21 @@ VALUES
     ',
     '
         INSERT INTO medication_stock (medication, batch, quantity, expiry_date) VALUES
-            (''Ivermectina'',  ''IVM-23A'', 500,  ''2026-12-01''),
+            (''Ivermectin'',   ''IVM-23A'', 500,  ''2026-12-01''),
             (''Zanamivir'',    ''ZAN-22B'', 200,  ''2024-06-15''),
             (''Oseltamivir'',  ''OSL-21C'', 150,  ''2024-03-01''),
             (''Remdesivir'',   ''REM-24A'', 300,  ''2027-01-15''),
-            (''Dipirona'',     ''DIP-22A'', 1000, ''2025-11-30''),
+            (''Dipyrone'',     ''DIP-22A'', 1000, ''2025-11-30''),
             (''Paracetamol'',  ''PAR-20B'', 750,  ''2023-08-20'');
     ',
     ARRAY['UPDATE', 'WHERE', 'SELECT'],
     400,
     '[
-        {"id": 1, "medication": "Ivermectina",  "batch": "IVM-23A", "quantity": 500,  "expiry_date": "2026-12-01"},
+        {"id": 1, "medication": "Ivermectin",  "batch": "IVM-23A", "quantity": 500,  "expiry_date": "2026-12-01"},
         {"id": 2, "medication": "Zanamivir",    "batch": "ZAN-22B", "quantity": 0,   "expiry_date": "2024-06-15"},
         {"id": 3, "medication": "Oseltamivir",  "batch": "OSL-21C", "quantity": 0,   "expiry_date": "2024-03-01"},
         {"id": 4, "medication": "Remdesivir",   "batch": "REM-24A", "quantity": 300, "expiry_date": "2027-01-15"},
-        {"id": 5, "medication": "Dipirona",     "batch": "DIP-22A", "quantity": 1000,"expiry_date": "2025-11-30"},
+        {"id": 5, "medication": "Dipyrone",     "batch": "DIP-22A", "quantity": 1000,"expiry_date": "2025-11-30"},
         {"id": 6, "medication": "Paracetamol",  "batch": "PAR-20B", "quantity": 0,   "expiry_date": "2023-08-20"}
     ]',
     FALSE,
@@ -558,11 +553,11 @@ VALUES
     'EXPERT'
 );
 
--- Scenario: Noite no Blue Moon (groups missions 1, 2, 3)
+-- Scenario: Night at the Blue Moon (groups missions 1, 2, 3)
 INSERT INTO scenarios (id, title, description, theme) VALUES (
     '00000000-0000-0000-0000-0000000000a1',
-    'Noite no Blue Moon',
-    'São 3h da manhã e o detetive Estranho acaba de chegar ao Blue Moon Cabaret. Um corpo foi encontrado no beco, e as pistas estão no livro de registro. Conforme você investiga, descobre que essa noite guarda mais segredos que um simples assassinato — uma teia de mentiras envolvendo frequentadores, interrogatórios e álibis que não se sustentam.',
+    'Night at the Blue Moon',
+    'It''s 3 AM and Detective Estranho has just arrived at the Blue Moon Cabaret. A body was found in the alley, and the clues are in the register book. As you investigate, you discover this night holds more secrets than a simple murder — a web of lies involving patrons, interrogations, and alibis that don''t hold up.',
     'CRIMINAL'
 );
 

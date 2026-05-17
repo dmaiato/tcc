@@ -49,6 +49,8 @@ export class AuthService {
     }
   }
 
+  readonly isAdmin = computed(() => this._user()?.role === 'ADMIN');
+
   private saveToStorage(accessToken: string, refreshToken: string, user: User): void {
     localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
     if (refreshToken) {
@@ -74,7 +76,8 @@ export class AuthService {
           username: response.username,
           createdAt: '',
           xp: 0,
-          level: 1
+          level: 1,
+          role: response.role as 'USER' | 'ADMIN'
         };
         this._token.set(response.token);
         this._refreshToken.set('');
@@ -104,7 +107,8 @@ export class AuthService {
           username: response.username,
           createdAt: '',
           xp: 0,
-          level: 1
+          level: 1,
+          role: response.role as 'USER' | 'ADMIN'
         };
         this._token.set(response.token);
         this._refreshToken.set('');
@@ -164,12 +168,19 @@ export class AuthService {
 
   fetchUserProfile(): Observable<User> {
     return this.api.get<UserResponse>('/users/me').pipe(
-      tap(user => {
+      map(response => {
+        const user: User = {
+          id: response.id,
+          email: response.email,
+          username: response.username,
+          createdAt: response.createdAt,
+          xp: response.xp,
+          level: response.level,
+          role: response.role as 'USER' | 'ADMIN'
+        };
         this._user.set(user);
-        const currentUser = this._user();
-        if (currentUser) {
-          localStorage.setItem(USER_KEY, JSON.stringify(user));
-        }
+        localStorage.setItem(USER_KEY, JSON.stringify(user));
+        return user;
       })
     );
   }

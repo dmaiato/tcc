@@ -1224,7 +1224,415 @@ Before merging changes to `ProfilePage.tsx`:
 
 ---
 
-## 6. Anti-patterns (do not ship)
+## 6. Mission Control (Admin Page) — `/admin`
+
+**File**: `src/pages/AdminPage.tsx` (plus internal `SchemaBuilder` and `DataEditor` subcomponents).
+
+Mission Control is the **authoring surface**: it must feel like a piece of engineering hardware — dense, predictable, slightly austere. It is the only page in SQLab where the user is *producing data*, not *consuming it*, so it leans on monospace type, tight vertical rhythm, and accordion-based progressive disclosure. Every visual decision below is load-bearing; treat this section as a contract.
+
+### 6.1 Page Shell
+
+```tsx
+<div className="min-h-screen flex flex-col gradient-mesh">
+  <TopBar />
+  <div className="flex-1 px-6 md:px-10 py-6">
+    <div className="max-w-5xl mx-auto">
+      {/* header + form + list */}
+    </div>
+  </div>
+</div>
+```
+
+Invariants:
+- Outer wrapper is **`min-h-screen`** (page grows with content) — never `h-screen`. The mission list can be arbitrarily long; clipping it is a bug.
+- **`gradient-mesh`** background is mandatory. It softens the dense form chrome and matches Profile/Leaderboard. MissionPage's flat `bg-background` is wrong here.
+- Inner gutter is **`px-6 md:px-10 py-6`** — note `py-6` (not `py-8` like Profile). Admin's higher information density justifies the tighter top/bottom.
+- Content cap is **`max-w-5xl`** — wider than Profile (`max-w-4xl`) because schema tables need horizontal room, narrower than a true dashboard because the form is still a single column.
+
+### 6.2 Page Header Row
+
+```tsx
+<div className="flex items-center justify-between mb-6">
+  <div className="flex items-center gap-3">
+    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-destructive to-accent flex items-center justify-center">
+      <Shield className="w-5 h-5 text-destructive-foreground" />
+    </div>
+    <div>
+      <h1 className="font-sans text-xl font-bold">Mission Control</h1>
+      <p className="font-mono text-[10px] text-muted-foreground">
+        {total} total · {builtIn} built-in · {custom} custom
+      </p>
+    </div>
+  </div>
+  {/* New Mission CTA — see 6.3 */}
+</div>
+```
+
+Rules:
+- **Identity tile**: `w-10 h-10 rounded-xl` with the **`from-destructive to-accent`** gradient. This red→amber wash is unique to admin and signals "elevated privileges" — do not reuse it elsewhere. Icon is **`Shield`** at `w-5 h-5` with `text-destructive-foreground`.
+- **`<h1>`** is `font-sans text-xl font-bold`. Exactly one `<h1>` per page.
+- Stat ribbon is `font-mono text-[10px]` with bullet separators (` · `, U+00B7 with hairline spaces). Never use commas, pipes, or em-dashes.
+
+### 6.3 Primary CTA (New Mission / Cancel)
+
+The CTA is a **stateful toggle** — same DOM node, two visual states:
+
+```tsx
+<motion.button
+  whileTap={{ scale: 0.95 }}
+  onClick={() => { setCreating(!creating); if (!creating) resetForm(); }}
+  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-mono text-xs font-medium transition-all ${
+    creating
+      ? "bg-muted text-muted-foreground border border-border hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
+      : "bg-primary text-primary-foreground hover:bg-primary/90 glow-primary"
+  }`}
+>
+  {creating ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+  {creating ? "Cancel" : "New Mission"}
+</motion.button>
+```
+
+Rules:
+- **Idle state** = solid `bg-primary` + **`glow-primary`** halo. This is the only glowing button on the page; it must dominate.
+- **Active state** = recessed `bg-muted` with destructive *hover only*. Hover must feel like an escape hatch, not a primary action — that is why the destructive treatment is gated behind `:hover`.
+- `whileTap: 0.95` is the only motion. No `whileHover` scale — that would compete with the glow.
+- Toggling **must call `resetForm()`** on every transition into "create" mode (line 397 in source) to prevent stale state leaks.
+
+### 6.4 Create Form Container
+
+```tsx
+<AnimatePresence>
+  {creating && (
+    <motion.div
+      initial={{ opacity: 0, y: -20, height: 0 }}
+      animate={{ opacity: 1, y: 0, height: "auto" }}
+      exit={{ opacity: 0, y: -20, height: 0 }}
+      className="overflow-hidden mb-6"
+    >
+      <div className="rounded-xl border-2 border-primary/30 bg-card p-5 space-y-3">
+        <div className="flex items-center gap-2 mb-4">
+          <Sparkles className="w-4 h-4 text-primary" />
+          <h2 className="font-sans text-sm font-semibold">Create New Mission</h2>
+        </div>
+        {/* <Section> accordions, then submit row */}
+      </div>
+    </motion.div>
+  )}
+</AnimatePresence>
+```
+
+Invariants:
+- The form wrapper is the **only card on the page with `border-2`** and the **only one tinted `border-primary/30`**. The double border signals "active workspace". Do not promote any other card to `border-2`.
+- Animation **must animate `height: 0 → auto`** alongside opacity+y, not just opacity. The list below must reflow as the form expands, otherwise the user loses scroll context.
+- The outer `<motion.div>` carries `overflow-hidden` — without it, the height animation will leak content during the transition.
+- Inner `<h2>` is `font-sans text-sm font-semibold` (deliberately smaller than the page `<h1>` and the section headers' `text-xs` — it sits in the middle of the type scale).
+- `space-y-3` is the only vertical rhythm allowed between sections. Resist the urge to use `space-y-4` "for breathing room"; the form is intentionally tight.
+
+### 6.5 The `<Section>` Accordion (single-expansion pattern)
+
+All four form regions (Details, Techniques, Schema, Data) share one primitive. **Only one section may be open at a time**:
+
+```tsx
+const Section = ({ id, title, icon, children }) => (
+  <div className="border border-border rounded-lg overflow-hidden">
+    <button
+      onClick={() => setExpandedSection(expandedSection === id ? "" : id)}
+      className="w-full flex items-center justify-between px-4 py-3 bg-muted/20 hover:bg-muted/40 transition-colors"
+    >
+      <span className="flex items-center gap-2 font-mono text-xs text-foreground">
+        {icon} {title}
+      </span>
+      {expandedSection === id
+        ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
+        : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />}
+    </button>
+    <AnimatePresence>
+      {expandedSection === id && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          className="overflow-hidden"
+        >
+          <div className="p-4 space-y-3">{children}</div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+);
+```
+
+Rules:
+- State is a **single string** (`expandedSection`), not a `Set`. Mutual exclusion is enforced by the data model itself — do not "fix" this with multi-select.
+- Trigger row chrome: `bg-muted/20` idle, `bg-muted/40` hover. Body is unstyled (transparent) — the outer `border-border` provides the frame.
+- Title is **always `font-mono text-xs`**. Icons are **`w-3.5 h-3.5`**, color-coded per section (see 6.6).
+- Chevron is the affordance, not the row. Never replace it with a rotation animation; the swap between `ChevronUp`/`ChevronDown` is intentional and accessible.
+- `overflow-hidden` on the motion wrapper is non-negotiable — without it, content escapes during collapse.
+
+### 6.6 Section Color Coding (icons only, not chrome)
+
+| Section ID    | Icon       | Color class       | Semantic meaning                |
+| ------------- | ---------- | ----------------- | ------------------------------- |
+| `details`     | `Sparkles` | `text-primary`    | Identity / creative metadata    |
+| `techniques`  | `Database` | `text-secondary`  | Pedagogy / tagging              |
+| `schema`      | `Database` | `text-accent`     | Structure / shape of data       |
+| `data`        | `Database` | `text-primary`    | Concrete rows / payload         |
+
+The chrome stays neutral; **only the icon carries color**. This keeps the four sections visually peer-level while still legible at a glance in the collapsed state.
+
+### 6.7 Details Section — Form Field Conventions
+
+Every input in the Details section follows the same recipe. **There is exactly one input style on this page** — do not introduce a second:
+
+```tsx
+<div>
+  <label className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">
+    Title *
+  </label>
+  <input
+    value={title}
+    onChange={(e) => setTitle(e.target.value)}
+    placeholder="e.g., The Lost Archives"
+    className="w-full font-mono text-xs bg-muted/30 border border-border rounded-md px-3 py-2 text-foreground placeholder:text-muted-foreground/50 focus:border-primary outline-none"
+  />
+</div>
+```
+
+Field rules:
+- Label is **`font-mono text-[10px] uppercase tracking-wider`**. `tracking-wider`, not `tracking-widest` (`widest` is reserved for `<h3>` list headers in 6.10).
+- Required fields end with ` *` in the label text. No red asterisk, no separate `<span>` — the literal character carries the semantics.
+- Input/textarea/select all share: `font-mono text-xs · bg-muted/30 · border border-border · rounded-md · px-3 py-2 · focus:border-primary outline-none`. **The `outline-none` is paired with `focus:border-primary`**; never drop both.
+- Placeholder is `text-muted-foreground/50` — deliberately faint so it never reads as a value.
+- Textareas add `rows={3} resize-none`. The form is too dense to allow user-driven resize.
+
+Layout grids inside Details:
+- Title/Subtitle: `grid grid-cols-1 md:grid-cols-2 gap-3`.
+- Difficulty/Category/XP: `grid grid-cols-3 gap-3` — **stays 3-up even on mobile**. These three fields are conceptually one unit ("mission classification") and breaking them apart hurts comprehension more than the cramped width.
+- Hint and Expected Query: full width, stacked.
+
+### 6.8 Techniques Section — Toggle Chips
+
+```tsx
+<div className="flex flex-wrap gap-1.5">
+  {allTechniques.map((t) => (
+    <button
+      key={t}
+      onClick={() => toggleTechnique(t)}
+      className={`font-mono text-[10px] px-2 py-1 rounded-md border transition-all ${
+        techniques.includes(t)
+          ? "bg-primary/15 border-primary/40 text-primary"
+          : "bg-muted/20 border-border text-muted-foreground hover:border-muted-foreground/30"
+      }`}
+    >
+      {t}
+    </button>
+  ))}
+</div>
+```
+
+Rules:
+- Multi-select (unlike the Section accordion). State is `Technique[]`; toggle = include/exclude.
+- Active chip uses the **`bg-primary/15 · border-primary/40 · text-primary`** triad — the same token set used by `MissionFilters` active state but **slightly tighter padding** (`px-2 py-1` vs filters' `px-3 py-1.5`) because admin density is higher.
+- Idle hover only adjusts the border (`hover:border-muted-foreground/30`) — no background swap. The bg flip is reserved for the *selected* state.
+- `gap-1.5` (6px), not `gap-2`. The chip cluster must read as a single dense block.
+
+### 6.9 Schema & Sample Data Sections
+
+These two sections use dedicated subcomponents (`SchemaBuilder`, `DataEditor`) that share a visual language:
+
+**Table card frame** (used by both):
+```tsx
+<div className="rounded-lg border border-border bg-muted/20 p-3">
+  <div className="flex items-center gap-2 mb-2">
+    <Database className="w-3.5 h-3.5 text-secondary" />
+    <input className="font-mono text-xs bg-transparent border-b border-border/50 focus:border-secondary outline-none px-1 py-0.5 text-foreground" />
+    <button className="ml-auto text-destructive/60 hover:text-destructive"><X className="w-3.5 h-3.5" /></button>
+  </div>
+  {/* columns or rows */}
+</div>
+```
+
+**Inline editable inputs** (column names, cell values) use the **underline-only pattern**:
+- `bg-transparent · border-b border-border/30 (or /50) · focus:border-primary · outline-none`.
+- No box, no padding beyond `px-1 py-0.5`. This is critical — boxed inputs at this density would create a "form within a form" perception. The underline-only treatment keeps the schema feeling like a *document*, not a form.
+- Focus color differentiation: **`focus:border-secondary`** for the table name (structural), **`focus:border-primary`** for column names and cell values (content).
+
+**Type-select dropdowns** (schema columns):
+```tsx
+<select className="font-mono text-[10px] bg-muted border border-border rounded px-1.5 py-0.5 text-muted-foreground">
+  {["INTEGER", "TEXT", "DECIMAL", "BOOLEAN", "DATE"].map(t => <option key={t} value={t}>{t}</option>)}
+</select>
+```
+- `text-[10px]` (smaller than the column-name input) — type is metadata, name is content.
+- `text-muted-foreground` — the type never carries the same weight as the value it constrains.
+
+**Destructive affordances** in this region follow a *removal-distance ladder*:
+| What's removed | Class                                              |
+| -------------- | -------------------------------------------------- |
+| Entire table   | `text-destructive/60 hover:text-destructive`       |
+| Column         | `text-destructive/40 hover:text-destructive`       |
+| Single row     | `text-destructive/40 hover:text-destructive`       |
+
+Higher-impact destructions get higher idle opacity (60 vs 40). This subliminally communicates "this delete matters more" without resorting to color or size changes.
+
+**"Add" affordances** are dashed-border full-width buttons:
+```tsx
+<button className="w-full py-2 rounded-lg border border-dashed border-border hover:border-secondary/50 font-mono text-xs text-muted-foreground hover:text-secondary transition-colors flex items-center justify-center gap-1.5">
+  <Plus className="w-3.5 h-3.5" /> Add table
+</button>
+```
+- **Dashed border** is the universal "create new slot" signal in admin. Never use it for any other purpose.
+- Hover swaps to `secondary` (purple) — different from primary CTAs so it never competes with "New Mission" or "Create Mission".
+
+**Sample-data table** (`DataEditor`):
+- Wrapping container is `overflow-auto max-h-48` — clamp the height aggressively. Tall data tables would dwarf the rest of the form.
+- Header row: `bg-muted/20 · text-[10px] text-muted-foreground font-mono`. **No sort affordance** — this is an editor, not a viewer.
+- Body rows: `border-b border-border/50 · hover:bg-muted/10`. Hover bg is `/10` (extremely subtle) because cells already have focus chrome that would conflict with a stronger hover.
+- Cell inputs are full-width underline-only; placeholder is the literal string `"null"` (lowercase, matches SQL convention).
+- The `updateCell` parser coerces `""` and `"null"` → `null`, `INTEGER` → `parseInt`, `DECIMAL` → `parseFloat`. The placeholder + parser must agree; do not change one without the other.
+
+### 6.10 Submit Row
+
+```tsx
+<div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
+  <button onClick={cancel} className="font-mono text-xs text-muted-foreground hover:text-foreground transition-colors px-4 py-2">
+    Cancel
+  </button>
+  <motion.button
+    whileTap={{ scale: 0.95 }}
+    onClick={handleCreate}
+    className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-mono text-xs font-medium hover:bg-primary/90 glow-primary transition-all"
+  >
+    <Sparkles className="w-3.5 h-3.5" /> Create Mission
+  </motion.button>
+</div>
+```
+
+Rules:
+- **`border-t border-border · pt-3`** separator is mandatory. The submit row must visually detach from the last accordion.
+- Cancel is a **ghost button** (no border, no bg) — the visual hierarchy is `glowing primary > nothing > nothing else`. There is no destructive variant for Cancel here because the form is non-destructive (closing it just discards a draft).
+- Create button is `px-5 py-2.5` — fractionally larger than the header CTA (`px-4 py-2.5`) to anchor the form's bottom edge. It reuses the same `glow-primary` token; the page has exactly **two** glowing buttons (header CTA + submit) and they must look like the same affordance in two locations.
+- Validation toasts use `variant: "destructive"` and fire **before** the optimistic `addMission` call. Never optimistically add and then roll back.
+
+### 6.11 Mission List (read-only built-ins + editable custom)
+
+The list is **two separately-labeled groups** stacked vertically, never a single list with a "type" column.
+
+**Group header**:
+```tsx
+<h3 className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest mb-2">
+  Built-in Missions ({count})
+</h3>
+```
+- This is the only place `tracking-widest` appears on the page (form labels use `tracking-wider`). The wider tracking marks a *section break*, not a *field label*.
+
+**Built-in row**:
+```tsx
+<div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-card hover:bg-muted/20 transition-colors">
+  <span className="font-mono text-[9px] text-muted-foreground/50 w-6">{idx.padStart(2, "0")}</span>
+  <div className="flex-1 min-w-0">
+    <Link className="font-sans text-sm font-medium hover:text-primary transition-colors">{title}</Link>
+    <p className="font-mono text-[10px] text-muted-foreground truncate">{subtitle}</p>
+  </div>
+  <div className="flex items-center gap-2 shrink-0">
+    <span className={`font-mono text-[9px] px-1.5 py-0.5 rounded ${diff.bgColor} ${diff.color}`}>{diff.label}</span>
+    <span className={`font-mono text-[9px] px-1.5 py-0.5 rounded ${cat.bgColor} ${cat.color}`}>{cat.icon}</span>
+    <span className="font-mono text-[9px] text-accent">{xp} XP</span>
+    <span className="font-mono text-[8px] text-muted-foreground/40 px-2 py-0.5 rounded bg-muted/30 border border-border/50">
+      read-only
+    </span>
+  </div>
+</div>
+```
+
+**Custom row** differs in exactly three ways:
+1. Border is **`border-secondary/20`** (not `border-border`) — purple tint marks "user-authored".
+2. The numeric index is replaced by a **`Sparkles` icon** in `text-secondary`.
+3. The trailing `read-only` badge is replaced by a delete affordance (see 6.12).
+4. The wrapper is `motion.div` with `layout` prop for smooth reflow on delete.
+
+Shared row rules:
+- `gap-3` between leading index/icon, content, and meta cluster.
+- `flex-1 min-w-0` on the content slot is **required** — without `min-w-0` the truncate breaks and pushes the meta cluster off-screen.
+- Title uses `font-sans text-sm font-medium`; subtitle uses `font-mono text-[10px] text-muted-foreground truncate`. The sans/mono split mirrors MissionPage's prompt-vs-metadata convention.
+- Meta cluster spacing is `gap-2`, `shrink-0`. The pills (`text-[9px]`) and XP (`text-[9px]`) are all *one* size step smaller than the row text — they recede.
+- Difficulty/category pills pull their color tokens from `difficultyConfig` / `categoryConfig`. **Never hard-code these classes here** — the configs are the single source of truth, shared with MissionPage and MissionFilters.
+
+### 6.12 Two-Step Delete (custom missions only)
+
+```tsx
+{confirmDelete === m.id ? (
+  <div className="flex items-center gap-1">
+    <button onClick={() => handleDelete(m.id)} className="font-mono text-[10px] px-2 py-1 rounded bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive/20">
+      Confirm
+    </button>
+    <button onClick={() => setConfirmDelete(null)} className="font-mono text-[10px] px-2 py-1 rounded text-muted-foreground hover:text-foreground">
+      Cancel
+    </button>
+  </div>
+) : (
+  <button onClick={() => setConfirmDelete(m.id)} className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
+    <Trash2 className="w-3.5 h-3.5" />
+  </button>
+)}
+```
+
+Rules:
+- Confirmation is **inline** — never a modal, never a toast-with-undo. The row itself swaps its trailing slot.
+- Idle delete is a **ghost icon button** (`p-1.5`, no border, no bg) that reveals `bg-destructive/10` on hover. The icon must never be red at rest, only on hover/confirm.
+- Confirm button uses the full destructive triad: `bg-destructive/10 · text-destructive · border-destructive/30`. The accompanying Cancel is a *ghost* — the visual weight asymmetry tells the user which path is the "committed" one.
+- State is a **single string** (`confirmDelete: string | null`), enforcing one-at-a-time confirmation across the entire list. Opening confirm on row B implicitly closes it on row A — desired behaviour.
+- `handleDelete` fires the toast *after* `deleteMission` and `setConfirmDelete(null)`. Order matters: state cleanup before user feedback.
+
+### 6.13 Empty State (no custom missions)
+
+```tsx
+<div className="text-center py-10 rounded-xl border border-dashed border-border">
+  <p className="font-mono text-xs text-muted-foreground">No custom missions yet.</p>
+  <p className="font-mono text-[10px] text-muted-foreground/60 mt-1">
+    Click "New Mission" to create one.
+  </p>
+</div>
+```
+
+- **Dashed border** — same convention as the "Add table" / "Add row" buttons. Dashed = "this is a slot waiting to be filled".
+- Two-tier copy: primary fact (`text-xs`) + dimmer guidance (`text-[10px] · /60`). Never a single line; the guidance line is what makes the empty state actionable.
+- `py-10` (40px vertical) is the canonical empty-state height — narrower would feel like an error, taller would dwarf the built-in list above.
+
+### 6.14 State Architecture
+
+The page owns all form state in `useState` (no form library). This is deliberate — the schema/sampleData co-mutation logic in `SchemaBuilder` requires fine-grained imperative control that resists abstraction. Specifically:
+
+- **Renaming a table** must also rename its key in `sampleData` (line 48-52).
+- **Adding a column** must append `null` for that column to every existing row (line 65-66).
+- **Removing a column** must delete that key from every existing row (line 79-83).
+- **Renaming a column** must rekey it in every row (line 99-107).
+
+These four invariants are why schema and sampleData are sibling state, not derived. **Do not refactor them into a single nested object** — the explicit pairing makes the mutation contract visible at the call site.
+
+### 6.15 Mission Control Invariants Checklist
+
+Before shipping any change to `AdminPage.tsx`, verify:
+
+- [ ] Outer wrapper is `min-h-screen` (not `h-screen`), with `gradient-mesh`.
+- [ ] Content cap is `max-w-5xl mx-auto`, gutters `px-6 md:px-10 py-6`.
+- [ ] Exactly one `<h1>` (Mission Control); accordion titles are buttons, not headings.
+- [ ] The page contains **exactly two glowing buttons**: header "New Mission" (idle) and form "Create Mission". No third.
+- [ ] Form container uses **`border-2 border-primary/30`** — it is the only `border-2` card on the page.
+- [ ] At most one `<Section>` is open at a time (`expandedSection: string`, not a Set).
+- [ ] All form inputs share one recipe: `font-mono text-xs · bg-muted/30 · border-border · focus:border-primary · outline-none`.
+- [ ] Inline schema/cell inputs use **underline-only** (`border-b`, `bg-transparent`) — never the boxed input recipe.
+- [ ] Difficulty/Category pill colors come from `difficultyConfig` / `categoryConfig`, never hard-coded.
+- [ ] Built-in row border is `border-border`; custom row border is `border-secondary/20`. No other variations.
+- [ ] Delete confirmation is inline (row swap), never a Radix `<AlertDialog>` or toast-with-undo.
+- [ ] "Add" affordances use `border-dashed`; nothing else on the page does.
+- [ ] Group headers use `tracking-widest`; field labels use `tracking-wider`. They are not interchangeable.
+- [ ] Section icon colors follow §6.6 (primary/secondary/accent/primary) — chrome stays neutral.
+- [ ] `schema` and `sampleData` mutate as a pair on every structural change (rename, add column, drop column).
+
+---
+
+## 7. Anti-patterns (do not ship)
 
 - ❌ Mixing `font-sans` and `font-mono` for the same kind of content within one screen.
 - ❌ `border-2` on non-Verify CTAs — that thickness is reserved for the "this is the action that scores you" button.

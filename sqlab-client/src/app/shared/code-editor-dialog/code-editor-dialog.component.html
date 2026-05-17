@@ -1,0 +1,39 @@
+<div class="fixed inset-0 z-[100] flex items-center justify-center p-4 dialog-backdrop bg-black/60" (click)="onBackdropClick($event)">
+  <div class="w-full h-full max-h-[calc(100vh-2rem)] bg-editor border border-border rounded-xl flex flex-col overflow-hidden shadow-2xl">
+    <!-- Title bar with traffic lights -->
+    <div class="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30 shrink-0">
+      <div class="flex items-center gap-2">
+        <div class="w-2.5 h-2.5 rounded-full bg-destructive/60"></div>
+        <div class="w-2.5 h-2.5 rounded-full bg-accent/60"></div>
+        <div class="w-2.5 h-2.5 rounded-full bg-primary/60"></div>
+      </div>
+      <div class="flex items-center gap-2">
+        <ng-icon name="lucideTerminal" class="w-3.5 h-3.5 text-muted-foreground" />
+        <span class="font-mono text-xs text-foreground">{{ title() }}</span>
+      </div>
+      <button (click)="close.emit()" type="button"
+        class="p-1 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
+        <ng-icon name="lucideX" class="w-4 h-4" />
+      </button>
+    </div>
+
+    <!-- Textarea -->
+    <textarea
+      #textarea
+      [value]="value()"
+      (input)="onInput($event)"
+      (keydown)="onKeyDown($event)"
+      class="flex-1 w-full bg-transparent font-mono text-sm text-foreground p-5 resize-none outline-none leading-relaxed placeholder:text-muted-foreground/40 overflow-y-auto min-h-0"
+      placeholder="-- Type your SQL here..."
+      spellcheck="false"
+      autocapitalize="off"
+      autocorrect="off"
+    ></textarea>
+
+    <!-- Status bar -->
+    <div class="flex items-center justify-between px-4 py-2 border-t border-border bg-muted/20 shrink-0">
+      <span class="font-mono text-[10px] text-muted-foreground">Esc to close · Tab to indent</span>
+      <span class="font-mono text-[10px] text-muted-foreground">Changes synced live</span>
+    </div>
+  </div>
+</div>

@@ -2,6 +2,8 @@ package com.sqlab.infrastructure.adapter.in.web.dto;
 
 import com.sqlab.domain.model.DifficultyLevel;
 import com.sqlab.domain.model.Theme;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 import java.util.Map;
@@ -31,4 +33,38 @@ public class ScenarioDto {
             Theme theme,
             List<ScenarioMissionItem> missions,
             Map<String, Integer> userProgress) {}
+
+    public record CreateScenarioRequest(
+            @NotBlank String title,
+            @NotBlank String description,
+            @NotNull Theme theme) {}
+
+    public record UpdateScenarioRequest(
+            @NotBlank String title,
+            @NotBlank String description,
+            @NotNull Theme theme) {}
+
+    public record ScenarioResponse(
+            UUID id,
+            String title,
+            String description,
+            Theme theme,
+            int totalMissions) {}
+
+    public record ScenarioMissionSummary(
+            UUID id,
+            String title,
+            DifficultyLevel difficulty,
+            int xpReward) {}
+
+    public record ScenarioAdminDetail(
+            UUID id,
+            String title,
+            String description,
+            Theme theme,
+            int totalMissions,
+            List<ScenarioMissionSummary> missions) {}
+
+    public record ReorderMissionsRequest(
+            @NotNull List<@NotNull UUID> missionIds) {}
 }
