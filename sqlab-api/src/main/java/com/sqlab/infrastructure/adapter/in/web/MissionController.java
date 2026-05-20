@@ -1,6 +1,7 @@
 package com.sqlab.infrastructure.adapter.in.web;
 
 import com.sqlab.application.port.in.GetMissionsUseCase;
+import com.sqlab.application.port.in.AdminValidateMissionUseCase;
 import com.sqlab.application.port.in.ManageMissionUseCase;
 import com.sqlab.application.port.in.ValidateMissionUseCase;
 import com.sqlab.domain.model.DifficultyLevel;
@@ -25,13 +26,16 @@ public class MissionController {
     private final GetMissionsUseCase getMissionsUseCase;
     private final ValidateMissionUseCase validateMissionUseCase;
     private final ManageMissionUseCase manageMissionUseCase;
+    private final AdminValidateMissionUseCase adminValidateMissionUseCase;
 
     public MissionController(GetMissionsUseCase getMissionsUseCase,
                              ValidateMissionUseCase validateMissionUseCase,
-                             ManageMissionUseCase manageMissionUseCase) {
+                             ManageMissionUseCase manageMissionUseCase,
+                             AdminValidateMissionUseCase adminValidateMissionUseCase) {
         this.getMissionsUseCase = getMissionsUseCase;
         this.validateMissionUseCase = validateMissionUseCase;
         this.manageMissionUseCase = manageMissionUseCase;
+        this.adminValidateMissionUseCase = adminValidateMissionUseCase;
     }
 
     @GetMapping
@@ -66,6 +70,17 @@ public class MissionController {
 
         ValidationResult result = validateMissionUseCase.handle(
                 new ValidateMissionUseCase.Command(UUID.fromString(userId), missionId, request.tuples())
+        );
+        return ResponseEntity.ok(new MissionDto.ValidationResponse(result.correct(), result.feedback()));
+    }
+
+    @PostMapping("/{missionId}/validate/admin")
+    public ResponseEntity<MissionDto.ValidationResponse> adminValidate(
+            @PathVariable UUID missionId,
+            @Valid @RequestBody MissionDto.ValidationRequest request) {
+
+        ValidationResult result = adminValidateMissionUseCase.handle(
+                new AdminValidateMissionUseCase.Command(missionId, request.tuples())
         );
         return ResponseEntity.ok(new MissionDto.ValidationResponse(result.correct(), result.feedback()));
     }
