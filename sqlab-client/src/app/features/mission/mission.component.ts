@@ -6,6 +6,7 @@ import { NgIconsModule } from '@ng-icons/core';
 import { PgliteService, QueryResult } from '../../core/pglite.service';
 import { MissionService } from '../../core/mission.service';
 import { ToastService } from '../../shared/toast/toast.service';
+import { AuthService } from '../../core/auth/auth.service';
 import { Mission, Theme, DifficultyLevel } from '../../core/models/mission.model';
 import { MissionTabsComponent } from './mission-tabs/mission-tabs.component';
 import { SqlEditorComponent } from './sql-editor/sql-editor.component';
@@ -25,6 +26,7 @@ export class MissionComponent implements OnInit, OnDestroy {
   private readonly pgliteService = inject(PgliteService);
   private readonly missionService = inject(MissionService);
   private readonly toastService = inject(ToastService);
+  private readonly authService = inject(AuthService);
 
   mission = signal<Mission | null>(null);
   isLoading = signal(true);
@@ -51,6 +53,10 @@ export class MissionComponent implements OnInit, OnDestroy {
   lockedScenarioId = signal<string | null>(null);
 
   schema = signal<{ name: string; columns: ColumnInfo[] }[]>([]);
+
+  expectedResult = signal<Record<string, unknown>[] | null>(null);
+  expectedColumns = signal<string[]>([]);
+  showExpected = signal(false);
 
   ngOnInit(): void {
     this.loadMissions();
@@ -158,16 +164,35 @@ export class MissionComponent implements OnInit, OnDestroy {
     });
   }
 
+  private loadExpectedResult(mission: Mission): void {
+    if (mission.expectedResult) {
+      const rows = mission.expectedResult as Record<string, unknown>[];
+      this.expectedResult.set(rows);
+      if (rows.length > 0) {
+        this.expectedColumns.set(Object.keys(rows[0]));
+      }
+    }
+  }
+
   private loadMission(id: string): void {
     this.isLoading.set(true);
     this.isLocked.set(false);
-    this.missionService.getMissionById(id).subscribe({
+    this.showExpected.set(false);
+
+    const load = this.authService.isAdmin()
+      ? this.missionService.getMissionAdmin(id)
+      : this.missionService.getMissionById(id);
+
+    load.subscribe({
       next: (mission) => {
         this.mission.set(mission);
         this.initializePglite(mission);
         this.updateNavigation();
         if (mission.scenarioId) {
           this.loadScenarioMissions(mission.scenarioId);
+        }
+        if (this.authService.isAdmin()) {
+          this.loadExpectedResult(mission);
         }
       },
       error: (err) => {
@@ -291,11 +316,16 @@ export class MissionComponent implements OnInit, OnDestroy {
 
     const normalizedRows = this.normalizeRows(result.rows);
 
-    this.missionService.validateMission(mission.id, normalizedRows).subscribe({
+    const validate$ = this.authService.isAdmin()
+      ? this.missionService.adminValidateMission(mission.id, normalizedRows)
+      : this.missionService.validateMission(mission.id, normalizedRows);
+
+    validate$.subscribe({
       next: (response) => {
         this.validationResult.set(response);
         if (response.correct) {
-          this.toastService.success('Mission complete!');
+          const message = this.authService.isAdmin() ? 'Validation correct' : 'Mission complete!';
+          this.toastService.success(message);
         } else if (response.feedback) {
           this.toastService.error(response.feedback);
         } else {
