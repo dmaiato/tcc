@@ -278,7 +278,7 @@ VALUES
     I want the total balance and the average for each. And I only want to see branches
     where the average exceeds seven hundred thousand. That''s where the dirty money
     smells strongest." She crosses her arms. "Let''s find out who''s been laundering
-    money under cover of night.",
+    money under cover of night."',
 
     'Calculate the total balance and the average balance per bank branch. Show only branches with an average balance greater than 700,000. Display the branch, total, and average columns.',
 
@@ -437,7 +437,7 @@ VALUES
     still burn with fire. "Patients with severe symptoms need immediate isolation.
     Severity above 7," she says, turning to the monitor. "Cross-reference the patient
     records with the symptom reports. I need names, ages, and which symptoms each one
-    presented. Time is life now, and I''m not losing anyone else.",
+    presented. Time is life now, and I''m not losing anyone else."',
 
     'Find patients who have at least one symptom with severity greater than 7. Show the patient''s name, age, and symptom_name columns.',
 
@@ -514,7 +514,7 @@ VALUES
     Expired meds are worse than no meds at all — they can mask symptoms, cause adverse
     reactions, cost lives." She shoves the pen into your hand. "Zero out the stock
     for everything that expired before 2025. Then show me what''s left. We need to
-    know what we actually have to fight with.",
+    know what we actually have to fight with."',
 
     'Set the quantity to 0 for medications with an expiry_date before 2025-01-01. Then list all records from the medication_stock table to verify.',
 
@@ -550,6 +550,91 @@ VALUES
     ]',
     FALSE,
     'BIOLOGY',
+    'EXPERT'
+),
+-- ========================================================================
+-- MISSION 11 — EXPERT / CYBERSECURITY
+-- Teaches: JOIN (3 tables), WHERE, GROUP BY, HAVING, COUNT, ORDER BY
+-- ========================================================================
+(
+    '00000000-0000-0000-0000-000000000011',
+    'Data Exfiltration',
+
+    'The CyberCrime unit intercepted chatter about a massive data leak at AethelCorp. Commander Torres spreads printouts across your desk — access logs, employee records, and a list of classified files. "Three tables," she says, tapping each printout. "Employees. File access logs. Confidential files. Someone on the inside accessed more than three top-secret files. That''s not a mistake — that''s a coordinated exfiltration." She crosses her arms. "Find them before the data hits the dark web."',
+
+    'Find employees who accessed more than 3 top-secret files (classification = ''Top Secret''). Show the employee''s name, department, and access_count columns. Order results by access_count descending, then alphabetically by name.',
+
+    'Join all three tables with INNER JOIN: employees → file_access → confidential_files. Filter with WHERE cf.classification = ''Top Secret''. Group by employee columns (id, name, department), count with COUNT(*), filter groups with HAVING COUNT(*) > 3, then ORDER BY access_count DESC, name.',
+
+    '
+        CREATE TABLE employees (
+            id              SERIAL PRIMARY KEY,
+            name            VARCHAR(100) NOT NULL,
+            department      VARCHAR(50) NOT NULL,
+            clearance_level VARCHAR(20) NOT NULL
+        );
+        CREATE TABLE confidential_files (
+            id             SERIAL PRIMARY KEY,
+            filename       VARCHAR(200) NOT NULL,
+            classification VARCHAR(50) NOT NULL
+        );
+        CREATE TABLE file_access (
+            id          SERIAL PRIMARY KEY,
+            employee_id INTEGER NOT NULL REFERENCES employees(id),
+            file_id     INTEGER NOT NULL REFERENCES confidential_files(id),
+            access_time TIMESTAMP NOT NULL,
+            action      VARCHAR(20) NOT NULL
+        );
+    ',
+    '
+        INSERT INTO employees (name, department, clearance_level) VALUES
+            (''John Carter'',  ''Engineering'', ''Level 3''),
+            (''Mary Wilson'',  ''Engineering'', ''Level 2''),
+            (''Alex Rivera'',  ''HR'',          ''Level 2''),
+            (''Lisa Chen'',    ''IT Security'', ''Level 4''),
+            (''Bob Torres'',   ''IT Security'', ''Level 3''),
+            (''Diana Park'',   ''Legal'',       ''Level 2''),
+            (''Steve Murphy'', ''Executive'',   ''Level 5'');
+        INSERT INTO confidential_files (filename, classification) VALUES
+            (''financial_report_2026.pdf'', ''Top Secret''),
+            (''merger_plans.docx'',         ''Top Secret''),
+            (''employee_salaries.xlsx'',    ''Confidential''),
+            (''source_code_vault.zip'',     ''Top Secret''),
+            (''board_minutes.pdf'',         ''Top Secret''),
+            (''marketing_plan.pptx'',       ''Public''),
+            (''patent_applications.pdf'',   ''Confidential'');
+        INSERT INTO file_access (employee_id, file_id, access_time, action) VALUES
+            (1, 1, ''2026-05-10 02:14:00'', ''READ''),
+            (1, 4, ''2026-05-10 02:16:00'', ''READ''),
+            (1, 2, ''2026-05-10 02:18:00'', ''DOWNLOAD''),
+            (1, 5, ''2026-05-10 02:20:00'', ''READ''),
+            (1, 6, ''2026-05-10 09:00:00'', ''READ''),
+            (2, 6, ''2026-05-09 10:00:00'', ''READ''),
+            (2, 3, ''2026-05-08 11:00:00'', ''READ''),
+            (3, 3, ''2026-05-07 14:30:00'', ''READ''),
+            (3, 6, ''2026-05-07 15:00:00'', ''READ''),
+            (4, 1, ''2026-05-09 03:00:00'', ''READ''),
+            (4, 4, ''2026-05-09 03:05:00'', ''READ''),
+            (4, 2, ''2026-05-09 03:10:00'', ''DOWNLOAD''),
+            (4, 7, ''2026-05-09 03:15:00'', ''READ''),
+            (5, 1, ''2026-05-08 01:00:00'', ''READ''),
+            (5, 2, ''2026-05-08 01:30:00'', ''READ''),
+            (6, 5, ''2026-05-07 22:00:00'', ''READ''),
+            (6, 1, ''2026-05-07 22:15:00'', ''READ''),
+            (7, 1, ''2026-05-10 04:00:00'', ''DOWNLOAD''),
+            (7, 2, ''2026-05-10 04:05:00'', ''DOWNLOAD''),
+            (7, 4, ''2026-05-10 04:10:00'', ''DOWNLOAD''),
+            (7, 5, ''2026-05-10 04:15:00'', ''DOWNLOAD''),
+            (7, 3, ''2026-05-10 04:20:00'', ''READ'');
+    ',
+    ARRAY['SELECT', 'JOIN', 'WHERE', 'GROUP BY', 'HAVING', 'COUNT', 'ORDER BY'],
+    600,
+    '[
+        {"name": "John Carter",  "department": "Engineering", "access_count": 4},
+        {"name": "Steve Murphy", "department": "Executive",   "access_count": 4}
+    ]',
+    FALSE,
+    'CYBERSECURITY',
     'EXPERT'
 );
 
