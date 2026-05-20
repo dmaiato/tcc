@@ -26,7 +26,7 @@ export class MissionComponent implements OnInit, OnDestroy {
   private readonly pgliteService = inject(PgliteService);
   private readonly missionService = inject(MissionService);
   private readonly toastService = inject(ToastService);
-  private readonly authService = inject(AuthService);
+  readonly authService = inject(AuthService);
 
   mission = signal<Mission | null>(null);
   isLoading = signal(true);

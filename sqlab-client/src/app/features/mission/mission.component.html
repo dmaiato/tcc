@@ -34,6 +34,10 @@
   <!-- Navigator strip -->
   <div class="flex items-center justify-center gap-1 px-5 py-1.5 border-b border-border bg-background/50 shrink-0">
     <a routerLink="/" class="font-mono text-[10px] text-muted-foreground hover:text-primary transition-colors px-2 py-1 rounded hover:bg-muted">← Missions</a>
+    @if (authService.isAdmin()) {
+      <a routerLink="/admin/missions" class="font-mono text-[10px] text-accent hover:text-accent/80 transition-colors px-2 py-1 rounded hover:bg-accent/5">← Admin</a>
+      <span class="font-mono text-[9px] text-accent px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20">Test Mode</span>
+    }
     @if (mission.scenarioId && mission.scenarioTitle) {
       <a [routerLink]="['/scenarios', mission.scenarioId]" class="font-mono text-[10px] text-muted-foreground hover:text-primary transition-colors px-2 py-1 rounded hover:bg-muted">{{ mission.scenarioTitle }}</a>
       <span class="font-mono text-[10px] text-muted-foreground">›</span>
@@ -53,6 +57,41 @@
       <app-action-bar [query]="query()" [running]="isRunning()" [restoring]="isRestoring()" [verifying]="isValidating()" [verifyResult]="validationResult()" [dbModified]="isDbModified()" (restore)="resetDatabase()" (run)="executeQuery()" (verify)="submitSolution()" />
 
       <app-results-pane [result]="queryResultWithError" [runId]="runId()" />
+
+      @if (authService.isAdmin() && expectedResult() && expectedResult()!.length > 0) {
+        <div class="rounded-lg border border-accent/30 bg-accent/5 overflow-hidden">
+          <button (click)="showExpected.set(!showExpected())"
+            class="w-full flex items-center justify-between px-4 py-2.5 font-mono text-[10px] text-accent hover:bg-accent/5 transition-colors">
+            <span class="flex items-center gap-1.5">
+              <ng-icon name="lucideEye" class="w-3 h-3" />
+              {{ showExpected() ? 'Hide' : 'Show' }} Expected Result
+            </span>
+            <ng-icon [name]="showExpected() ? 'lucideChevronUp' : 'lucideChevronDown'" class="w-3 h-3" />
+          </button>
+          @if (showExpected()) {
+            <div class="border-t border-accent/20 overflow-x-auto">
+              <table class="w-full font-mono text-xs">
+                <thead>
+                  <tr class="bg-accent/5">
+                    @for (col of expectedColumns(); track col) {
+                      <th class="text-left py-2 px-3 font-medium text-muted-foreground border-b border-border whitespace-nowrap">{{ col }}</th>
+                    }
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of expectedResult(); track $index) {
+                    <tr class="border-b border-border/30 last:border-0 hover:bg-accent/5 transition-colors">
+                      @for (col of expectedColumns(); track col) {
+                        <td class="py-1.5 px-3 whitespace-nowrap">{{ row[col] }}</td>
+                      }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      }
     </div>
   </div>
   </div>
