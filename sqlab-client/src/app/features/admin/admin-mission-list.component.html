@@ -68,6 +68,11 @@
                         title="Edit mission">
                         <ng-icon name="lucidePen" class="size-3.5" />
                       </a>
+                      <a routerLink="/mission/{{ mission.id }}"
+                        class="flex items-center justify-center size-7 rounded hover:bg-accent/10 text-accent hover:text-accent transition-colors"
+                        title="Test mission">
+                        <ng-icon name="lucidePlay" class="size-3.5" />
+                      </a>
                       @if (confirmDelete() === mission.id) {
                         <button (click)="confirmDeleteMission(mission.id)" type="button"
                           class="font-mono text-[9px] px-2 py-1 rounded bg-destructive text-destructive-foreground hover:bg-destructive/90">
