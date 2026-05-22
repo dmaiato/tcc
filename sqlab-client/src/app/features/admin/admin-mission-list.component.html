@@ -63,15 +63,15 @@
                       </span>
                       <span class="font-mono text-[9px] text-accent shrink-0">{{ mission.xpReward }} XP</span>
                       <div class="flex items-center gap-1 shrink-0 ml-1">
+                      <a routerLink="/mission/{{ mission.id }}"
+                        class="flex items-center justify-center size-7 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+                        title="Test mission">
+                        <ng-icon name="lucideFlaskConical" class="size-3.5" />
+                      </a>
                       <a routerLink="/admin/mission/{{ mission.id }}/edit"
                         class="flex items-center justify-center size-7 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
                         title="Edit mission">
                         <ng-icon name="lucidePen" class="size-3.5" />
-                      </a>
-                      <a routerLink="/mission/{{ mission.id }}"
-                        class="flex items-center justify-center size-7 rounded hover:bg-accent/10 text-accent hover:text-accent transition-colors"
-                        title="Test mission">
-                        <ng-icon name="lucidePlay" class="size-3.5" />
                       </a>
                       @if (confirmDelete() === mission.id) {
                         <button (click)="confirmDeleteMission(mission.id)" type="button"

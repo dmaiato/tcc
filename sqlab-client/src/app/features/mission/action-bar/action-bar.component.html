@@ -61,6 +61,9 @@
       } @else if (verifyResult && !verifyResult.correct) {
         <ng-icon name="lucideX" class="w-3.5 h-3.5" />
         Incorrect
+      } @else if (isAdmin) {
+        <ng-icon name="lucideFlaskConical" class="w-3.5 h-3.5" />
+        Test Solution
       } @else {
         <ng-icon name="lucideCheck" class="w-3.5 h-3.5" />
         Verify Result

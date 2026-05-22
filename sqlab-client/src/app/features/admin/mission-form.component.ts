@@ -1,7 +1,7 @@
 import { Component, inject, signal, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgIconsModule } from '@ng-icons/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { MissionService } from '../../core/mission.service';
 import { ScenarioService } from '../../core/scenario.service';
 import { CreateMissionRequest, UpdateMissionRequest, Theme, DifficultyLevel } from '../../core/models/mission.model';
@@ -11,7 +11,7 @@ import { CodeEditorDialogComponent } from '../../shared/code-editor-dialog/code-
 @Component({
   selector: 'app-mission-form',
   standalone: true,
-  imports: [CommonModule, NgIconsModule, CodeEditorDialogComponent],
+  imports: [CommonModule, NgIconsModule, CodeEditorDialogComponent, RouterLink],
   templateUrl: './mission-form.component.html',
   styleUrl: './mission-form.component.css'
 })

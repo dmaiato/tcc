@@ -16,6 +16,7 @@ export class ActionBarComponent {
   @Input() verifying = false;
   @Input() verifyResult: { correct: boolean } | null = null;
   @Input() dbModified = false;
+  @Input() isAdmin = false;
   @Output() restore = new EventEmitter<void>();
   @Output() run = new EventEmitter<void>();
   @Output() verify = new EventEmitter<void>();
@@ -37,6 +38,9 @@ export class ActionBarComponent {
       return 'border-2 border-primary text-primary bg-primary/5 glow-success';
     } else if (this.verifyResult && !this.verifyResult.correct) {
       return 'border-2 border-destructive text-destructive bg-destructive/5 glow-error';
+    }
+    if (this.isAdmin) {
+      return 'border-2 border-accent/50 text-accent bg-card hover:border-accent hover:glow-accent';
     }
     return 'border-2 border-primary/50 text-primary bg-card hover:border-primary hover:glow-primary';
   }

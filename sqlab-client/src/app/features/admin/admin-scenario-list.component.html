@@ -115,6 +115,11 @@
                                 {{ mission.difficulty }}
                               </span>
                               <span class="font-mono text-[9px] text-accent shrink-0">{{ mission.xpReward }} XP</span>
+                              <a routerLink="/mission/{{ mission.id }}"
+                                class="flex items-center justify-center size-6 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                                title="Test mission">
+                                <ng-icon name="lucideFlaskConical" class="size-3.5" />
+                              </a>
                               <a routerLink="/admin/mission/{{ mission.id }}/edit"
                                 class="flex items-center justify-center size-6 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors shrink-0"
                                 title="Edit mission">
