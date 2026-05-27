@@ -7,7 +7,6 @@ import { ScenarioService } from '../../core/scenario.service';
 import { CreateMissionRequest, UpdateMissionRequest, Theme, DifficultyLevel } from '../../core/models/mission.model';
 import { ToastService } from '../../shared/toast/toast.service';
 import { CodeEditorDialogComponent } from '../../shared/code-editor-dialog/code-editor-dialog.component';
-
 @Component({
   selector: 'app-mission-form',
   standalone: true,
@@ -40,6 +39,7 @@ export class MissionFormComponent implements OnInit {
   formDifficulty = signal<DifficultyLevel>('BEGINNER');
   formTechniques = signal<string[]>([]);
   formExpectedResult = signal('');
+  formEnabled = signal(true);
 
   readonly allTechniques = ['SELECT', 'WHERE', 'ORDER BY', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'GROUP BY', 'HAVING', 'COUNT', 'SUM', 'AVG', 'UPDATE', 'DELETE', 'INSERT', 'LIKE', 'IN', 'BETWEEN', 'DISTINCT', 'SUBSELECT'];
   readonly themes: Theme[] = ['ASTRONOMY', 'CYBERSECURITY', 'CRIMINAL', 'FINANCE', 'BIOLOGY'];
@@ -73,6 +73,7 @@ export class MissionFormComponent implements OnInit {
           this.formDifficulty.set(detail.difficulty);
           this.formTechniques.set([...detail.techniques]);
           this.formExpectedResult.set(detail.expectedResult ? JSON.stringify(detail.expectedResult, null, 2) : '');
+          this.formEnabled.set(detail.enabled !== false);
           this.expandedSection.set(new Set(['details']));
         },
         error: () => {
@@ -111,6 +112,7 @@ export class MissionFormComponent implements OnInit {
       techniques: this.formTechniques(),
       xpReward: this.formXpReward(),
       ordered: this.formOrdered(),
+      enabled: this.formEnabled(),
       theme: this.formTheme(),
       difficulty: this.formDifficulty(),
       expectedResult: this.parseExpectedResult()
@@ -181,6 +183,10 @@ export class MissionFormComponent implements OnInit {
         }
       });
     }
+  }
+
+  toggleEnabled(): void {
+    this.formEnabled.update(v => !v);
   }
 
   onXpInput(value: string): void {

@@ -22,22 +22,29 @@ public class GetMissionsService implements GetMissionsUseCase {
 
     @Override
     public List<Mission> handle(ListAllQuery query) {
+        List<Mission> missions;
         if (query.theme() != null && query.difficulty() != null) {
-            return missionRepository.findByThemeAndDifficulty(query.theme(), query.difficulty());
+            missions = missionRepository.findByThemeAndDifficulty(query.theme(), query.difficulty());
+        } else if (query.theme() != null) {
+            missions = missionRepository.findByTheme(query.theme());
+        } else if (query.difficulty() != null) {
+            missions = missionRepository.findByDifficulty(query.difficulty());
+        } else {
+            return missionRepository.findByEnabledTrue();
         }
-        if (query.theme() != null) {
-            return missionRepository.findByTheme(query.theme());
-        }
-        if (query.difficulty() != null) {
-            return missionRepository.findByDifficulty(query.difficulty());
-        }
-        return missionRepository.findAll();
+        return missions.stream()
+                .filter(Mission::isEnabled)
+                .toList();
     }
 
     @Override
     public Mission handle(FindByIdQuery query) {
         Mission mission = missionRepository.findById(query.missionId())
                 .orElseThrow(() -> new MissionNotFoundException(query.missionId()));
+
+        if (!mission.isEnabled()) {
+            throw new MissionNotFoundException(query.missionId());
+        }
 
         if (query.userId() != null && mission.getScenarioId() != null) {
             if (mission.getOrderIndex() != null && mission.getOrderIndex() > 1) {
@@ -58,7 +65,7 @@ public class GetMissionsService implements GetMissionsUseCase {
         Mission mission = handle(query);
         Integer scenarioTotalMissions = null;
         if (mission.getScenarioId() != null) {
-            scenarioTotalMissions = missionRepository.countByScenarioId(mission.getScenarioId());
+            scenarioTotalMissions = missionRepository.countByScenarioIdAndEnabledTrue(mission.getScenarioId());
         }
         return new MissionDetail(mission, scenarioTotalMissions);
     }

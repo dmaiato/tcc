@@ -28,7 +28,8 @@ public class MissionDto {
             @NotNull DifficultyLevel difficulty,
             @NotEmpty List<Map<String, Object>> expectedResult,
             UUID scenarioId,
-            Integer orderIndex) {}
+            Integer orderIndex,
+            Boolean enabled) {}
 
     public record UpdateMissionRequest(
             @NotBlank String title,
@@ -44,7 +45,8 @@ public class MissionDto {
             @NotNull DifficultyLevel difficulty,
             @NotEmpty List<Map<String, Object>> expectedResult,
             UUID scenarioId,
-            Integer orderIndex) {}
+            Integer orderIndex,
+            Boolean enabled) {}
 
     @JsonInclude(Include.NON_NULL)
     public record MissionResponse(
@@ -64,6 +66,7 @@ public class MissionDto {
             String scenarioTitle,
             Integer scenarioOrderIndex,
             Integer scenarioTotalMissions,
+            boolean enabled,
             List<Map<String, Object>> expectedResult) {}
 
     @JsonInclude(Include.NON_NULL)
@@ -76,7 +79,8 @@ public class MissionDto {
             boolean ordered,
             Theme theme,
             DifficultyLevel difficulty,
-            UUID scenarioId) {}
+            UUID scenarioId,
+            boolean enabled) {}
 
     public record ValidationRequest(@NotNull List<Map<String, Object>> tuples) {}
 

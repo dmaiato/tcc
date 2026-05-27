@@ -29,6 +29,7 @@ CREATE TABLE missions
     ordered         BOOLEAN      NOT NULL DEFAULT FALSE,
     theme           VARCHAR(20)  NOT NULL,
     difficulty      VARCHAR(20)  NOT NULL DEFAULT 'BEGINNER',
+    enabled         BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 

@@ -70,6 +70,9 @@ public class MissionJpaEntity {
     @Column(name = "order_index")
     private Integer orderIndex;
 
+    @Column(nullable = false)
+    private boolean enabled;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "scenario_id", insertable = false, updatable = false)
     private ScenarioJpaEntity scenario;

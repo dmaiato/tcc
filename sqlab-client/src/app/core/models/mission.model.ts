@@ -19,6 +19,7 @@ export interface Mission {
   scenarioTitle?: string;
   scenarioOrderIndex?: number;
   scenarioTotalMissions?: number;
+  enabled?: boolean;
   expectedResult?: Record<string, unknown>[];
 }
 
@@ -31,6 +32,7 @@ export interface MissionSummary {
   theme: Theme;
   difficulty: DifficultyLevel;
   scenarioId?: string;
+  enabled?: boolean;
 }
 
 export interface ValidationRequest {
@@ -91,6 +93,7 @@ export interface CreateMissionRequest {
   expectedResult: Record<string, unknown>[];
   scenarioId?: string;
   orderIndex?: number;
+  enabled?: boolean;
 }
 
 export interface UpdateMissionRequest {
@@ -108,4 +111,5 @@ export interface UpdateMissionRequest {
   expectedResult: Record<string, unknown>[];
   scenarioId?: string;
   orderIndex?: number;
+  enabled?: boolean;
 }

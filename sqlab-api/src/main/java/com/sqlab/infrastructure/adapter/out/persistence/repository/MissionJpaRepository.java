@@ -17,6 +17,8 @@ public interface MissionJpaRepository extends JpaRepository<MissionJpaEntity, UU
     List<MissionJpaEntity> findByDifficulty(DifficultyLevel difficulty);
     List<MissionJpaEntity> findByThemeAndDifficulty(Theme theme, DifficultyLevel difficulty);
     List<MissionJpaEntity> findByScenarioIdOrderByOrderIndex(UUID scenarioId);
+    List<MissionJpaEntity> findByEnabledTrue();
     Optional<MissionJpaEntity> findByScenarioIdAndOrderIndex(UUID scenarioId, int orderIndex);
     int countByScenarioId(UUID scenarioId);
+    int countByScenarioIdAndEnabledTrue(UUID scenarioId);
 }

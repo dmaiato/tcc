@@ -8,6 +8,7 @@ import com.sqlab.domain.model.Mission;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -50,6 +51,7 @@ public class ManageMissionService implements ManageMissionUseCase {
                 .scenarioId(scenarioId)
                 .orderIndex(orderIndex)
                 .scenarioTitle(null)
+                .enabled(command.enabled() != null ? command.enabled() : true)
                 .build();
 
         return missionRepository.save(mission);
@@ -75,9 +77,10 @@ public class ManageMissionService implements ManageMissionUseCase {
                 .ordered(command.ordered())
                 .theme(command.theme())
                 .difficulty(command.difficulty())
-                .scenarioId(command.scenarioId())
-                .orderIndex(command.orderIndex())
+                .scenarioId(command.scenarioId() != null ? command.scenarioId() : existing.getScenarioId())
+                .orderIndex(command.orderIndex() != null ? command.orderIndex() : existing.getOrderIndex())
                 .scenarioTitle(existing.getScenarioTitle())
+                .enabled(command.enabled() != null ? command.enabled() : existing.isEnabled())
                 .build();
 
         return missionRepository.save(updated);
@@ -96,5 +99,11 @@ public class ManageMissionService implements ManageMissionUseCase {
     public Mission findById(UUID missionId) {
         return missionRepository.findById(missionId)
                 .orElseThrow(() -> new MissionNotFoundException(missionId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Mission> findAll() {
+        return missionRepository.findAll();
     }
 }

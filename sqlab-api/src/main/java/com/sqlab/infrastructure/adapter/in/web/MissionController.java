@@ -93,7 +93,8 @@ public class MissionController {
                 request.hint(), request.ddlScript(), request.dmlScript(),
                 request.techniques(), request.xpReward(), request.ordered(),
                 request.theme(), request.difficulty(), request.expectedResult(),
-                request.scenarioId(), request.orderIndex());
+                request.scenarioId(), request.orderIndex(),
+                request.enabled());
         Mission mission = manageMissionUseCase.create(command);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(toMissionResponse(mission));
@@ -109,7 +110,8 @@ public class MissionController {
                 request.hint(), request.ddlScript(), request.dmlScript(),
                 request.techniques(), request.xpReward(), request.ordered(),
                 request.theme(), request.difficulty(), request.expectedResult(),
-                request.scenarioId(), request.orderIndex());
+                request.scenarioId(), request.orderIndex(),
+                request.enabled());
         Mission mission = manageMissionUseCase.update(command);
         return ResponseEntity.ok(toMissionResponse(mission));
     }
@@ -118,6 +120,35 @@ public class MissionController {
     public ResponseEntity<MissionDto.MissionResponse> findByIdAdmin(@PathVariable UUID missionId) {
         Mission mission = manageMissionUseCase.findById(missionId);
         return ResponseEntity.ok(toMissionResponse(mission));
+    }
+
+    @GetMapping("/admin")
+    public ResponseEntity<List<MissionDto.MissionResponse>> listAllAdmin() {
+        List<Mission> missions = manageMissionUseCase.findAll();
+        List<MissionDto.MissionResponse> response = missions.stream()
+                .map(this::toMissionResponse)
+                .toList();
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{missionId}/enabled")
+    public ResponseEntity<MissionDto.MissionResponse> setEnabled(
+            @PathVariable UUID missionId,
+            @RequestBody Map<String, Boolean> body) {
+        Boolean enabled = body.get("enabled");
+        if (enabled == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        Mission mission = manageMissionUseCase.findById(missionId);
+        ManageMissionUseCase.UpdateMissionCommand command = new ManageMissionUseCase.UpdateMissionCommand(
+                missionId,
+                mission.getTitle(), mission.getBriefing(), mission.getObjective(),
+                mission.getHint(), mission.getDdlScript(), mission.getDmlScript(),
+                mission.getTechniques(), mission.getXpReward(), mission.isOrdered(),
+                mission.getTheme(), mission.getDifficulty(), mission.getExpectedResult().rows(),
+                mission.getScenarioId(), mission.getOrderIndex(), enabled);
+        Mission updated = manageMissionUseCase.update(command);
+        return ResponseEntity.ok(toMissionResponse(updated));
     }
 
     @DeleteMapping("/{missionId}")
@@ -130,7 +161,7 @@ public class MissionController {
         return new MissionDto.MissionSummary(
                 m.getId(), m.getTitle(), m.getScenarioTitle(), m.getTechniques(),
                 m.getXpReward(), m.isOrdered(), m.getTheme(), m.getDifficulty(),
-                m.getScenarioId());
+                m.getScenarioId(), m.isEnabled());
     }
 
     private MissionDto.MissionResponse toResponse(GetMissionsUseCase.MissionDetail detail) {
@@ -141,7 +172,7 @@ public class MissionController {
                 m.getDdlScript(), m.getDmlScript(), m.getTechniques(),
                 m.getXpReward(), m.isOrdered(), m.getTheme(), m.getDifficulty(),
                 m.getScenarioId(), m.getScenarioTitle(), m.getOrderIndex(),
-                detail.scenarioTotalMissions(), null);
+                detail.scenarioTotalMissions(), m.isEnabled(), null);
     }
 
     private MissionDto.MissionResponse toMissionResponse(Mission m) {
@@ -151,6 +182,6 @@ public class MissionController {
                 m.getDdlScript(), m.getDmlScript(), m.getTechniques(),
                 m.getXpReward(), m.isOrdered(), m.getTheme(), m.getDifficulty(),
                 m.getScenarioId(), m.getScenarioTitle(), m.getOrderIndex(),
-                null, m.getExpectedResult().rows());
+                null, m.isEnabled(), m.getExpectedResult().rows());
     }
 }

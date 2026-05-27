@@ -24,7 +24,8 @@ public interface ManageMissionUseCase {
             DifficultyLevel difficulty,
             List<Map<String, Object>> expectedResult,
             UUID scenarioId,
-            Integer orderIndex) {}
+            Integer orderIndex,
+            Boolean enabled) {}
 
     record UpdateMissionCommand(
             UUID id,
@@ -41,7 +42,8 @@ public interface ManageMissionUseCase {
             DifficultyLevel difficulty,
             List<Map<String, Object>> expectedResult,
             UUID scenarioId,
-            Integer orderIndex) {}
+            Integer orderIndex,
+            Boolean enabled) {}
 
     Mission create(CreateMissionCommand command);
 
@@ -50,4 +52,6 @@ public interface ManageMissionUseCase {
     void delete(UUID missionId);
 
     Mission findById(UUID missionId);
+
+    List<Mission> findAll();
 }

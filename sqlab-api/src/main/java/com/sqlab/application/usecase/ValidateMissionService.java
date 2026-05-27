@@ -32,6 +32,10 @@ public class ValidateMissionService implements ValidateMissionUseCase {
         Mission mission = missionRepository.findById(command.missionId())
                 .orElseThrow(() -> new MissionNotFoundException(command.missionId()));
 
+        if (!mission.isEnabled()) {
+            throw new MissionNotFoundException(command.missionId());
+        }
+
         if (mission.getScenarioId() != null) {
             if (mission.getOrderIndex() != null && mission.getOrderIndex() > 1) {
                 boolean prevCompleted = missionRepository.isPreviousMissionCompleted(

@@ -6,11 +6,21 @@
           <span class="text-primary"><ng-icon name="lucideSparkles" class="w-4 h-4" /></span>
           <h2 class="font-sans text-sm font-semibold text-foreground">{{ formTitleText }}</h2>
           @if (isEditing) {
-            <a routerLink="/mission/{{ editId }}"
-              class="ml-auto flex items-center justify-center size-7 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
-              title="Test this mission in the SQL workbench">
-              <ng-icon name="lucideFlaskConical" class="size-3.5" />
-            </a>
+            <div class="ml-auto flex items-center gap-2">
+              <button (click)="toggleEnabled()" type="button"
+                class="flex items-center gap-1 px-2 py-1 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+                [class.text-primary]="formEnabled()"
+                [class.text-muted-foreground]="!formEnabled()">
+                <ng-icon name="lucideEye" class="size-3.5" />
+                <span class="font-mono text-[10px]">{{ formEnabled() ? 'Disable' : 'Enable' }}</span>
+              </button>
+              <a routerLink="/mission/{{ editId }}"
+                class="flex items-center gap-1 px-2 py-1 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+                title="Test this mission in the SQL workbench">
+                <ng-icon name="lucideFlaskConical" class="size-3.5" />
+                <span class="font-mono text-[10px]">Test</span>
+              </a>
+            </div>
           }
         </div>
 

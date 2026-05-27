@@ -67,6 +67,13 @@ public class MissionPersistenceAdapter implements MissionRepository {
     }
 
     @Override
+    public List<Mission> findByEnabledTrue() {
+        return jpaRepository.findByEnabledTrue().stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
     public boolean isPreviousMissionCompleted(UUID userId, UUID scenarioId, int orderIndex) {
         return jpaRepository.findByScenarioIdAndOrderIndex(scenarioId, orderIndex)
                 .map(mission -> progressJpaRepository.existsByUserIdAndMissionIdAndCompleted(userId, mission.getId(), true))
@@ -79,12 +86,19 @@ public class MissionPersistenceAdapter implements MissionRepository {
     }
 
     @Override
+    public int countByScenarioIdAndEnabledTrue(UUID scenarioId) {
+        return jpaRepository.countByScenarioIdAndEnabledTrue(scenarioId);
+    }
+
+    @Override
     @Transactional
     public Mission save(Mission mission) {
         MissionJpaEntity entity = mapper.toJpa(mission);
         if (mission.getId() != null) {
-            jpaRepository.findById(mission.getId()).ifPresent(existing ->
-                    entity.setCreatedAt(existing.getCreatedAt()));
+        jpaRepository.findById(mission.getId()).ifPresent(existing -> {
+                entity.setCreatedAt(existing.getCreatedAt());
+                entity.setScenario(existing.getScenario());
+        });
         }
         return mapper.toDomain(jpaRepository.save(entity));
     }

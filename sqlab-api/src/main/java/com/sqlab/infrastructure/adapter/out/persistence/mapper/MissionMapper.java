@@ -26,7 +26,8 @@ public class MissionMapper {
                 entity.getDifficulty(),
                 entity.getScenarioId(),
                 entity.getOrderIndex(),
-                scenarioTitle
+                scenarioTitle,
+                entity.isEnabled()
         );
     }
 
@@ -47,6 +48,7 @@ public class MissionMapper {
                 .difficulty(domain.getDifficulty())
                 .scenarioId(domain.getScenarioId())
                 .orderIndex(domain.getOrderIndex())
+                .enabled(domain.isEnabled())
                 .build();
     }
 }

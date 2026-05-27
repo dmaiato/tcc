@@ -47,7 +47,10 @@ public class ScenarioController {
                 : Set.of();
         List<Scenario> scenarios = getScenariosUseCase.handle();
         List<ScenarioDto.ScenarioSummary> response = scenarios.stream().map(s -> {
-            List<Mission> missions = missionRepository.findByScenarioIdOrderByOrderIndex(s.getId());
+            List<Mission> missions = missionRepository.findByScenarioIdOrderByOrderIndex(s.getId())
+                    .stream()
+                    .filter(Mission::isEnabled)
+                    .toList();
             int completed = (int) missions.stream()
                     .filter(m -> completedIds.contains(m.getId()))
                     .count();
@@ -66,7 +69,10 @@ public class ScenarioController {
                 ? progressRepository.findCompletedMissionIdsByUserId(userUuid)
                 : Set.of();
         Scenario scenario = getScenariosUseCase.handle(scenarioId);
-        List<Mission> missions = missionRepository.findByScenarioIdOrderByOrderIndex(scenarioId);
+        List<Mission> allMissions = missionRepository.findByScenarioIdOrderByOrderIndex(scenarioId);
+        List<Mission> missions = allMissions.stream()
+                .filter(Mission::isEnabled)
+                .toList();
 
         List<ScenarioDto.ScenarioMissionItem> missionItems = missions.stream().map(m -> {
             String status;
