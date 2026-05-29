@@ -32,7 +32,8 @@ public class ManageScenarioService implements ManageScenarioUseCase {
                 UUID.randomUUID(),
                 command.title(),
                 command.description(),
-                command.theme()
+                command.theme(),
+                command.enabled() != null ? command.enabled() : true
         );
         return scenarioRepository.save(scenario);
     }
@@ -42,13 +43,38 @@ public class ManageScenarioService implements ManageScenarioUseCase {
         Scenario existing = scenarioRepository.findById(command.id())
                 .orElseThrow(() -> new ScenarioNotFoundException(command.id()));
 
+        boolean enabled = command.enabled() != null ? command.enabled() : existing.isEnabled();
+        boolean enabledChanged = enabled != existing.isEnabled();
+
         Scenario updated = new Scenario(
                 command.id(),
                 command.title(),
                 command.description(),
-                command.theme()
+                command.theme(),
+                enabled
         );
+
+        if (enabledChanged) {
+            missionRepository.setEnabledByScenarioId(command.id(), enabled);
+        }
+
         return scenarioRepository.save(updated);
+    }
+
+    @Override
+    public void setEnabled(UUID scenarioId, boolean enabled) {
+        Scenario existing = scenarioRepository.findById(scenarioId)
+                .orElseThrow(() -> new ScenarioNotFoundException(scenarioId));
+
+        Scenario updated = new Scenario(
+                existing.getId(),
+                existing.getTitle(),
+                existing.getDescription(),
+                existing.getTheme(),
+                enabled
+        );
+        scenarioRepository.save(updated);
+        missionRepository.setEnabledByScenarioId(scenarioId, enabled);
     }
 
     @Override
@@ -112,6 +138,7 @@ public class ManageScenarioService implements ManageScenarioUseCase {
                     .scenarioId(original.getScenarioId())
                     .orderIndex(-(size + i + 1))
                     .scenarioTitle(original.getScenarioTitle())
+                    .enabled(original.isEnabled())
                     .build();
 
             missionRepository.save(reordered);
@@ -141,6 +168,7 @@ public class ManageScenarioService implements ManageScenarioUseCase {
                     .scenarioId(original.getScenarioId())
                     .orderIndex(i + 1)
                     .scenarioTitle(original.getScenarioTitle())
+                    .enabled(original.isEnabled())
                     .build();
 
             missionRepository.save(reordered);

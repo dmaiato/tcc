@@ -74,6 +74,17 @@ public class MissionPersistenceAdapter implements MissionRepository {
     }
 
     @Override
+    public boolean existsByScenarioIdAndEnabledFalse(UUID scenarioId) {
+        return jpaRepository.existsByScenarioIdAndEnabledFalse(scenarioId);
+    }
+
+    @Override
+    public Set<UUID> findScenarioIdsWithDisabledMissions(Set<UUID> scenarioIds) {
+        if (scenarioIds.isEmpty()) return Set.of();
+        return jpaRepository.findScenarioIdsWithDisabledMissions(scenarioIds);
+    }
+
+    @Override
     public boolean isPreviousMissionCompleted(UUID userId, UUID scenarioId, int orderIndex) {
         return jpaRepository.findByScenarioIdAndOrderIndex(scenarioId, orderIndex)
                 .map(mission -> progressJpaRepository.existsByUserIdAndMissionIdAndCompleted(userId, mission.getId(), true))
@@ -101,6 +112,12 @@ public class MissionPersistenceAdapter implements MissionRepository {
         });
         }
         return mapper.toDomain(jpaRepository.save(entity));
+    }
+
+    @Override
+    @Transactional
+    public int setEnabledByScenarioId(UUID scenarioId, boolean enabled) {
+        return jpaRepository.setEnabledByScenarioId(scenarioId, enabled);
     }
 
     @Override

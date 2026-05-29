@@ -33,6 +33,7 @@ export interface ScenarioResponse {
   description: string;
   theme: Theme;
   totalMissions: number;
+  enabled: boolean;
 }
 
 export interface ScenarioMissionSummary {
@@ -40,6 +41,7 @@ export interface ScenarioMissionSummary {
   title: string;
   difficulty: DifficultyLevel;
   xpReward: number;
+  enabled: boolean;
 }
 
 export interface ScenarioAdminDetail {
@@ -47,6 +49,7 @@ export interface ScenarioAdminDetail {
   title: string;
   description: string;
   theme: Theme;
+  enabled: boolean;
   totalMissions: number;
   missions: ScenarioMissionSummary[];
 }
@@ -55,12 +58,14 @@ export interface CreateScenarioRequest {
   title: string;
   description: string;
   theme: Theme;
+  enabled: boolean;
 }
 
 export interface UpdateScenarioRequest {
   title: string;
   description: string;
   theme: Theme;
+  enabled: boolean;
 }
 
 export interface ReorderMissionsRequest {

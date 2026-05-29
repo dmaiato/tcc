@@ -29,6 +29,9 @@ public class ScenarioJpaEntity {
     @Column(nullable = false, length = 20)
     private Theme theme;
 
+    @Column(nullable = false)
+    private boolean enabled;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

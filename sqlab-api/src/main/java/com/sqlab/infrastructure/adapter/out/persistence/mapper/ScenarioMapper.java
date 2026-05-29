@@ -14,7 +14,8 @@ public class ScenarioMapper {
                 entity.getId(),
                 entity.getTitle(),
                 entity.getDescription(),
-                entity.getTheme()
+                entity.getTheme(),
+                entity.isEnabled()
         );
     }
 
@@ -24,6 +25,7 @@ public class ScenarioMapper {
                 .title(domain.getTitle())
                 .description(domain.getDescription())
                 .theme(domain.getTheme())
+                .enabled(domain.isEnabled())
                 .createdAt(LocalDateTime.now())
                 .build();
     }

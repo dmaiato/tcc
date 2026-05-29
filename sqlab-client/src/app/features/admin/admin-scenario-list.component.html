@@ -43,8 +43,13 @@
                         [style.background]="'linear-gradient(135deg, ' + style.from + ', ' + style.to + ')'">
                         <ng-icon [name]="style.icon" class="w-4 h-4" />
                       </div>
-                      <div class="min-w-0">
+                      <div class="flex items-center gap-2 min-w-0">
                         <h3 class="font-sans text-sm font-semibold text-foreground truncate">{{ scenario.title }}</h3>
+                        @if (!scenario.enabled) {
+                          <span class="font-mono text-[9px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/20 shrink-0">
+                            Disabled
+                          </span>
+                        }
                       </div>
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
@@ -110,7 +115,14 @@
                               <span class="font-mono text-[9px] text-muted-foreground/40 w-5 shrink-0 text-right">
                                 {{ (mi + 1).toString().padStart(2, '0') }}
                               </span>
-                              <span class="font-sans text-xs text-foreground truncate flex-1">{{ mission.title }}</span>
+                              <div class="flex items-center gap-2 min-w-0 flex-1">
+                                <span class="font-sans text-xs text-foreground truncate">{{ mission.title }}</span>
+                                @if (!mission.enabled) {
+                                  <span class="font-mono text-[9px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/20 shrink-0">
+                                    Disabled
+                                  </span>
+                                }
+                              </div>
                               <span class="font-mono text-[9px] px-1.5 py-0.5 rounded {{ getDifficultyColor(mission.difficulty) }} shrink-0">
                                 {{ mission.difficulty }}
                               </span>

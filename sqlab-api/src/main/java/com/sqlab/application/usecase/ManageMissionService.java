@@ -1,6 +1,7 @@
 package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.ManageMissionUseCase;
+import com.sqlab.application.port.in.ManageScenarioUseCase;
 import com.sqlab.application.port.out.MissionRepository;
 import com.sqlab.domain.exception.MissionNotFoundException;
 import com.sqlab.domain.model.ExpectedTuple;
@@ -16,9 +17,12 @@ import java.util.UUID;
 public class ManageMissionService implements ManageMissionUseCase {
 
     private final MissionRepository missionRepository;
+    private final ManageScenarioUseCase manageScenarioUseCase;
 
-    public ManageMissionService(MissionRepository missionRepository) {
+    public ManageMissionService(MissionRepository missionRepository,
+                                ManageScenarioUseCase manageScenarioUseCase) {
         this.missionRepository = missionRepository;
+        this.manageScenarioUseCase = manageScenarioUseCase;
     }
 
     private void validateScenarioConstraint(UUID scenarioId, Integer orderIndex) {
@@ -82,6 +86,12 @@ public class ManageMissionService implements ManageMissionUseCase {
                 .scenarioTitle(existing.getScenarioTitle())
                 .enabled(command.enabled() != null ? command.enabled() : existing.isEnabled())
                 .build();
+
+        if (command.enabled() != null
+                && command.enabled() != existing.isEnabled()
+                && existing.getScenarioId() != null) {
+            manageScenarioUseCase.setEnabled(existing.getScenarioId(), command.enabled());
+        }
 
         return missionRepository.save(updated);
     }

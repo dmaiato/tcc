@@ -48,6 +48,7 @@ CREATE TABLE scenarios (
     title       VARCHAR(100) NOT NULL,
     description TEXT         NOT NULL,
     theme       VARCHAR(20)  NOT NULL,
+    enabled     BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at  TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 

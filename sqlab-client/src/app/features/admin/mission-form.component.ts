@@ -39,7 +39,7 @@ export class MissionFormComponent implements OnInit {
   formDifficulty = signal<DifficultyLevel>('BEGINNER');
   formTechniques = signal<string[]>([]);
   formExpectedResult = signal('');
-  formEnabled = signal(true);
+  formEnabled = signal<boolean | null>(null);
 
   readonly allTechniques = ['SELECT', 'WHERE', 'ORDER BY', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'GROUP BY', 'HAVING', 'COUNT', 'SUM', 'AVG', 'UPDATE', 'DELETE', 'INSERT', 'LIKE', 'IN', 'BETWEEN', 'DISTINCT', 'SUBSELECT'];
   readonly themes: Theme[] = ['ASTRONOMY', 'CYBERSECURITY', 'CRIMINAL', 'FINANCE', 'BIOLOGY'];
@@ -82,6 +82,7 @@ export class MissionFormComponent implements OnInit {
         }
       });
     } else {
+      this.formEnabled.set(true);
       this.expandedSection.set(new Set(['details']));
       if (this.scenarioId) {
         this.scenarioService.getAdminDetail(this.scenarioId).subscribe({
@@ -112,7 +113,7 @@ export class MissionFormComponent implements OnInit {
       techniques: this.formTechniques(),
       xpReward: this.formXpReward(),
       ordered: this.formOrdered(),
-      enabled: this.formEnabled(),
+      enabled: this.formEnabled() ?? true,
       theme: this.formTheme(),
       difficulty: this.formDifficulty(),
       expectedResult: this.parseExpectedResult()

@@ -57,10 +57,6 @@ export class MissionService {
     return this.api.get<Mission[]>('/missions/admin');
   }
 
-  setEnabled(id: string, enabled: boolean): Observable<Mission> {
-    return this.api.put<Mission>(`/missions/${id}/enabled`, { enabled });
-  }
-
   deleteMission(id: string): Observable<void> {
     return this.api.delete<void>(`/missions/${id}`);
   }

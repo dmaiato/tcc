@@ -9,6 +9,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -30,10 +34,22 @@ public class GetMissionsService implements GetMissionsUseCase {
         } else if (query.difficulty() != null) {
             missions = missionRepository.findByDifficulty(query.difficulty());
         } else {
-            return missionRepository.findByEnabledTrue();
+            missions = missionRepository.findByEnabledTrue();
         }
-        return missions.stream()
+
+        List<Mission> enabledMissions = missions.stream()
                 .filter(Mission::isEnabled)
+                .toList();
+
+        Set<UUID> scenarioIds = enabledMissions.stream()
+                .map(Mission::getScenarioId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        Set<UUID> disabledScenarios = missionRepository.findScenarioIdsWithDisabledMissions(scenarioIds);
+
+        return enabledMissions.stream()
+                .filter(m -> m.getScenarioId() == null || !disabledScenarios.contains(m.getScenarioId()))
                 .toList();
     }
 
@@ -43,6 +59,11 @@ public class GetMissionsService implements GetMissionsUseCase {
                 .orElseThrow(() -> new MissionNotFoundException(query.missionId()));
 
         if (!mission.isEnabled()) {
+            throw new MissionNotFoundException(query.missionId());
+        }
+
+        if (mission.getScenarioId() != null
+            && missionRepository.existsByScenarioIdAndEnabledFalse(mission.getScenarioId())) {
             throw new MissionNotFoundException(query.missionId());
         }
 

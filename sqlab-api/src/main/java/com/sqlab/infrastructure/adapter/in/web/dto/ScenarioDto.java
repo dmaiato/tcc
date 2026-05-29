@@ -37,31 +37,36 @@ public class ScenarioDto {
     public record CreateScenarioRequest(
             @NotBlank String title,
             @NotBlank String description,
-            @NotNull Theme theme) {}
+            @NotNull Theme theme,
+            @NotNull Boolean enabled) {}
 
     public record UpdateScenarioRequest(
             @NotBlank String title,
             @NotBlank String description,
-            @NotNull Theme theme) {}
+            @NotNull Theme theme,
+            @NotNull Boolean enabled) {}
 
     public record ScenarioResponse(
             UUID id,
             String title,
             String description,
             Theme theme,
-            int totalMissions) {}
+            int totalMissions,
+            boolean enabled) {}
 
     public record ScenarioMissionSummary(
             UUID id,
             String title,
             DifficultyLevel difficulty,
-            int xpReward) {}
+            int xpReward,
+            boolean enabled) {}
 
     public record ScenarioAdminDetail(
             UUID id,
             String title,
             String description,
             Theme theme,
+            boolean enabled,
             int totalMissions,
             List<ScenarioMissionSummary> missions) {}
 

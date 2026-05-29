@@ -131,26 +131,6 @@ public class MissionController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/{missionId}/enabled")
-    public ResponseEntity<MissionDto.MissionResponse> setEnabled(
-            @PathVariable UUID missionId,
-            @RequestBody Map<String, Boolean> body) {
-        Boolean enabled = body.get("enabled");
-        if (enabled == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        Mission mission = manageMissionUseCase.findById(missionId);
-        ManageMissionUseCase.UpdateMissionCommand command = new ManageMissionUseCase.UpdateMissionCommand(
-                missionId,
-                mission.getTitle(), mission.getBriefing(), mission.getObjective(),
-                mission.getHint(), mission.getDdlScript(), mission.getDmlScript(),
-                mission.getTechniques(), mission.getXpReward(), mission.isOrdered(),
-                mission.getTheme(), mission.getDifficulty(), mission.getExpectedResult().rows(),
-                mission.getScenarioId(), mission.getOrderIndex(), enabled);
-        Mission updated = manageMissionUseCase.update(command);
-        return ResponseEntity.ok(toMissionResponse(updated));
-    }
-
     @DeleteMapping("/{missionId}")
     public ResponseEntity<Void> delete(@PathVariable UUID missionId) {
         manageMissionUseCase.delete(missionId);

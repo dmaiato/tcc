@@ -28,8 +28,6 @@ export class AdminMissionListComponent {
   missions = signal<Mission[]>([]);
   loading = signal(true);
   confirmDelete = signal<string | null>(null);
-  confirmToggle = signal<string | null>(null);
-  togglingId = signal<string | null>(null);
   expandedId = signal<string | null>(null);
   expandedMission = signal<Mission | null>(null);
   expandedLoading = signal(false);
@@ -74,39 +72,6 @@ export class AdminMissionListComponent {
 
   cancelDelete(): void {
     this.confirmDelete.set(null);
-  }
-
-  requestToggle(missionId: string): void {
-    this.confirmToggle.set(missionId);
-  }
-
-  cancelToggle(): void {
-    this.confirmToggle.set(null);
-  }
-
-  confirmToggleMission(missionId: string): void {
-    this.confirmToggle.set(null);
-    this.togglingId.set(missionId);
-    this.missionService.getMissionAdmin(missionId).subscribe({
-      next: (mission) => {
-        const newEnabled = !mission.enabled;
-        this.missionService.setEnabled(missionId, newEnabled).subscribe({
-          next: () => {
-            this.togglingId.set(null);
-            this.toast.success(newEnabled ? 'Mission enabled' : 'Mission disabled');
-            this.loadMissions();
-          },
-          error: () => {
-            this.togglingId.set(null);
-            this.toast.error('Failed to update mission');
-          }
-        });
-      },
-      error: () => {
-        this.togglingId.set(null);
-        this.toast.error('Failed to load mission');
-      }
-    });
   }
 
   confirmDeleteMission(missionId: string): void {

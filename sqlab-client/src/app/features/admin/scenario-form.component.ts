@@ -49,6 +49,7 @@ export class ScenarioFormComponent implements OnInit {
   formTitle = signal('');
   formDescription = signal('');
   formTheme = signal<Theme>('CRIMINAL');
+  formEnabled = signal<boolean | null>(null);
 
   missions = signal<ScenarioMissionSummary[]>([]);
   originalOrder = signal<string[]>([]);
@@ -116,6 +117,7 @@ export class ScenarioFormComponent implements OnInit {
           this.formTitle.set(detail.title);
           this.formDescription.set(detail.description);
           this.formTheme.set(detail.theme);
+          this.formEnabled.set(detail.enabled);
           this.missions.set(detail.missions);
           this.originalOrder.set(detail.missions.map(m => m.id));
           this.loadingMissions.set(false);
@@ -126,7 +128,13 @@ export class ScenarioFormComponent implements OnInit {
           this.router.navigate(['/admin/scenarios']);
         }
       });
+    } else {
+      this.formEnabled.set(true);
     }
+  }
+
+  toggleEnabled(): void {
+    this.formEnabled.update(v => !v);
   }
 
   cancel(): void {
@@ -188,14 +196,16 @@ export class ScenarioFormComponent implements OnInit {
         const data: UpdateScenarioRequest = {
           title: this.formTitle().trim(),
           description: this.formDescription().trim(),
-          theme: this.formTheme()
+          theme: this.formTheme(),
+          enabled: this.formEnabled() ?? true
         };
         return this.scenarioService.update(this.editId!, data);
       } else {
         const data: CreateScenarioRequest = {
           title: this.formTitle().trim(),
           description: this.formDescription().trim(),
-          theme: this.formTheme()
+          theme: this.formTheme(),
+          enabled: this.formEnabled() ?? true
         };
         return this.scenarioService.create(data);
       }

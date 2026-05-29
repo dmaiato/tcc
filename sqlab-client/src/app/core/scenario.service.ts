@@ -29,8 +29,8 @@ export class ScenarioService {
     return this.api.get<ScenarioResponse[]>('/admin/scenarios');
   }
 
-  getByIdAdmin(id: string): Observable<ScenarioResponse> {
-    return this.api.get<ScenarioResponse>(`/admin/scenarios/${id}`);
+  getByIdAdmin(id: string): Observable<ScenarioAdminDetail> {
+    return this.api.get<ScenarioAdminDetail>(`/admin/scenarios/${id}`);
   }
 
   getAdminDetail(id: string): Observable<ScenarioAdminDetail> {
@@ -52,4 +52,5 @@ export class ScenarioService {
   reorderMissions(scenarioId: string, data: ReorderMissionsRequest): Observable<void> {
     return this.api.put<void>(`/admin/scenarios/${scenarioId}/missions/reorder`, data);
   }
+
 }

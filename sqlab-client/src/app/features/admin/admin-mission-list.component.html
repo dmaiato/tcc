@@ -46,6 +46,11 @@
                       <div class="min-w-0">
                         <div class="flex items-center gap-2">
                           <h3 class="font-sans text-sm font-semibold text-foreground truncate">{{ mission.title }}</h3>
+                          @if (!mission.enabled) {
+                            <span class="font-mono text-[9px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/20 shrink-0">
+                              Disabled
+                            </span>
+                          }
                           @if (mission.scenarioTitle) {
                             <span class="font-mono text-[9px] px-1.5 py-0.5 rounded bg-secondary/10 text-secondary border border-secondary/20 shrink-0">
                               {{ mission.scenarioTitle }}
