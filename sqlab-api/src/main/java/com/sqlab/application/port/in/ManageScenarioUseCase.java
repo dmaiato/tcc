@@ -8,8 +8,8 @@ import java.util.UUID;
 
 public interface ManageScenarioUseCase {
 
-    record CreateScenarioCommand(String title, String description, Theme theme, Boolean enabled) {}
-    record UpdateScenarioCommand(UUID id, String title, String description, Theme theme, Boolean enabled) {}
+    record CreateScenarioCommand(String title, String description, Theme theme, Boolean enabled, int requiredLevel) {}
+    record UpdateScenarioCommand(UUID id, String title, String description, Theme theme, Boolean enabled, int requiredLevel) {}
     record ReorderMissionsCommand(UUID scenarioId, List<UUID> missionIds) {}
 
     Scenario create(CreateScenarioCommand command);

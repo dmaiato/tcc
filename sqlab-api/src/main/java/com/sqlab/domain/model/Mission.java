@@ -29,6 +29,7 @@ public class Mission {
     private final Integer orderIndex;
     private final String scenarioTitle;
     private final boolean enabled;
+    private final int requiredLevel;
 
     public ValidationResult validate(List<java.util.Map<String, Object>> submitted) {
         return ordered

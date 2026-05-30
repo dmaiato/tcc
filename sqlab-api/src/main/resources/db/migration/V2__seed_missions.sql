@@ -639,13 +639,26 @@ VALUES
 );
 
 -- Scenario: Night at the Blue Moon (groups missions 1, 2, 3)
-INSERT INTO scenarios (id, title, description, theme) VALUES (
+INSERT INTO scenarios (id, title, description, theme, required_level) VALUES (
     '00000000-0000-0000-0000-0000000000a1',
     'Night at the Blue Moon',
     'It''s 3 AM and Detective Estranho has just arrived at the Blue Moon Cabaret. A body was found in the alley, and the clues are in the register book. As you investigate, you discover this night holds more secrets than a simple murder — a web of lies involving patrons, interrogations, and alibis that don''t hold up.',
-    'CRIMINAL'
+    'CRIMINAL',
+    2
 );
 
 UPDATE missions SET scenario_id = '00000000-0000-0000-0000-0000000000a1', order_index = 1 WHERE id = '00000000-0000-0000-0000-000000000001';
 UPDATE missions SET scenario_id = '00000000-0000-0000-0000-0000000000a1', order_index = 2 WHERE id = '00000000-0000-0000-0000-000000000002';
 UPDATE missions SET scenario_id = '00000000-0000-0000-0000-0000000000a1', order_index = 3 WHERE id = '00000000-0000-0000-0000-000000000003';
+
+-- Scenario: The Mendes & Sons Affair (groups missions 4, 6)
+INSERT INTO scenarios (id, title, description, theme, required_level) VALUES (
+    '00000000-0000-0000-0000-0000000000a2',
+    'The Mendes & Sons Affair',
+    'The Mendes & Sons accounting scandal unfolds as Detective Estranho follows the money trail from suspicious corporate accounts to a network of money laundering across multiple bank branches.',
+    'FINANCE',
+    3
+);
+
+UPDATE missions SET scenario_id = '00000000-0000-0000-0000-0000000000a2', order_index = 1 WHERE id = '00000000-0000-0000-0000-000000000004';
+UPDATE missions SET scenario_id = '00000000-0000-0000-0000-0000000000a2', order_index = 2 WHERE id = '00000000-0000-0000-0000-000000000006';

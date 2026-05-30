@@ -201,6 +201,10 @@ export class MissionComponent implements OnInit, OnDestroy {
           this.isLocked.set(true);
           this.lockedMessage.set(err.error?.message || 'This mission is locked.');
           this.lockedScenarioId.set(err.error?.scenarioId || null);
+        } else if (err.status === 403 && err.error?.code === 'LEVEL_REQUIRED') {
+          this.isLocked.set(true);
+          this.lockedMessage.set(err.error?.message || 'Level ' + err.error?.requiredLevel + ' required.');
+          this.lockedScenarioId.set(err.error?.scenarioId || null);
         } else {
           this.router.navigate(['/dashboard']);
         }

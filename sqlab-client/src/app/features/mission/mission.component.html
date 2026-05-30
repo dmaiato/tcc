@@ -20,7 +20,9 @@
             <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
           </svg>
         </div>
-        <h2 class="text-lg font-semibold text-foreground mb-2">Mission Locked</h2>
+        <h2 class="text-lg font-semibold text-foreground mb-2">
+          {{ lockedMessage().includes('Level') ? 'Level Required' : 'Mission Locked' }}
+        </h2>
         <p class="text-sm text-muted-foreground mb-4">{{ lockedMessage() }}</p>
         <a [routerLink]="lockedScenarioId() ? ['/scenarios', lockedScenarioId()] : '/scenarios'"
            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-mono text-xs font-medium transition-colors">

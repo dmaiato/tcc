@@ -1,6 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
 import { MissionService } from '../../core/mission.service';
 import { ScenarioDetail, ScenarioMissionItem, Theme, DifficultyLevel } from '../../core/models/mission.model';
 
@@ -30,6 +31,11 @@ import { ScenarioDetail, ScenarioMissionItem, Theme, DifficultyLevel } from '../
             <!-- Header -->
             <div class="flex items-center gap-3 mb-4">
               <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{{ getThemeLabel(s.theme) }}</span>
+              @if (s.requiredLevel > 0) {
+                <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-accent/10 text-accent border border-accent/20">
+                  Level {{ s.requiredLevel }}+ Required
+                </span>
+              }
             </div>
             <h1 class="text-2xl font-bold tracking-tight text-foreground mb-4">{{ s.title }}</h1>
 
@@ -116,7 +122,9 @@ import { ScenarioDetail, ScenarioMissionItem, Theme, DifficultyLevel } from '../
                         [class.text-muted-foreground]="mission.status === 'LOCKED'">
                     @if (mission.status === 'COMPLETED') { Completed }
                     @else if (mission.status === 'AVAILABLE') { Start → }
-                    @else { Locked }
+                    @else if (mission.status === 'LOCKED' && mission.requiredLevel > 0 && (authService.currentUser()?.level ?? 1) < mission.requiredLevel) {
+                      Level {{ mission.requiredLevel }}
+                    } @else { Locked }
                   </span>
                 </div>
               }
@@ -131,6 +139,7 @@ export class ScenarioDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly missionService = inject(MissionService);
+  readonly authService = inject(AuthService);
 
   scenario = signal<ScenarioDetail | null>(null);
   isLoading = signal(true);

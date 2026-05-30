@@ -57,6 +57,9 @@
                         [style.background]="style.from">
                         {{ style.label }}
                       </span>
+                      @if (scenario.requiredLevel && scenario.requiredLevel > 0) {
+                        <span class="font-mono text-[9px] px-1.5 py-0.5 rounded bg-accent/10 text-accent border border-accent/20">Lv {{ scenario.requiredLevel }}+</span>
+                      }
                       <span class="font-mono text-[9px] text-muted-foreground flex items-center gap-1 shrink-0">
                         <ng-icon name="lucideLayers" class="w-3 h-3" />
                         {{ scenario.totalMissions }} missions

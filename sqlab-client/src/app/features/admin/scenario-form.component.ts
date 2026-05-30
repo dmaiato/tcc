@@ -50,6 +50,7 @@ export class ScenarioFormComponent implements OnInit {
   formDescription = signal('');
   formTheme = signal<Theme>('CRIMINAL');
   formEnabled = signal<boolean | null>(null);
+  formRequiredLevel = signal(0);
 
   missions = signal<ScenarioMissionSummary[]>([]);
   originalOrder = signal<string[]>([]);
@@ -118,6 +119,7 @@ export class ScenarioFormComponent implements OnInit {
           this.formDescription.set(detail.description);
           this.formTheme.set(detail.theme);
           this.formEnabled.set(detail.enabled);
+          this.formRequiredLevel.set(detail.requiredLevel);
           this.missions.set(detail.missions);
           this.originalOrder.set(detail.missions.map(m => m.id));
           this.loadingMissions.set(false);
@@ -131,6 +133,11 @@ export class ScenarioFormComponent implements OnInit {
     } else {
       this.formEnabled.set(true);
     }
+  }
+
+  onRequiredLevelChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.formRequiredLevel.set(parseInt(input.value, 10) || 0);
   }
 
   toggleEnabled(): void {
@@ -197,6 +204,7 @@ export class ScenarioFormComponent implements OnInit {
           title: this.formTitle().trim(),
           description: this.formDescription().trim(),
           theme: this.formTheme(),
+          requiredLevel: this.formRequiredLevel(),
           enabled: this.formEnabled() ?? true
         };
         return this.scenarioService.update(this.editId!, data);
@@ -205,6 +213,7 @@ export class ScenarioFormComponent implements OnInit {
           title: this.formTitle().trim(),
           description: this.formDescription().trim(),
           theme: this.formTheme(),
+          requiredLevel: this.formRequiredLevel(),
           enabled: this.formEnabled() ?? true
         };
         return this.scenarioService.create(data);

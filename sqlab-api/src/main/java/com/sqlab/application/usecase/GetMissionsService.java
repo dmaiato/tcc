@@ -2,9 +2,13 @@ package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.GetMissionsUseCase;
 import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.UserRepository;
+import com.sqlab.domain.exception.LevelRequiredException;
 import com.sqlab.domain.exception.MissionLockedException;
 import com.sqlab.domain.exception.MissionNotFoundException;
 import com.sqlab.domain.model.Mission;
+import com.sqlab.domain.model.User;
+import com.sqlab.domain.model.UserRole;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,9 +23,11 @@ import java.util.stream.Collectors;
 public class GetMissionsService implements GetMissionsUseCase {
 
     private final MissionRepository missionRepository;
+    private final UserRepository userRepository;
 
-    public GetMissionsService(MissionRepository missionRepository) {
+    public GetMissionsService(MissionRepository missionRepository, UserRepository userRepository) {
         this.missionRepository = missionRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -65,6 +71,17 @@ public class GetMissionsService implements GetMissionsUseCase {
         if (mission.getScenarioId() != null
             && missionRepository.existsByScenarioIdAndEnabledFalse(mission.getScenarioId())) {
             throw new MissionNotFoundException(query.missionId());
+        }
+
+        if (query.userId() != null && mission.getRequiredLevel() > 0) {
+            User user = userRepository.findById(query.userId())
+                    .orElseThrow(() -> new MissionNotFoundException(query.missionId()));
+            if (user.getRole() != UserRole.ADMIN) {
+                int userLevel = User.computeLevel(user.getXp());
+                if (userLevel < mission.getRequiredLevel()) {
+                    throw new LevelRequiredException(mission.getRequiredLevel(), userLevel);
+                }
+            }
         }
 
         if (query.userId() != null && mission.getScenarioId() != null) {

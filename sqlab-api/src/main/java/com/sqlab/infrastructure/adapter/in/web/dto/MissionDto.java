@@ -67,7 +67,8 @@ public class MissionDto {
             Integer scenarioOrderIndex,
             Integer scenarioTotalMissions,
             boolean enabled,
-            List<Map<String, Object>> expectedResult) {}
+            List<Map<String, Object>> expectedResult,
+            int requiredLevel) {}
 
     @JsonInclude(Include.NON_NULL)
     public record MissionSummary(
@@ -80,7 +81,8 @@ public class MissionDto {
             Theme theme,
             DifficultyLevel difficulty,
             UUID scenarioId,
-            boolean enabled) {}
+            boolean enabled,
+            int requiredLevel) {}
 
     public record ValidationRequest(@NotNull List<Map<String, Object>> tuples) {}
 

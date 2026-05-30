@@ -16,7 +16,8 @@ public class ScenarioDto {
             String title,
             Theme theme,
             int totalMissions,
-            int completedMissions) {}
+            int completedMissions,
+            int requiredLevel) {}
 
     public record ScenarioMissionItem(
             UUID id,
@@ -24,7 +25,8 @@ public class ScenarioDto {
             List<String> techniques,
             int xpReward,
             DifficultyLevel difficulty,
-            String status) {}
+            String status,
+            int requiredLevel) {}
 
     public record ScenarioDetail(
             UUID id,
@@ -32,19 +34,22 @@ public class ScenarioDto {
             String description,
             Theme theme,
             List<ScenarioMissionItem> missions,
-            Map<String, Integer> userProgress) {}
+            Map<String, Integer> userProgress,
+            int requiredLevel) {}
 
     public record CreateScenarioRequest(
             @NotBlank String title,
             @NotBlank String description,
             @NotNull Theme theme,
-            @NotNull Boolean enabled) {}
+            @NotNull Boolean enabled,
+            int requiredLevel) {}
 
     public record UpdateScenarioRequest(
             @NotBlank String title,
             @NotBlank String description,
             @NotNull Theme theme,
-            @NotNull Boolean enabled) {}
+            @NotNull Boolean enabled,
+            int requiredLevel) {}
 
     public record ScenarioResponse(
             UUID id,
@@ -52,7 +57,8 @@ public class ScenarioDto {
             String description,
             Theme theme,
             int totalMissions,
-            boolean enabled) {}
+            boolean enabled,
+            int requiredLevel) {}
 
     public record ScenarioMissionSummary(
             UUID id,
@@ -68,7 +74,8 @@ public class ScenarioDto {
             Theme theme,
             boolean enabled,
             int totalMissions,
-            List<ScenarioMissionSummary> missions) {}
+            List<ScenarioMissionSummary> missions,
+            int requiredLevel) {}
 
     public record ReorderMissionsRequest(
             @NotNull List<@NotNull UUID> missionIds) {}

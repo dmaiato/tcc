@@ -32,6 +32,9 @@ public class ScenarioJpaEntity {
     @Column(nullable = false)
     private boolean enabled;
 
+    @Column(name = "required_level", nullable = false)
+    private int requiredLevel;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

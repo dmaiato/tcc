@@ -6,6 +6,7 @@ import com.sqlab.application.port.out.MissionRepository;
 import com.sqlab.application.port.out.UserRepository;
 import com.sqlab.domain.model.Mission;
 import com.sqlab.domain.model.Progress;
+import com.sqlab.domain.model.User;
 import com.sqlab.infrastructure.adapter.in.web.dto.UserDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -36,12 +37,8 @@ public class UserController {
     @GetMapping
     public ResponseEntity<UserDto.ProfileResponse> getProfile(@AuthenticationPrincipal String userId) {
         return userRepository.findById(UUID.fromString(userId))
-                .map(u -> ResponseEntity.ok(new UserDto.ProfileResponse(u.getId(), u.getUsername(), u.getEmail(), u.getXp(), computeLevel(u.getXp()), u.getRole().name(), u.getCreatedAt())))
+                .map(u -> ResponseEntity.ok(new UserDto.ProfileResponse(u.getId(), u.getUsername(), u.getEmail(), u.getXp(), User.computeLevel(u.getXp()), u.getRole().name(), u.getCreatedAt())))
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-    private int computeLevel(int xp) {
-        return (int) Math.sqrt(xp / 100.0) + 1;
     }
 
     @GetMapping("/progress")

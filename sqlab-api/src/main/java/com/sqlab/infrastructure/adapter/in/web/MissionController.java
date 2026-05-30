@@ -141,7 +141,7 @@ public class MissionController {
         return new MissionDto.MissionSummary(
                 m.getId(), m.getTitle(), m.getScenarioTitle(), m.getTechniques(),
                 m.getXpReward(), m.isOrdered(), m.getTheme(), m.getDifficulty(),
-                m.getScenarioId(), m.isEnabled());
+                m.getScenarioId(), m.isEnabled(), m.getRequiredLevel());
     }
 
     private MissionDto.MissionResponse toResponse(GetMissionsUseCase.MissionDetail detail) {
@@ -152,7 +152,7 @@ public class MissionController {
                 m.getDdlScript(), m.getDmlScript(), m.getTechniques(),
                 m.getXpReward(), m.isOrdered(), m.getTheme(), m.getDifficulty(),
                 m.getScenarioId(), m.getScenarioTitle(), m.getOrderIndex(),
-                detail.scenarioTotalMissions(), m.isEnabled(), null);
+                detail.scenarioTotalMissions(), m.isEnabled(), null, m.getRequiredLevel());
     }
 
     private MissionDto.MissionResponse toMissionResponse(Mission m) {
@@ -162,6 +162,6 @@ public class MissionController {
                 m.getDdlScript(), m.getDmlScript(), m.getTechniques(),
                 m.getXpReward(), m.isOrdered(), m.getTheme(), m.getDifficulty(),
                 m.getScenarioId(), m.getScenarioTitle(), m.getOrderIndex(),
-                null, m.isEnabled(), m.getExpectedResult().rows());
+                null, m.isEnabled(), m.getExpectedResult().rows(), m.getRequiredLevel());
     }
 }

@@ -1,6 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
 import { MissionService } from '../../core/mission.service';
 import { ScenarioSummary, Theme } from '../../core/models/mission.model';
 
@@ -36,9 +37,15 @@ import { ScenarioSummary, Theme } from '../../core/models/mission.model';
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               @for (scenario of scenarios(); track scenario.id) {
                 <a [routerLink]="['/scenarios', scenario.id]"
+                   [class.opacity-50]="scenario.requiredLevel > 0 && (authService.currentUser()?.level ?? 1) < scenario.requiredLevel"
                    class="group relative rounded-xl border border-border bg-card p-4 hover:bg-muted/30 transition-colors card-shine">
                   <div class="flex items-center gap-2 mb-3">
                     <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{{ getThemeLabel(scenario.theme) }}</span>
+                    @if (scenario.requiredLevel > 0) {
+                      <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-accent/10 text-accent border border-accent/20 ml-auto">
+                        Level {{ scenario.requiredLevel }}+
+                      </span>
+                    }
                   </div>
                   <h3 class="font-sans text-sm font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">{{ scenario.title }}</h3>
                   <div class="space-y-2">
@@ -59,6 +66,7 @@ import { ScenarioSummary, Theme } from '../../core/models/mission.model';
 })
 export class ScenarioListComponent implements OnInit {
   private readonly missionService = inject(MissionService);
+  readonly authService = inject(AuthService);
 
   scenarios = signal<ScenarioSummary[]>([]);
   isLoading = signal(true);

@@ -10,6 +10,7 @@ public class MissionMapper {
 
     public Mission toDomain(MissionJpaEntity entity) {
         String scenarioTitle = entity.getScenario() != null ? entity.getScenario().getTitle() : null;
+        int requiredLevel = entity.getScenario() != null ? entity.getScenario().getRequiredLevel() : 0;
         return new Mission(
                 entity.getId(),
                 entity.getTitle(),
@@ -27,7 +28,8 @@ public class MissionMapper {
                 entity.getScenarioId(),
                 entity.getOrderIndex(),
                 scenarioTitle,
-                entity.isEnabled()
+                entity.isEnabled(),
+                requiredLevel
         );
     }
 

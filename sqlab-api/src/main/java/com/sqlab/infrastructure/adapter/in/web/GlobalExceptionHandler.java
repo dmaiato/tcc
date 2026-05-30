@@ -1,6 +1,7 @@
 package com.sqlab.infrastructure.adapter.in.web;
 
 import com.sqlab.domain.exception.InvalidCredentialsException;
+import com.sqlab.domain.exception.LevelRequiredException;
 import com.sqlab.domain.exception.MissionLockedException;
 import com.sqlab.domain.exception.MissionNotFoundException;
 import com.sqlab.domain.exception.ScenarioNotFoundException;
@@ -55,6 +56,18 @@ public class GlobalExceptionHandler {
         body.put("code", "MISSION_LOCKED");
         body.put("message", ex.getMessage());
         body.put("scenarioId", ex.getScenarioId());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler(LevelRequiredException.class)
+    public ResponseEntity<Map<String, Object>> handleLevelRequired(LevelRequiredException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("status", 403);
+        body.put("error", "Forbidden");
+        body.put("code", "LEVEL_REQUIRED");
+        body.put("message", ex.getMessage());
+        body.put("requiredLevel", ex.getRequiredLevel());
+        body.put("currentLevel", ex.getCurrentLevel());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 

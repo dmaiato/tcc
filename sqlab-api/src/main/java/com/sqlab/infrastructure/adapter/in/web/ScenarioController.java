@@ -5,7 +5,10 @@ import com.sqlab.application.port.in.GetScenariosUseCase;
 import com.sqlab.application.port.in.ManageScenarioUseCase;
 import com.sqlab.application.port.out.MissionRepository;
 import com.sqlab.application.port.out.ProgressRepository;
+import com.sqlab.application.port.out.UserRepository;
 import com.sqlab.domain.exception.ScenarioNotFoundException;
+import com.sqlab.domain.model.User;
+import com.sqlab.domain.model.UserRole;
 import com.sqlab.domain.model.Mission;
 import com.sqlab.domain.model.Scenario;
 import com.sqlab.infrastructure.adapter.in.web.dto.ScenarioDto;
@@ -30,15 +33,18 @@ public class ScenarioController {
     private final ManageScenarioUseCase manageScenarioUseCase;
     private final MissionRepository missionRepository;
     private final ProgressRepository progressRepository;
+    private final UserRepository userRepository;
 
     public ScenarioController(GetScenariosUseCase getScenariosUseCase,
                               ManageScenarioUseCase manageScenarioUseCase,
                               MissionRepository missionRepository,
-                              ProgressRepository progressRepository) {
+                              ProgressRepository progressRepository,
+                              UserRepository userRepository) {
         this.getScenariosUseCase = getScenariosUseCase;
         this.manageScenarioUseCase = manageScenarioUseCase;
         this.missionRepository = missionRepository;
         this.progressRepository = progressRepository;
+        this.userRepository = userRepository;
     }
 
     @GetMapping("/scenarios")
@@ -65,7 +71,7 @@ public class ScenarioController {
                             .filter(m -> completedIds.contains(m.getId()))
                             .count();
                     return new ScenarioDto.ScenarioSummary(
-                            s.getId(), s.getTitle(), s.getTheme(), missions.size(), completed);
+                            s.getId(), s.getTitle(), s.getTheme(), missions.size(), completed, s.getRequiredLevel());
                 })
                 .toList();
         return ResponseEntity.ok(response);
@@ -85,11 +91,21 @@ public class ScenarioController {
             throw new ScenarioNotFoundException(scenarioId);
         }
 
+        // Compute user level for level check (admins bypass)
+        boolean levelRestricted = scenario.getRequiredLevel() > 0;
+        boolean belowRequiredLevel = levelRestricted && userUuid != null
+                ? userRepository.findById(userUuid)
+                        .map(u -> u.getRole() != UserRole.ADMIN && User.computeLevel(u.getXp()) < scenario.getRequiredLevel())
+                        .orElse(false)
+                : false;
+
         List<ScenarioDto.ScenarioMissionItem> missionItems = allMissions.stream().map(m -> {
             String status;
             boolean completed = completedIds.contains(m.getId());
             if (completed) {
                 status = "COMPLETED";
+            } else if (belowRequiredLevel) {
+                status = "LOCKED";
             } else if (m.getOrderIndex() == null || m.getOrderIndex() == 1
                        || isPreviousMissionCompleted(completedIds, allMissions, m.getOrderIndex())) {
                 status = "AVAILABLE";
@@ -98,7 +114,7 @@ public class ScenarioController {
             }
             return new ScenarioDto.ScenarioMissionItem(
                     m.getId(), m.getTitle(), m.getTechniques(),
-                    m.getXpReward(), m.getDifficulty(), status);
+                    m.getXpReward(), m.getDifficulty(), status, m.getRequiredLevel());
         }).toList();
 
         int completedCount = (int) missionItems.stream()
@@ -108,7 +124,8 @@ public class ScenarioController {
         return ResponseEntity.ok(new ScenarioDto.ScenarioDetail(
                 scenario.getId(), scenario.getTitle(), scenario.getDescription(),
                 scenario.getTheme(), missionItems,
-                Map.of("completedCount", completedCount, "totalCount", allMissions.size())
+                Map.of("completedCount", completedCount, "totalCount", allMissions.size()),
+                scenario.getRequiredLevel()
         ));
     }
 
@@ -118,7 +135,7 @@ public class ScenarioController {
         List<ScenarioDto.ScenarioResponse> response = scenarios.stream().map(s ->
                 new ScenarioDto.ScenarioResponse(
                         s.getId(), s.getTitle(), s.getDescription(), s.getTheme(),
-                        missionRepository.countByScenarioId(s.getId()), s.isEnabled())
+                        missionRepository.countByScenarioId(s.getId()), s.isEnabled(), s.getRequiredLevel())
         ).toList();
         return ResponseEntity.ok(response);
     }
@@ -133,7 +150,7 @@ public class ScenarioController {
                 .toList();
         return ResponseEntity.ok(new ScenarioDto.ScenarioAdminDetail(
                 scenario.getId(), scenario.getTitle(), scenario.getDescription(),
-                scenario.getTheme(), scenario.isEnabled(), missionSummaries.size(), missionSummaries));
+                scenario.getTheme(), scenario.isEnabled(), missionSummaries.size(), missionSummaries, scenario.getRequiredLevel()));
     }
 
     @PostMapping("/admin/scenarios")
@@ -141,11 +158,11 @@ public class ScenarioController {
             @Valid @RequestBody ScenarioDto.CreateScenarioRequest request) {
         Scenario scenario = manageScenarioUseCase.create(
                 new ManageScenarioUseCase.CreateScenarioCommand(
-                        request.title(), request.description(), request.theme(), request.enabled()));
+                        request.title(), request.description(), request.theme(), request.enabled(), request.requiredLevel()));
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ScenarioDto.ScenarioResponse(
                         scenario.getId(), scenario.getTitle(), scenario.getDescription(),
-                        scenario.getTheme(), 0, scenario.isEnabled()));
+                        scenario.getTheme(), 0, scenario.isEnabled(), scenario.getRequiredLevel()));
     }
 
     @PutMapping("/admin/scenarios/{scenarioId}")
@@ -154,11 +171,11 @@ public class ScenarioController {
             @Valid @RequestBody ScenarioDto.UpdateScenarioRequest request) {
         Scenario scenario = manageScenarioUseCase.update(
                 new ManageScenarioUseCase.UpdateScenarioCommand(
-                        scenarioId, request.title(), request.description(), request.theme(), request.enabled()));
+                        scenarioId, request.title(), request.description(), request.theme(), request.enabled(), request.requiredLevel()));
         int count = missionRepository.countByScenarioId(scenarioId);
         return ResponseEntity.ok(new ScenarioDto.ScenarioResponse(
                 scenario.getId(), scenario.getTitle(), scenario.getDescription(),
-                scenario.getTheme(), count, scenario.isEnabled()));
+                scenario.getTheme(), count, scenario.isEnabled(), scenario.getRequiredLevel()));
     }
 
     @DeleteMapping("/admin/scenarios/{scenarioId}")

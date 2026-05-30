@@ -33,7 +33,8 @@ public class ManageScenarioService implements ManageScenarioUseCase {
                 command.title(),
                 command.description(),
                 command.theme(),
-                command.enabled() != null ? command.enabled() : true
+                command.enabled() != null ? command.enabled() : true,
+                command.requiredLevel()
         );
         return scenarioRepository.save(scenario);
     }
@@ -51,7 +52,8 @@ public class ManageScenarioService implements ManageScenarioUseCase {
                 command.title(),
                 command.description(),
                 command.theme(),
-                enabled
+                enabled,
+                command.requiredLevel()
         );
 
         if (enabledChanged) {
@@ -71,7 +73,8 @@ public class ManageScenarioService implements ManageScenarioUseCase {
                 existing.getTitle(),
                 existing.getDescription(),
                 existing.getTheme(),
-                enabled
+                enabled,
+                existing.getRequiredLevel()
         );
         scenarioRepository.save(updated);
         missionRepository.setEnabledByScenarioId(scenarioId, enabled);

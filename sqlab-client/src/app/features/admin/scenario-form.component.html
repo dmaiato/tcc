@@ -42,6 +42,12 @@
                 <option [value]="t" class="bg-card text-foreground">{{ t }}</option>
               }
             </select>
+          <div class="space-y-2">
+            <label class="font-mono text-xs text-muted-foreground">Minimum Level</label>
+            <input type="number" min="0" max="100"
+                   [value]="formRequiredLevel()"
+                   (input)="onRequiredLevelChange($event)"
+                   class="w-full bg-transparent font-mono text-sm text-foreground p-3 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-ring" />
           </div>
         </div>
 
