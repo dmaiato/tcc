@@ -26,6 +26,11 @@ public class GetScenariosService implements GetScenariosUseCase {
     }
 
     @Override
+    public List<Scenario> handleEnabled() {
+        return scenarioRepository.findByEnabled();
+    }
+
+    @Override
     public Scenario handle(UUID id) {
         return scenarioRepository.findById(id)
                 .orElseThrow(() -> new ScenarioNotFoundException(id));

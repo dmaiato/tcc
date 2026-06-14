@@ -6,16 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Representa o resultado esperado de uma missão como uma lista ordenada de tuplas.
- * A ordem é relevante para missões que exigem ORDER BY.
- */
 public record ExpectedTuple(List<Map<String, Object>> rows) {
 
-    /**
-     * Validação estrutural sem considerar ordem.
-     * Usada em missões de consulta simples (SELECT, JOIN, etc.).
-     */
+    public ExpectedTuple(List<Map<String, Object>> rows) {
+        this.rows = List.copyOf(rows);
+    }
+
     public ValidationResult matchesUnordered(List<Map<String, Object>> submitted) {
         if (rows.size() != submitted.size()) {
             return ValidationResult.failed(
@@ -38,11 +34,6 @@ public record ExpectedTuple(List<Map<String, Object>> rows) {
         return ValidationResult.CORRECT;
     }
 
-    /**
-     * Validação estrutural considerando ordem.
-     * Usada em missões que exigem ORDER BY.
-     * Antes de apontar valores errados, verifica se o problema é apenas a ordem.
-     */
     public ValidationResult matchesOrdered(List<Map<String, Object>> submitted) {
         if (rows.size() != submitted.size()) {
             return ValidationResult.failed(
@@ -54,12 +45,10 @@ public record ExpectedTuple(List<Map<String, Object>> rows) {
         ValidationResult columnCheck = checkColumns(submitted);
         if (columnCheck != null) return columnCheck;
 
-        // All data present but in wrong order?
         boolean allDataMatches = submitted.stream().allMatch(candidate ->
                 rows.stream().anyMatch(expected -> mapsEqual(expected, candidate))
         );
         if (allDataMatches) {
-            // Check if actually ordered correctly — if not, order is the only issue
             boolean orderedCorrectly = true;
             for (int i = 0; i < rows.size(); i++) {
                 if (!mapsEqual(rows.get(i), submitted.get(i))) {
@@ -72,7 +61,6 @@ public record ExpectedTuple(List<Map<String, Object>> rows) {
             }
         }
 
-        // Row-by-row detailed feedback
         for (int i = 0; i < rows.size(); i++) {
             ValidationResult rowCheck = checkRow(i, rows.get(i), submitted.get(i));
             if (rowCheck != null) return rowCheck;

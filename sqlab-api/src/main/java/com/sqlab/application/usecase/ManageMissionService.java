@@ -54,7 +54,6 @@ public class ManageMissionService implements ManageMissionUseCase {
                 .difficulty(command.difficulty())
                 .scenarioId(scenarioId)
                 .orderIndex(orderIndex)
-                .scenarioTitle(null)
                 .enabled(command.enabled() != null ? command.enabled() : true)
                 .build();
 
@@ -83,7 +82,6 @@ public class ManageMissionService implements ManageMissionUseCase {
                 .difficulty(command.difficulty())
                 .scenarioId(command.scenarioId() != null ? command.scenarioId() : existing.getScenarioId())
                 .orderIndex(command.orderIndex() != null ? command.orderIndex() : existing.getOrderIndex())
-                .scenarioTitle(existing.getScenarioTitle())
                 .enabled(command.enabled() != null ? command.enabled() : existing.isEnabled())
                 .build();
 

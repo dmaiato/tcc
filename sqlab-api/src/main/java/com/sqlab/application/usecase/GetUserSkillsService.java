@@ -3,7 +3,6 @@ package com.sqlab.application.usecase;
 import com.sqlab.application.port.in.GetUserSkillsUseCase;
 import com.sqlab.application.port.out.MissionRepository;
 import com.sqlab.application.port.out.ProgressRepository;
-import com.sqlab.domain.model.Progress;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,20 +19,22 @@ public class GetUserSkillsService implements GetUserSkillsUseCase {
     private final MissionRepository missionRepository;
 
     public GetUserSkillsService(ProgressRepository progressRepository,
-                             MissionRepository missionRepository) {
+                                MissionRepository missionRepository) {
         this.progressRepository = progressRepository;
         this.missionRepository = missionRepository;
     }
 
     @Override
     public List<String> handle(Query query) {
-        List<Progress> completedProgress = progressRepository.findCompletedByUserId(query.userId());
+        Set<UUID> completedMissionIds = progressRepository.findCompletedMissionIdsByUserId(query.userId());
+
+        if (completedMissionIds.isEmpty()) {
+            return List.of();
+        }
 
         Set<String> skills = new HashSet<>();
-        for (Progress progress : completedProgress) {
-            missionRepository.findById(progress.getMissionId())
-                    .ifPresent(mission -> skills.addAll(mission.getTechniques()));
-        }
+        missionRepository.findAllById(completedMissionIds)
+                .forEach(mission -> skills.addAll(mission.getTechniques()));
 
         return skills.stream().sorted().toList();
     }

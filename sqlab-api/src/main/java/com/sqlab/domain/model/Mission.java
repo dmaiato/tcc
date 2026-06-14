@@ -27,7 +27,6 @@ public class Mission {
     private final DifficultyLevel difficulty;
     private final UUID scenarioId;
     private final Integer orderIndex;
-    private final String scenarioTitle;
     private final boolean enabled;
     private final int requiredLevel;
 

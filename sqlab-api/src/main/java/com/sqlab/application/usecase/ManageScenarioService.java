@@ -119,62 +119,44 @@ public class ManageScenarioService implements ManageScenarioUseCase {
 
         for (int i = 0; i < size; i++) {
             UUID missionId = command.missionIds().get(i);
-            Mission original = existingMissions.stream()
-                    .filter(m -> m.getId().equals(missionId))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Mission not found: " + missionId));
-
-            Mission reordered = Mission.builder()
-                    .id(original.getId())
-                    .title(original.getTitle())
-                    .briefing(original.getBriefing())
-                    .objective(original.getObjective())
-                    .hint(original.getHint())
-                    .ddlScript(original.getDdlScript())
-                    .dmlScript(original.getDmlScript())
-                    .techniques(original.getTechniques())
-                    .xpReward(original.getXpReward())
-                    .expectedResult(original.getExpectedResult())
-                    .ordered(original.isOrdered())
-                    .theme(original.getTheme())
-                    .difficulty(original.getDifficulty())
-                    .scenarioId(original.getScenarioId())
-                    .orderIndex(-(size + i + 1))
-                    .scenarioTitle(original.getScenarioTitle())
-                    .enabled(original.isEnabled())
-                    .build();
-
+            Mission original = findMissionById(existingMissions, missionId);
+            Mission reordered = copyWithOrderIndex(original, -(size + i + 1));
             missionRepository.save(reordered);
         }
 
         for (int i = 0; i < size; i++) {
             UUID missionId = command.missionIds().get(i);
-            Mission original = existingMissions.stream()
-                    .filter(m -> m.getId().equals(missionId))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Mission not found: " + missionId));
-
-            Mission reordered = Mission.builder()
-                    .id(original.getId())
-                    .title(original.getTitle())
-                    .briefing(original.getBriefing())
-                    .objective(original.getObjective())
-                    .hint(original.getHint())
-                    .ddlScript(original.getDdlScript())
-                    .dmlScript(original.getDmlScript())
-                    .techniques(original.getTechniques())
-                    .xpReward(original.getXpReward())
-                    .expectedResult(original.getExpectedResult())
-                    .ordered(original.isOrdered())
-                    .theme(original.getTheme())
-                    .difficulty(original.getDifficulty())
-                    .scenarioId(original.getScenarioId())
-                    .orderIndex(i + 1)
-                    .scenarioTitle(original.getScenarioTitle())
-                    .enabled(original.isEnabled())
-                    .build();
-
+            Mission original = findMissionById(existingMissions, missionId);
+            Mission reordered = copyWithOrderIndex(original, i + 1);
             missionRepository.save(reordered);
         }
+    }
+
+    private Mission findMissionById(List<Mission> missions, UUID id) {
+        return missions.stream()
+                .filter(m -> m.getId().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Mission not found: " + id));
+    }
+
+    private Mission copyWithOrderIndex(Mission original, int orderIndex) {
+        return Mission.builder()
+                .id(original.getId())
+                .title(original.getTitle())
+                .briefing(original.getBriefing())
+                .objective(original.getObjective())
+                .hint(original.getHint())
+                .ddlScript(original.getDdlScript())
+                .dmlScript(original.getDmlScript())
+                .techniques(original.getTechniques())
+                .xpReward(original.getXpReward())
+                .expectedResult(original.getExpectedResult())
+                .ordered(original.isOrdered())
+                .theme(original.getTheme())
+                .difficulty(original.getDifficulty())
+                .scenarioId(original.getScenarioId())
+                .orderIndex(orderIndex)
+                .enabled(original.isEnabled())
+                .build();
     }
 }

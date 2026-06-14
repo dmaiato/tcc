@@ -2,14 +2,17 @@ package com.sqlab.infrastructure.adapter.out.persistence.mapper;
 
 import com.sqlab.domain.model.ExpectedTuple;
 import com.sqlab.domain.model.Mission;
+import com.sqlab.domain.model.Theme;
 import com.sqlab.infrastructure.adapter.out.persistence.entity.MissionJpaEntity;
+import com.sqlab.infrastructure.adapter.out.persistence.entity.TechniqueJpaEntity;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class MissionMapper {
 
     public Mission toDomain(MissionJpaEntity entity) {
-        String scenarioTitle = entity.getScenario() != null ? entity.getScenario().getTitle() : null;
         int requiredLevel = entity.getScenario() != null ? entity.getScenario().getRequiredLevel() : 0;
         return new Mission(
                 entity.getId(),
@@ -19,38 +22,34 @@ public class MissionMapper {
                 entity.getHint(),
                 entity.getDdlScript(),
                 entity.getDmlScript(),
-                entity.getTechniques(),
+                entity.getTechniques().stream().map(TechniqueJpaEntity::getName).sorted().toList(),
                 entity.getXpReward(),
                 new ExpectedTuple(entity.getExpectedResult()),
                 entity.isOrdered(),
-                entity.getTheme(),
+                Theme.valueOf(entity.getTheme().getName()),
                 entity.getDifficulty(),
-                entity.getScenarioId(),
+                entity.getScenario() != null ? entity.getScenario().getId() : null,
                 entity.getOrderIndex(),
-                scenarioTitle,
                 entity.isEnabled(),
                 requiredLevel
         );
     }
 
     public MissionJpaEntity toJpa(Mission domain) {
-        return MissionJpaEntity.builder()
-                .id(domain.getId())
-                .title(domain.getTitle())
-                .briefing(domain.getBriefing())
-                .objective(domain.getObjective())
-                .hint(domain.getHint())
-                .ddlScript(domain.getDdlScript())
-                .dmlScript(domain.getDmlScript())
-                .techniques(domain.getTechniques())
-                .xpReward(domain.getXpReward())
-                .expectedResult(domain.getExpectedResult().rows())
-                .ordered(domain.isOrdered())
-                .theme(domain.getTheme())
-                .difficulty(domain.getDifficulty())
-                .scenarioId(domain.getScenarioId())
-                .orderIndex(domain.getOrderIndex())
-                .enabled(domain.isEnabled())
-                .build();
+        MissionJpaEntity entity = new MissionJpaEntity();
+        entity.setId(domain.getId());
+        entity.setTitle(domain.getTitle());
+        entity.setBriefing(domain.getBriefing());
+        entity.setObjective(domain.getObjective());
+        entity.setHint(domain.getHint());
+        entity.setDdlScript(domain.getDdlScript());
+        entity.setDmlScript(domain.getDmlScript());
+        entity.setXpReward(domain.getXpReward());
+        entity.setExpectedResult(domain.getExpectedResult().rows());
+        entity.setOrdered(domain.isOrdered());
+        entity.setDifficulty(domain.getDifficulty());
+        entity.setEnabled(domain.isEnabled());
+        entity.setOrderIndex(domain.getOrderIndex());
+        return entity;
     }
 }

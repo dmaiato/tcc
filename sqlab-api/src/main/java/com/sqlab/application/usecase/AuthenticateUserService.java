@@ -27,7 +27,7 @@ public class AuthenticateUserService implements AuthenticateUserUseCase {
     public AuthResult handle(Command command) {
         var user = userRepository.findByEmail(command.email()).orElseThrow(InvalidCredentialsException::new);
 
-        if (!passwordEncoder.matches(command.rawPassword(), user.getPasswordHash())) {
+        if (!user.matchesPassword(command.rawPassword(), passwordEncoder)) {
             throw new InvalidCredentialsException();
         }
 

@@ -1,15 +1,17 @@
 package com.sqlab.infrastructure.adapter.out.persistence.entity;
 
 import com.sqlab.domain.model.DifficultyLevel;
-import com.sqlab.domain.model.Theme;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -42,10 +44,6 @@ public class MissionJpaEntity {
     @Column(name = "dml_script", columnDefinition = "TEXT")
     private String dmlScript;
 
-    @Column(columnDefinition = "TEXT[]")
-    @JdbcTypeCode(SqlTypes.ARRAY)
-    private List<String> techniques;
-
     @Column(name = "xp_reward", nullable = false)
     private int xpReward;
 
@@ -56,32 +54,40 @@ public class MissionJpaEntity {
     @Column(nullable = false)
     private boolean ordered;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private Theme theme;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "theme_id", nullable = false)
+    private ThemeJpaEntity theme;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private DifficultyLevel difficulty;
 
-    @Column(name = "scenario_id")
-    private UUID scenarioId;
-
-    @Column(name = "order_index")
-    private Integer orderIndex;
-
     @Column(nullable = false)
     private boolean enabled;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "scenario_id", insertable = false, updatable = false)
+    @JoinColumn(name = "scenario_id")
     private ScenarioJpaEntity scenario;
 
+    @Column(name = "order_index")
+    private Integer orderIndex;
+
+    @ManyToMany
+    @JoinTable(
+        name = "mission_techniques",
+        joinColumns = @JoinColumn(name = "mission_id"),
+        inverseJoinColumns = @JoinColumn(name = "technique_id")
+    )
+    private Set<TechniqueJpaEntity> techniques = new HashSet<>();
+
     @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
+    void prePersist() {
+        if (id == null) {
+            id = UUID.randomUUID();
+        }
     }
 }

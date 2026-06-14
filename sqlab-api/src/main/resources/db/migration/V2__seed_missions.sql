@@ -1,7 +1,47 @@
 -- V2__seed_missions.sql
--- 10 creative missions with clear briefing (narrative) / objective (SQL task) distinction
+-- Seed idempotente com FK dependencies respeitadas
+-- Ordem: themes → scenarios → techniques → missions → mission_techniques
 
-INSERT INTO missions (id, title, briefing, objective, hint, ddl_script, dml_script, techniques, xp_reward, expected_result, ordered, theme, difficulty)
+-- Themes
+INSERT INTO themes (id, name, description, emoji) VALUES
+    ('b0000001-0000-0000-0000-000000000001', 'ASTRONOMY',     'Explore o cosmos com SQL',     '🌌'),
+    ('b0000002-0000-0000-0000-000000000002', 'BIOLOGY',       'Ciências da vida e dados',     '🧬'),
+    ('b0000003-0000-0000-0000-000000000003', 'CRIMINAL',      'Investigação e mistério',       '🔍'),
+    ('b0000004-0000-0000-0000-000000000004', 'CYBERSECURITY', 'Segurança digital e hacking',   '🛡️'),
+    ('b0000005-0000-0000-0000-000000000005', 'FINANCE',       'Finanças e contabilidade',      '💰')
+ON CONFLICT (id) DO NOTHING;
+
+-- Scenarios
+INSERT INTO scenarios (id, title, description, theme_id, required_level) VALUES
+    ('00000000-0000-0000-0000-0000000000a1',
+     'Night at the Blue Moon',
+     'It''s 3 AM and Detective Estranho has just arrived at the Blue Moon Cabaret. A body was found in the alley, and the clues are in the register book. As you investigate, you discover this night holds more secrets than a simple murder — a web of lies involving patrons, interrogations, and alibis that don''t hold up.',
+     'b0000003-0000-0000-0000-000000000003',
+     2),
+    ('00000000-0000-0000-0000-0000000000a2',
+     'The Mendes & Sons Affair',
+     'The Mendes & Sons accounting scandal unfolds as Detective Estranho follows the money trail from suspicious corporate accounts to a network of money laundering across multiple bank branches.',
+     'b0000005-0000-0000-0000-000000000005',
+     3)
+ON CONFLICT (id) DO NOTHING;
+
+-- Techniques
+INSERT INTO techniques (id, name) VALUES
+    ('c0000001-0000-0000-0000-000000000001', 'SELECT'),
+    ('c0000002-0000-0000-0000-000000000002', 'WHERE'),
+    ('c0000003-0000-0000-0000-000000000003', 'INNER JOIN'),
+    ('c0000004-0000-0000-0000-000000000004', 'ORDER BY'),
+    ('c0000005-0000-0000-0000-000000000005', 'GROUP BY'),
+    ('c0000006-0000-0000-0000-000000000006', 'HAVING'),
+    ('c0000007-0000-0000-0000-000000000007', 'SUM'),
+    ('c0000008-0000-0000-0000-000000000008', 'AVG'),
+    ('c0000009-0000-0000-0000-000000000009', 'COUNT'),
+    ('c000000a-0000-0000-0000-00000000000a', 'UPDATE'),
+    ('c000000b-0000-0000-0000-00000000000b', 'JOIN')
+ON CONFLICT (id) DO NOTHING;
+
+-- Missions (sem coluna techniques, com theme_id UUID, scenario_id e order_index embutidos)
+INSERT INTO missions (id, title, briefing, objective, hint, ddl_script, dml_script, xp_reward, expected_result, ordered, theme_id, difficulty, scenario_id, order_index)
 VALUES
 
 -- ========================================================================
@@ -40,7 +80,6 @@ VALUES
             (''Julia Ramos'',     ''Jellybean'',    ''Gin and Tonic'',   ''01:20''),
             (''Michael Torres'',  ''Mick'',          ''Sparkling Water'', ''22:50'');
     ',
-    ARRAY['SELECT'],
     100,
     '[
         {"id": 1, "patron_name": "Charles Mendes",  "alias": "Big C",        "drink": "Whiskey",         "left_at": "23:15"},
@@ -50,8 +89,10 @@ VALUES
         {"id": 5, "patron_name": "Michael Torres",  "alias": "Mick",          "drink": "Sparkling Water", "left_at": "22:50"}
     ]',
     FALSE,
-    'CRIMINAL',
-    'BEGINNER'
+    'b0000003-0000-0000-0000-000000000003',
+    'BEGINNER',
+    '00000000-0000-0000-0000-0000000000a1',
+    1
 ),
 
 -- ========================================================================
@@ -90,7 +131,6 @@ VALUES
             (''Julia Ramos'',     ''Jellybean'',    ''Gin and Tonic'',   ''01:20''),
             (''Michael Torres'',  ''Mick'',          ''Sparkling Water'', ''22:50'');
     ',
-    ARRAY['SELECT', 'WHERE'],
     100,
     '[
         {"id": 2, "patron_name": "Anna Lima",    "alias": "Little A",  "drink": "Martini",       "left_at": "02:30"},
@@ -98,8 +138,10 @@ VALUES
         {"id": 4, "patron_name": "Julia Ramos",  "alias": "Jellybean", "drink": "Gin and Tonic", "left_at": "01:20"}
     ]',
     FALSE,
-    'CRIMINAL',
-    'BEGINNER'
+    'b0000003-0000-0000-0000-000000000003',
+    'BEGINNER',
+    '00000000-0000-0000-0000-0000000000a1',
+    2
 ),
 
 -- ========================================================================
@@ -147,7 +189,6 @@ VALUES
             (''Peter Costa'', ''Reported seeing a man in a hat leaving through the alley.'', ''Truthful''),
             (''Julia Ramos'', ''Trembled when asked about the time.'', ''Inconclusive'');
     ',
-    ARRAY['SELECT', 'INNER JOIN'],
     200,
     '[
         {"id": 2, "patron_name": "Anna Lima",   "alias": "Little A",  "drink": "Martini",       "left_at": "02:30"},
@@ -155,8 +196,10 @@ VALUES
         {"id": 4, "patron_name": "Julia Ramos", "alias": "Jellybean", "drink": "Gin and Tonic", "left_at": "01:20"}
     ]',
     FALSE,
-    'CRIMINAL',
-    'INTERMEDIATE'
+    'b0000003-0000-0000-0000-000000000003',
+    'INTERMEDIATE',
+    '00000000-0000-0000-0000-0000000000a1',
+    3
 ),
 
 -- ========================================================================
@@ -195,7 +238,6 @@ VALUES
             (''Central Accounting'',        ''Services'',   312000.00, TRUE),
             (''Inactive Warehouse'',        ''Closed'',         500.00, FALSE);
     ',
-    ARRAY['SELECT', 'WHERE'],
     100,
     '[
         {"id": 1, "holder_name": "Mendes & Sons Ltd.",       "department": "Operations", "balance": 487250.00,  "is_active": true},
@@ -204,8 +246,10 @@ VALUES
         {"id": 4, "holder_name": "Central Accounting",        "department": "Services",  "balance": 312000.00,  "is_active": true}
     ]',
     FALSE,
-    'FINANCE',
-    'BEGINNER'
+    'b0000005-0000-0000-0000-000000000005',
+    'BEGINNER',
+    '00000000-0000-0000-0000-0000000000a2',
+    1
 ),
 
 -- ========================================================================
@@ -248,7 +292,6 @@ VALUES
             (''Vega'',            ''Infrared'', 310.20, 3.9, ''2025-03-15 22:55:00''),
             (''Alpha Centauri'',  ''Optical'',  480.00, 7.8, ''2025-03-15 23:00:00'');
     ',
-    ARRAY['SELECT', 'ORDER BY'],
     200,
     '[
         {"id": 6, "star_system": "Vega",            "signal_type": "Infrared", "frequency_mhz": 310.20, "strength": 3.9, "recorded_at": "2025-03-15 22:55:00"},
@@ -260,8 +303,10 @@ VALUES
         {"id": 5, "star_system": "Andromeda",       "signal_type": "Radio",    "frequency_mhz": 1420.10,"strength": 7.3, "recorded_at": "2025-03-15 22:50:00"}
     ]',
     TRUE,
-    'ASTRONOMY',
-    'INTERMEDIATE'
+    'b0000001-0000-0000-0000-000000000001',
+    'INTERMEDIATE',
+    NULL,
+    NULL
 ),
 
 -- ========================================================================
@@ -303,15 +348,16 @@ VALUES
             (''Popular Market'',          ''North District'', 320000.00),
             (''Health Pharmacy'',         ''North District'', 450000.00);
     ',
-    ARRAY['SELECT', 'GROUP BY', 'HAVING', 'SUM', 'AVG'],
     350,
     '[
         {"branch": "Downtown",       "total": 4580000.00, "average": 1145000.00},
         {"branch": "South District", "total": 1580000.00, "average": 790000.00}
     ]',
     FALSE,
-    'FINANCE',
-    'ADVANCED'
+    'b0000005-0000-0000-0000-000000000005',
+    'ADVANCED',
+    '00000000-0000-0000-0000-0000000000a2',
+    2
 ),
 
 -- ========================================================================
@@ -357,14 +403,15 @@ VALUES
             (''Vela Pulsar'',        ''Star'',        959.00,     1968, FALSE),
             (''M87*'',               ''Black Hole'',  55000000.00, 2019, TRUE);
     ',
-    ARRAY['SELECT', 'WHERE', 'GROUP BY', 'HAVING', 'COUNT'],
     350,
     '[
         {"body_type": "Star", "count": 2}
     ]',
     FALSE,
-    'ASTRONOMY',
-    'ADVANCED'
+    'b0000001-0000-0000-0000-000000000001',
+    'ADVANCED',
+    NULL,
+    NULL
 ),
 
 -- ========================================================================
@@ -412,15 +459,16 @@ VALUES
             (''Maria Santos'', ''192.168.1.10'', ''/reports'',         ''09:15'', FALSE),
             (''Carla Dias'',  ''192.168.1.50'', ''/email'',            ''08:30'', FALSE);
     ',
-    ARRAY['SELECT', 'WHERE', 'GROUP BY', 'HAVING', 'COUNT', 'ORDER BY'],
     500,
     '[
         {"employee_name": "Alex Silva", "access_count": 4},
         {"employee_name": "João Lima",  "access_count": 4}
     ]',
     FALSE,
-    'CYBERSECURITY',
-    'EXPERT'
+    'b0000004-0000-0000-0000-000000000004',
+    'EXPERT',
+    NULL,
+    NULL
 ),
 
 -- ========================================================================
@@ -482,7 +530,6 @@ VALUES
             (5, ''Cyanosis'',            9),
             (5, ''Seizure'',            10);
     ',
-    ARRAY['SELECT', 'INNER JOIN', 'WHERE'],
     250,
     '[
         {"name": "Mr. George",  "age": 67, "symptom_name": "High Fever"},
@@ -496,8 +543,10 @@ VALUES
         {"name": "Mr. Ambrose", "age": 81, "symptom_name": "Seizure"}
     ]',
     FALSE,
-    'BIOLOGY',
-    'INTERMEDIATE'
+    'b0000002-0000-0000-0000-000000000002',
+    'INTERMEDIATE',
+    NULL,
+    NULL
 ),
 
 -- ========================================================================
@@ -538,7 +587,6 @@ VALUES
             (''Dipyrone'',     ''DIP-22A'', 1000, ''2025-11-30''),
             (''Paracetamol'',  ''PAR-20B'', 750,  ''2023-08-20'');
     ',
-    ARRAY['UPDATE', 'WHERE', 'SELECT'],
     400,
     '[
         {"id": 1, "medication": "Ivermectin",  "batch": "IVM-23A", "quantity": 500,  "expiry_date": "2026-12-01"},
@@ -549,9 +597,12 @@ VALUES
         {"id": 6, "medication": "Paracetamol",  "batch": "PAR-20B", "quantity": 0,   "expiry_date": "2023-08-20"}
     ]',
     FALSE,
-    'BIOLOGY',
-    'EXPERT'
+    'b0000002-0000-0000-0000-000000000002',
+    'EXPERT',
+    NULL,
+    NULL
 ),
+
 -- ========================================================================
 -- MISSION 11 — EXPERT / CYBERSECURITY
 -- Teaches: JOIN (3 tables), WHERE, GROUP BY, HAVING, COUNT, ORDER BY
@@ -627,38 +678,67 @@ VALUES
             (7, 5, ''2026-05-10 04:15:00'', ''DOWNLOAD''),
             (7, 3, ''2026-05-10 04:20:00'', ''READ'');
     ',
-    ARRAY['SELECT', 'JOIN', 'WHERE', 'GROUP BY', 'HAVING', 'COUNT', 'ORDER BY'],
     600,
     '[
         {"name": "John Carter",  "department": "Engineering", "access_count": 4},
         {"name": "Steve Murphy", "department": "Executive",   "access_count": 4}
     ]',
     FALSE,
-    'CYBERSECURITY',
-    'EXPERT'
+    'b0000004-0000-0000-0000-000000000004',
+    'EXPERT',
+    NULL,
+    NULL
 );
 
--- Scenario: Night at the Blue Moon (groups missions 1, 2, 3)
-INSERT INTO scenarios (id, title, description, theme, required_level) VALUES (
-    '00000000-0000-0000-0000-0000000000a1',
-    'Night at the Blue Moon',
-    'It''s 3 AM and Detective Estranho has just arrived at the Blue Moon Cabaret. A body was found in the alley, and the clues are in the register book. As you investigate, you discover this night holds more secrets than a simple murder — a web of lies involving patrons, interrogations, and alibis that don''t hold up.',
-    'CRIMINAL',
-    2
-);
-
-UPDATE missions SET scenario_id = '00000000-0000-0000-0000-0000000000a1', order_index = 1 WHERE id = '00000000-0000-0000-0000-000000000001';
-UPDATE missions SET scenario_id = '00000000-0000-0000-0000-0000000000a1', order_index = 2 WHERE id = '00000000-0000-0000-0000-000000000002';
-UPDATE missions SET scenario_id = '00000000-0000-0000-0000-0000000000a1', order_index = 3 WHERE id = '00000000-0000-0000-0000-000000000003';
-
--- Scenario: The Mendes & Sons Affair (groups missions 4, 6)
-INSERT INTO scenarios (id, title, description, theme, required_level) VALUES (
-    '00000000-0000-0000-0000-0000000000a2',
-    'The Mendes & Sons Affair',
-    'The Mendes & Sons accounting scandal unfolds as Detective Estranho follows the money trail from suspicious corporate accounts to a network of money laundering across multiple bank branches.',
-    'FINANCE',
-    3
-);
-
-UPDATE missions SET scenario_id = '00000000-0000-0000-0000-0000000000a2', order_index = 1 WHERE id = '00000000-0000-0000-0000-000000000004';
-UPDATE missions SET scenario_id = '00000000-0000-0000-0000-0000000000a2', order_index = 2 WHERE id = '00000000-0000-0000-0000-000000000006';
+-- Mission-Techniques associations
+INSERT INTO mission_techniques (mission_id, technique_id) VALUES
+    -- Mission 1: SELECT
+    ('00000000-0000-0000-0000-000000000001', 'c0000001-0000-0000-0000-000000000001'),
+    -- Mission 2: SELECT, WHERE
+    ('00000000-0000-0000-0000-000000000002', 'c0000001-0000-0000-0000-000000000001'),
+    ('00000000-0000-0000-0000-000000000002', 'c0000002-0000-0000-0000-000000000002'),
+    -- Mission 3: SELECT, INNER JOIN
+    ('00000000-0000-0000-0000-000000000003', 'c0000001-0000-0000-0000-000000000001'),
+    ('00000000-0000-0000-0000-000000000003', 'c0000003-0000-0000-0000-000000000003'),
+    -- Mission 4: SELECT, WHERE
+    ('00000000-0000-0000-0000-000000000004', 'c0000001-0000-0000-0000-000000000001'),
+    ('00000000-0000-0000-0000-000000000004', 'c0000002-0000-0000-0000-000000000002'),
+    -- Mission 5: SELECT, ORDER BY
+    ('00000000-0000-0000-0000-000000000005', 'c0000001-0000-0000-0000-000000000001'),
+    ('00000000-0000-0000-0000-000000000005', 'c0000004-0000-0000-0000-000000000004'),
+    -- Mission 6: SELECT, GROUP BY, HAVING, SUM, AVG
+    ('00000000-0000-0000-0000-000000000006', 'c0000001-0000-0000-0000-000000000001'),
+    ('00000000-0000-0000-0000-000000000006', 'c0000005-0000-0000-0000-000000000005'),
+    ('00000000-0000-0000-0000-000000000006', 'c0000006-0000-0000-0000-000000000006'),
+    ('00000000-0000-0000-0000-000000000006', 'c0000007-0000-0000-0000-000000000007'),
+    ('00000000-0000-0000-0000-000000000006', 'c0000008-0000-0000-0000-000000000008'),
+    -- Mission 7: SELECT, WHERE, GROUP BY, HAVING, COUNT
+    ('00000000-0000-0000-0000-000000000007', 'c0000001-0000-0000-0000-000000000001'),
+    ('00000000-0000-0000-0000-000000000007', 'c0000002-0000-0000-0000-000000000002'),
+    ('00000000-0000-0000-0000-000000000007', 'c0000005-0000-0000-0000-000000000005'),
+    ('00000000-0000-0000-0000-000000000007', 'c0000006-0000-0000-0000-000000000006'),
+    ('00000000-0000-0000-0000-000000000007', 'c0000009-0000-0000-0000-000000000009'),
+    -- Mission 8: SELECT, WHERE, GROUP BY, HAVING, COUNT, ORDER BY
+    ('00000000-0000-0000-0000-000000000008', 'c0000001-0000-0000-0000-000000000001'),
+    ('00000000-0000-0000-0000-000000000008', 'c0000002-0000-0000-0000-000000000002'),
+    ('00000000-0000-0000-0000-000000000008', 'c0000005-0000-0000-0000-000000000005'),
+    ('00000000-0000-0000-0000-000000000008', 'c0000006-0000-0000-0000-000000000006'),
+    ('00000000-0000-0000-0000-000000000008', 'c0000009-0000-0000-0000-000000000009'),
+    ('00000000-0000-0000-0000-000000000008', 'c0000004-0000-0000-0000-000000000004'),
+    -- Mission 9: SELECT, INNER JOIN, WHERE
+    ('00000000-0000-0000-0000-000000000009', 'c0000001-0000-0000-0000-000000000001'),
+    ('00000000-0000-0000-0000-000000000009', 'c0000003-0000-0000-0000-000000000003'),
+    ('00000000-0000-0000-0000-000000000009', 'c0000002-0000-0000-0000-000000000002'),
+    -- Mission 10: UPDATE, WHERE, SELECT
+    ('00000000-0000-0000-0000-000000000010', 'c000000a-0000-0000-0000-00000000000a'),
+    ('00000000-0000-0000-0000-000000000010', 'c0000002-0000-0000-0000-000000000002'),
+    ('00000000-0000-0000-0000-000000000010', 'c0000001-0000-0000-0000-000000000001'),
+    -- Mission 11: SELECT, JOIN, WHERE, GROUP BY, HAVING, COUNT, ORDER BY
+    ('00000000-0000-0000-0000-000000000011', 'c0000001-0000-0000-0000-000000000001'),
+    ('00000000-0000-0000-0000-000000000011', 'c000000b-0000-0000-0000-00000000000b'),
+    ('00000000-0000-0000-0000-000000000011', 'c0000002-0000-0000-0000-000000000002'),
+    ('00000000-0000-0000-0000-000000000011', 'c0000005-0000-0000-0000-000000000005'),
+    ('00000000-0000-0000-0000-000000000011', 'c0000006-0000-0000-0000-000000000006'),
+    ('00000000-0000-0000-0000-000000000011', 'c0000009-0000-0000-0000-000000000009'),
+    ('00000000-0000-0000-0000-000000000011', 'c0000004-0000-0000-0000-000000000004')
+ON CONFLICT DO NOTHING;

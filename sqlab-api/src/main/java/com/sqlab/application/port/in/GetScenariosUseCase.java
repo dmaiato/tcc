@@ -7,5 +7,6 @@ import java.util.UUID;
 
 public interface GetScenariosUseCase {
     List<Scenario> handle();
+    List<Scenario> handleEnabled();
     Scenario handle(UUID id);
 }

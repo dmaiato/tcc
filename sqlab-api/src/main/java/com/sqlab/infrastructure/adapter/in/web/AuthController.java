@@ -2,7 +2,7 @@ package com.sqlab.infrastructure.adapter.in.web;
 
 import com.sqlab.application.port.in.AuthenticateUserUseCase;
 import com.sqlab.application.port.in.RegisterUserUseCase;
-import com.sqlab.application.port.out.UserRepository;
+import com.sqlab.domain.exception.InvalidCredentialsException;
 import com.sqlab.domain.model.User;
 import com.sqlab.infrastructure.adapter.in.web.dto.AuthDto;
 import jakarta.validation.Valid;
@@ -15,14 +15,11 @@ public class AuthController {
 
     private final RegisterUserUseCase registerUserUseCase;
     private final AuthenticateUserUseCase authenticateUserUseCase;
-    private final UserRepository userRepository;
 
     public AuthController(RegisterUserUseCase registerUserUseCase,
-                          AuthenticateUserUseCase authenticateUserUseCase,
-                          UserRepository userRepository) {
+                          AuthenticateUserUseCase authenticateUserUseCase) {
         this.registerUserUseCase = registerUserUseCase;
         this.authenticateUserUseCase = authenticateUserUseCase;
-        this.userRepository = userRepository;
     }
 
     @PostMapping("/register")
@@ -41,7 +38,6 @@ public class AuthController {
         AuthenticateUserUseCase.AuthResult auth = authenticateUserUseCase.handle(
                 new AuthenticateUserUseCase.Command(request.email(), request.password())
         );
-        var user = userRepository.findByEmail(request.email()).orElseThrow();
-        return ResponseEntity.ok(new AuthDto.AuthResponseWithUser(auth.token(), user.getId(), user.getUsername(), user.getEmail(), auth.role().name()));
+        return ResponseEntity.ok(new AuthDto.AuthResponseWithUser(auth.token(), null, null, null, auth.role().name()));
     }
 }

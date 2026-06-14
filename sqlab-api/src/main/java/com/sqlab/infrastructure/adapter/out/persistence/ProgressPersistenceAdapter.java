@@ -2,8 +2,13 @@ package com.sqlab.infrastructure.adapter.out.persistence;
 
 import com.sqlab.application.port.out.ProgressRepository;
 import com.sqlab.domain.model.Progress;
+import com.sqlab.infrastructure.adapter.out.persistence.entity.MissionJpaEntity;
 import com.sqlab.infrastructure.adapter.out.persistence.entity.ProgressJpaEntity;
+import com.sqlab.infrastructure.adapter.out.persistence.entity.UserJpaEntity;
+import com.sqlab.infrastructure.adapter.out.persistence.mapper.ProgressMapper;
+import com.sqlab.infrastructure.adapter.out.persistence.repository.MissionJpaRepository;
 import com.sqlab.infrastructure.adapter.out.persistence.repository.ProgressJpaRepository;
+import com.sqlab.infrastructure.adapter.out.persistence.repository.UserJpaRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,42 +22,35 @@ import java.util.stream.Collectors;
 public class ProgressPersistenceAdapter implements ProgressRepository {
 
     private final ProgressJpaRepository jpaRepository;
+    private final UserJpaRepository userJpaRepository;
+    private final MissionJpaRepository missionJpaRepository;
+    private final ProgressMapper mapper;
 
-    public ProgressPersistenceAdapter(ProgressJpaRepository jpaRepository) {
+    public ProgressPersistenceAdapter(ProgressJpaRepository jpaRepository,
+                                      UserJpaRepository userJpaRepository,
+                                      MissionJpaRepository missionJpaRepository,
+                                      ProgressMapper mapper) {
         this.jpaRepository = jpaRepository;
+        this.userJpaRepository = userJpaRepository;
+        this.missionJpaRepository = missionJpaRepository;
+        this.mapper = mapper;
     }
 
     @Override
     public Progress save(Progress progress) {
-        ProgressJpaEntity entity = ProgressJpaEntity.builder()
-                .id(progress.getId())
-                .userId(progress.getUserId())
-                .missionId(progress.getMissionId())
-                .completed(progress.isCompleted())
-                .completedAt(progress.getCompletedAt())
-                .build();
+        UserJpaEntity user = userJpaRepository.findById(progress.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + progress.getUserId()));
+        MissionJpaEntity mission = missionJpaRepository.findById(progress.getMissionId())
+                .orElseThrow(() -> new IllegalArgumentException("Mission not found: " + progress.getMissionId()));
 
-        ProgressJpaEntity saved = jpaRepository.save(entity);
-
-        return new Progress(
-                saved.getId(),
-                saved.getUserId(),
-                saved.getMissionId(),
-                saved.isCompleted(),
-                saved.getCompletedAt()
-        );
+        ProgressJpaEntity entity = mapper.toJpa(progress, user, mission);
+        return mapper.toDomain(jpaRepository.save(entity));
     }
 
     @Override
     public List<Progress> findByUserId(UUID userId) {
         return jpaRepository.findByUserId(userId).stream()
-                .map(e -> new Progress(
-                        e.getId(),
-                        e.getUserId(),
-                        e.getMissionId(),
-                        e.isCompleted(),
-                        e.getCompletedAt()
-                ))
+                .map(mapper::toDomain)
                 .toList();
     }
 
@@ -64,20 +62,14 @@ public class ProgressPersistenceAdapter implements ProgressRepository {
     @Override
     public List<Progress> findCompletedByUserId(UUID userId) {
         return jpaRepository.findByUserIdAndCompleted(userId, true).stream()
-                .map(e -> new Progress(
-                        e.getId(),
-                        e.getUserId(),
-                        e.getMissionId(),
-                        e.isCompleted(),
-                        e.getCompletedAt()
-                ))
+                .map(mapper::toDomain)
                 .toList();
     }
 
     @Override
     public Set<UUID> findCompletedMissionIdsByUserId(UUID userId) {
         return jpaRepository.findByUserIdAndCompleted(userId, true).stream()
-                .map(ProgressJpaEntity::getMissionId)
+                .map(e -> e.getMission().getId())
                 .collect(Collectors.toSet());
     }
 }

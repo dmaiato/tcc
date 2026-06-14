@@ -42,7 +42,7 @@ logging:
 
 sqlab:
   jwt:
-    secret: ${SQLAB_JWT_SECRET:change-me-in-production-must-be-32-chars-long}
+    secret: ${SQLAB_JWT_SECRET}
     expiration: ${SQLAB_JWT_EXPIRATION:86400000}
 
 server:

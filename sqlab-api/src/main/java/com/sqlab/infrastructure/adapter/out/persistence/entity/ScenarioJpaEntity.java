@@ -1,8 +1,8 @@
 package com.sqlab.infrastructure.adapter.out.persistence.entity;
 
-import com.sqlab.domain.model.Theme;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -25,9 +25,9 @@ public class ScenarioJpaEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private Theme theme;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "theme_id", nullable = false)
+    private ThemeJpaEntity theme;
 
     @Column(nullable = false)
     private boolean enabled;
@@ -36,10 +36,13 @@ public class ScenarioJpaEntity {
     private int requiredLevel;
 
     @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
+    void prePersist() {
+        if (id == null) {
+            id = UUID.randomUUID();
+        }
     }
 }

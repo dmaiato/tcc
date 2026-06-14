@@ -18,12 +18,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.AbstractMap;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
@@ -50,23 +51,23 @@ public class ScenarioController {
     @GetMapping("/scenarios")
     public ResponseEntity<List<ScenarioDto.ScenarioSummary>> listAll(
             @AuthenticationPrincipal String userId) {
-        UUID userUuid = userId != null ? UUID.fromString(userId) : null;
+        UUID userUuid = parseUserId(userId);
         Set<UUID> completedIds = userUuid != null
                 ? progressRepository.findCompletedMissionIdsByUserId(userUuid)
                 : Set.of();
-        List<Scenario> scenarios = getScenariosUseCase.handle();
+        List<Scenario> scenarios = getScenariosUseCase.handleEnabled();
+        Set<UUID> allScenarioIds = scenarios.stream().map(Scenario::getId).collect(Collectors.toSet());
+        Map<UUID, List<Mission>> missionsByScenario = missionRepository
+                .findByScenarioIdInOrderByOrderIndex(allScenarioIds)
+                .stream()
+                .collect(Collectors.groupingBy(Mission::getScenarioId, LinkedHashMap::new, Collectors.toList()));
         List<ScenarioDto.ScenarioSummary> response = scenarios.stream()
-                .map(s -> {
-                    List<Mission> missions = missionRepository.findByScenarioIdOrderByOrderIndex(s.getId());
-                    return new AbstractMap.SimpleEntry<>(s, missions);
-                })
-                .filter(entry -> {
-                    List<Mission> missions = entry.getValue();
+                .filter(s -> {
+                    List<Mission> missions = missionsByScenario.getOrDefault(s.getId(), List.of());
                     return !missions.isEmpty() && missions.stream().allMatch(Mission::isEnabled);
                 })
-                .map(entry -> {
-                    Scenario s = entry.getKey();
-                    List<Mission> missions = entry.getValue();
+                .map(s -> {
+                    List<Mission> missions = missionsByScenario.get(s.getId());
                     int completed = (int) missions.stream()
                             .filter(m -> completedIds.contains(m.getId()))
                             .count();
@@ -81,7 +82,7 @@ public class ScenarioController {
     public ResponseEntity<ScenarioDto.ScenarioDetail> findById(
             @PathVariable UUID scenarioId,
             @AuthenticationPrincipal String userId) {
-        UUID userUuid = userId != null ? UUID.fromString(userId) : null;
+        UUID userUuid = parseUserId(userId);
         Set<UUID> completedIds = userUuid != null
                 ? progressRepository.findCompletedMissionIdsByUserId(userUuid)
                 : Set.of();
@@ -191,6 +192,15 @@ public class ScenarioController {
         manageScenarioUseCase.reorderMissions(
                 new ManageScenarioUseCase.ReorderMissionsCommand(scenarioId, request.missionIds()));
         return ResponseEntity.ok().build();
+    }
+
+    private UUID parseUserId(String userId) {
+        if (userId == null) return null;
+        try {
+            return UUID.fromString(userId);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private boolean isPreviousMissionCompleted(Set<UUID> completedIds, List<Mission> missions, int orderIndex) {

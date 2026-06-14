@@ -2,6 +2,7 @@ package com.sqlab.infrastructure.adapter.out.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -19,15 +20,28 @@ public class ProgressJpaEntity {
     @Id
     private UUID id;
 
-    @Column(name = "user_id", nullable = false)
-    private UUID userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, updatable = false)
+    private UserJpaEntity user;
 
-    @Column(name = "mission_id", nullable = false)
-    private UUID missionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mission_id", nullable = false, updatable = false)
+    private MissionJpaEntity mission;
 
     @Column(nullable = false)
     private boolean completed;
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    void prePersist() {
+        if (id == null) {
+            id = UUID.randomUUID();
+        }
+    }
 }

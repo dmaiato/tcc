@@ -2,7 +2,6 @@ package com.sqlab.infrastructure.adapter.out.persistence;
 
 import com.sqlab.application.port.out.UserRepository;
 import com.sqlab.domain.model.User;
-import com.sqlab.infrastructure.adapter.out.persistence.entity.UserJpaEntity;
 import com.sqlab.infrastructure.adapter.out.persistence.mapper.UserMapper;
 import com.sqlab.infrastructure.adapter.out.persistence.repository.UserJpaRepository;
 import org.springframework.stereotype.Component;
@@ -25,17 +24,7 @@ public class UserPersistenceAdapter implements UserRepository {
 
     @Override
     public User save(User user) {
-        UserJpaEntity entity = jpaRepository.findById(user.getId())
-                .map(existing -> {
-                    existing.setUsername(user.getUsername());
-                    existing.setEmail(user.getEmail());
-                    existing.setPasswordHash(user.getPasswordHash());
-                    existing.setXp(user.getXp());
-                    existing.setRole(user.getRole().name());
-                    return existing;
-                })
-                .orElseGet(() -> mapper.toJpa(user));
-        return mapper.toDomain(jpaRepository.save(entity));
+        return mapper.toDomain(jpaRepository.save(mapper.toJpa(user)));
     }
 
     @Override

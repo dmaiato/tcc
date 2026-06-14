@@ -17,6 +17,7 @@ public interface MissionRepository {
     List<Mission> findByDifficulty(DifficultyLevel difficulty);
     List<Mission> findByThemeAndDifficulty(Theme theme, DifficultyLevel difficulty);
     List<Mission> findByScenarioIdOrderByOrderIndex(UUID scenarioId);
+    List<Mission> findByScenarioIdInOrderByOrderIndex(Set<UUID> scenarioIds);
     List<Mission> findByEnabledTrue();
     boolean existsByScenarioIdAndEnabledFalse(UUID scenarioId);
     Set<UUID> findScenarioIdsWithDisabledMissions(Set<UUID> scenarioIds);

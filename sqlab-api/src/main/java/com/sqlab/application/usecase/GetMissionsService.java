@@ -2,6 +2,7 @@ package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.GetMissionsUseCase;
 import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.ScenarioRepository;
 import com.sqlab.application.port.out.UserRepository;
 import com.sqlab.domain.exception.LevelRequiredException;
 import com.sqlab.domain.exception.MissionLockedException;
@@ -24,10 +25,14 @@ public class GetMissionsService implements GetMissionsUseCase {
 
     private final MissionRepository missionRepository;
     private final UserRepository userRepository;
+    private final ScenarioRepository scenarioRepository;
 
-    public GetMissionsService(MissionRepository missionRepository, UserRepository userRepository) {
+    public GetMissionsService(MissionRepository missionRepository,
+                              UserRepository userRepository,
+                              ScenarioRepository scenarioRepository) {
         this.missionRepository = missionRepository;
         this.userRepository = userRepository;
+        this.scenarioRepository = scenarioRepository;
     }
 
     @Override
@@ -89,8 +94,11 @@ public class GetMissionsService implements GetMissionsUseCase {
                 boolean prevCompleted = missionRepository.isPreviousMissionCompleted(
                         query.userId(), mission.getScenarioId(), mission.getOrderIndex() - 1);
                 if (!prevCompleted) {
+                    String scenarioTitle = scenarioRepository.findById(mission.getScenarioId())
+                            .map(s -> s.getTitle())
+                            .orElse("");
                     throw new MissionLockedException(
-                            mission.getId(), mission.getScenarioId(), mission.getScenarioTitle());
+                            mission.getId(), mission.getScenarioId(), scenarioTitle);
                 }
             }
         }
@@ -102,9 +110,13 @@ public class GetMissionsService implements GetMissionsUseCase {
     public MissionDetail handleDetail(FindByIdQuery query) {
         Mission mission = handle(query);
         Integer scenarioTotalMissions = null;
+        String scenarioTitle = null;
         if (mission.getScenarioId() != null) {
             scenarioTotalMissions = missionRepository.countByScenarioIdAndEnabledTrue(mission.getScenarioId());
+            scenarioTitle = scenarioRepository.findById(mission.getScenarioId())
+                    .map(s -> s.getTitle())
+                    .orElse(null);
         }
-        return new MissionDetail(mission, scenarioTotalMissions);
+        return new MissionDetail(mission, scenarioTotalMissions, scenarioTitle);
     }
 }

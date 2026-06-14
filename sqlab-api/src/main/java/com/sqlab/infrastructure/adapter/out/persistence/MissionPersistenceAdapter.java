@@ -5,12 +5,14 @@ import com.sqlab.domain.model.DifficultyLevel;
 import com.sqlab.domain.model.Mission;
 import com.sqlab.domain.model.Theme;
 import com.sqlab.infrastructure.adapter.out.persistence.entity.MissionJpaEntity;
+import com.sqlab.infrastructure.adapter.out.persistence.entity.TechniqueJpaEntity;
+import com.sqlab.infrastructure.adapter.out.persistence.entity.ThemeJpaEntity;
 import com.sqlab.infrastructure.adapter.out.persistence.mapper.MissionMapper;
-import com.sqlab.infrastructure.adapter.out.persistence.repository.MissionJpaRepository;
-import com.sqlab.infrastructure.adapter.out.persistence.repository.ProgressJpaRepository;
+import com.sqlab.infrastructure.adapter.out.persistence.repository.*;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -21,11 +23,22 @@ import java.util.UUID;
 public class MissionPersistenceAdapter implements MissionRepository {
 
     private final MissionJpaRepository jpaRepository;
+    private final ThemeJpaRepository themeJpaRepository;
+    private final TechniqueJpaRepository techniqueJpaRepository;
+    private final ScenarioJpaRepository scenarioJpaRepository;
     private final MissionMapper mapper;
     private final ProgressJpaRepository progressJpaRepository;
 
-    public MissionPersistenceAdapter(MissionJpaRepository jpaRepository, MissionMapper mapper, ProgressJpaRepository progressJpaRepository) {
+    public MissionPersistenceAdapter(MissionJpaRepository jpaRepository,
+                                     ThemeJpaRepository themeJpaRepository,
+                                     TechniqueJpaRepository techniqueJpaRepository,
+                                     ScenarioJpaRepository scenarioJpaRepository,
+                                     MissionMapper mapper,
+                                     ProgressJpaRepository progressJpaRepository) {
         this.jpaRepository = jpaRepository;
+        this.themeJpaRepository = themeJpaRepository;
+        this.techniqueJpaRepository = techniqueJpaRepository;
+        this.scenarioJpaRepository = scenarioJpaRepository;
         this.mapper = mapper;
         this.progressJpaRepository = progressJpaRepository;
     }
@@ -47,7 +60,7 @@ public class MissionPersistenceAdapter implements MissionRepository {
 
     @Override
     public List<Mission> findByTheme(Theme theme) {
-        return jpaRepository.findByTheme(theme).stream().map(mapper::toDomain).toList();
+        return jpaRepository.findByTheme_Name(theme.name()).stream().map(mapper::toDomain).toList();
     }
 
     @Override
@@ -57,12 +70,19 @@ public class MissionPersistenceAdapter implements MissionRepository {
 
     @Override
     public List<Mission> findByThemeAndDifficulty(Theme theme, DifficultyLevel difficulty) {
-        return jpaRepository.findByThemeAndDifficulty(theme, difficulty).stream().map(mapper::toDomain).toList();
+        return jpaRepository.findByTheme_NameAndDifficulty(theme.name(), difficulty).stream().map(mapper::toDomain).toList();
     }
 
     @Override
     public List<Mission> findByScenarioIdOrderByOrderIndex(UUID scenarioId) {
-        return jpaRepository.findByScenarioIdOrderByOrderIndex(scenarioId)
+        return jpaRepository.findByScenario_IdOrderByOrderIndex(scenarioId)
+                .stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
+    public List<Mission> findByScenarioIdInOrderByOrderIndex(Set<UUID> scenarioIds) {
+        if (scenarioIds.isEmpty()) return List.of();
+        return jpaRepository.findByScenario_IdInOrderByOrderIndex(scenarioIds)
                 .stream().map(mapper::toDomain).toList();
     }
 
@@ -75,7 +95,7 @@ public class MissionPersistenceAdapter implements MissionRepository {
 
     @Override
     public boolean existsByScenarioIdAndEnabledFalse(UUID scenarioId) {
-        return jpaRepository.existsByScenarioIdAndEnabledFalse(scenarioId);
+        return jpaRepository.existsByScenario_IdAndEnabledFalse(scenarioId);
     }
 
     @Override
@@ -86,31 +106,43 @@ public class MissionPersistenceAdapter implements MissionRepository {
 
     @Override
     public boolean isPreviousMissionCompleted(UUID userId, UUID scenarioId, int orderIndex) {
-        return jpaRepository.findByScenarioIdAndOrderIndex(scenarioId, orderIndex)
+        return jpaRepository.findByScenario_IdAndOrderIndex(scenarioId, orderIndex)
                 .map(mission -> progressJpaRepository.existsByUserIdAndMissionIdAndCompleted(userId, mission.getId(), true))
                 .orElse(false);
     }
 
     @Override
     public int countByScenarioId(UUID scenarioId) {
-        return jpaRepository.countByScenarioId(scenarioId);
+        return jpaRepository.countByScenario_Id(scenarioId);
     }
 
     @Override
     public int countByScenarioIdAndEnabledTrue(UUID scenarioId) {
-        return jpaRepository.countByScenarioIdAndEnabledTrue(scenarioId);
+        return jpaRepository.countByScenario_IdAndEnabledTrue(scenarioId);
     }
 
     @Override
     @Transactional
     public Mission save(Mission mission) {
         MissionJpaEntity entity = mapper.toJpa(mission);
-        if (mission.getId() != null) {
-        jpaRepository.findById(mission.getId()).ifPresent(existing -> {
-                entity.setCreatedAt(existing.getCreatedAt());
-                entity.setScenario(existing.getScenario());
-        });
+
+        ThemeJpaEntity themeEntity = themeJpaRepository.findByName(mission.getTheme().name())
+                .orElseThrow(() -> new IllegalArgumentException("Theme not found: " + mission.getTheme()));
+        entity.setTheme(themeEntity);
+
+        Set<TechniqueJpaEntity> techniqueEntities = new HashSet<>();
+        for (String techniqueName : mission.getTechniques()) {
+            TechniqueJpaEntity techniqueEntity = techniqueJpaRepository.findByName(techniqueName)
+                    .orElseThrow(() -> new IllegalArgumentException("Technique not found: " + techniqueName));
+            techniqueEntities.add(techniqueEntity);
         }
+        entity.setTechniques(techniqueEntities);
+
+        if (mission.getScenarioId() != null) {
+            scenarioJpaRepository.findById(mission.getScenarioId())
+                    .ifPresent(entity::setScenario);
+        }
+
         return mapper.toDomain(jpaRepository.save(entity));
     }
 

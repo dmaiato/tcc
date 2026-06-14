@@ -25,7 +25,7 @@ public interface GetMissionsUseCase {
 
     Mission handle(FindByIdQuery query);
 
-    record MissionDetail(Mission mission, Integer scenarioTotalMissions) {}
+    record MissionDetail(Mission mission, Integer scenarioTotalMissions, String scenarioTitle) {}
 
     MissionDetail handleDetail(FindByIdQuery query);
 }

@@ -1,10 +1,10 @@
 package com.sqlab.infrastructure.adapter.out.persistence.mapper;
 
 import com.sqlab.domain.model.Scenario;
+import com.sqlab.domain.model.Theme;
 import com.sqlab.infrastructure.adapter.out.persistence.entity.ScenarioJpaEntity;
+import com.sqlab.infrastructure.adapter.out.persistence.entity.ThemeJpaEntity;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDateTime;
 
 @Component
 public class ScenarioMapper {
@@ -14,21 +14,20 @@ public class ScenarioMapper {
                 entity.getId(),
                 entity.getTitle(),
                 entity.getDescription(),
-                entity.getTheme(),
+                Theme.valueOf(entity.getTheme().getName()),
                 entity.isEnabled(),
                 entity.getRequiredLevel()
         );
     }
 
-    public ScenarioJpaEntity toJpa(Scenario domain) {
-        return ScenarioJpaEntity.builder()
-                .id(domain.getId())
-                .title(domain.getTitle())
-                .description(domain.getDescription())
-                .theme(domain.getTheme())
-                .enabled(domain.isEnabled())
-                .requiredLevel(domain.getRequiredLevel())
-                .createdAt(LocalDateTime.now())
-                .build();
+    public ScenarioJpaEntity toJpa(Scenario domain, ThemeJpaEntity theme) {
+        ScenarioJpaEntity entity = new ScenarioJpaEntity();
+        entity.setId(domain.getId());
+        entity.setTitle(domain.getTitle());
+        entity.setDescription(domain.getDescription());
+        entity.setTheme(theme);
+        entity.setEnabled(domain.isEnabled());
+        entity.setRequiredLevel(domain.getRequiredLevel());
+        return entity;
     }
 }
