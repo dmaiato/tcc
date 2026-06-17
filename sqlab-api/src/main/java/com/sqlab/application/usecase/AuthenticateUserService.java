@@ -1,10 +1,10 @@
 package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.AuthenticateUserUseCase;
+import com.sqlab.application.port.out.PasswordHasher;
 import com.sqlab.application.port.out.UserRepository;
 import com.sqlab.application.port.out.TokenProvider;
 import com.sqlab.domain.exception.InvalidCredentialsException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,13 +13,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthenticateUserService implements AuthenticateUserUseCase {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordHasher passwordHasher;
     private final TokenProvider tokenProvider;
 
     public AuthenticateUserService(
-            UserRepository userRepository, PasswordEncoder passwordEncoder, TokenProvider tokenProvider) {
+            UserRepository userRepository, PasswordHasher passwordHasher, TokenProvider tokenProvider) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+        this.passwordHasher = passwordHasher;
         this.tokenProvider = tokenProvider;
     }
 
@@ -27,11 +27,11 @@ public class AuthenticateUserService implements AuthenticateUserUseCase {
     public AuthResult handle(Command command) {
         var user = userRepository.findByEmail(command.email()).orElseThrow(InvalidCredentialsException::new);
 
-        if (!user.matchesPassword(command.rawPassword(), passwordEncoder)) {
+        if (!passwordHasher.matches(command.rawPassword(), user.getPasswordHash())) {
             throw new InvalidCredentialsException();
         }
 
         String token = tokenProvider.generate(user.getId(), user.getUsername(), user.getRole());
-        return new AuthResult(token, user.getRole());
+        return new AuthResult(token, user.getId(), user.getUsername(), user.getEmail(), user.getRole());
     }
 }

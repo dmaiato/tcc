@@ -45,20 +45,27 @@ public record ExpectedTuple(List<Map<String, Object>> rows) {
         ValidationResult columnCheck = checkColumns(submitted);
         if (columnCheck != null) return columnCheck;
 
+        boolean positionalMatch = true;
+        for (int i = 0; i < rows.size(); i++) {
+            if (!mapsEqual(rows.get(i), submitted.get(i))) {
+                positionalMatch = false;
+                break;
+            }
+        }
+
+        if (positionalMatch) {
+            for (int i = 0; i < rows.size(); i++) {
+                ValidationResult rowCheck = checkRow(i, rows.get(i), submitted.get(i));
+                if (rowCheck != null) return rowCheck;
+            }
+            return ValidationResult.CORRECT;
+        }
+
         boolean allDataMatches = submitted.stream().allMatch(candidate ->
                 rows.stream().anyMatch(expected -> mapsEqual(expected, candidate))
         );
         if (allDataMatches) {
-            boolean orderedCorrectly = true;
-            for (int i = 0; i < rows.size(); i++) {
-                if (!mapsEqual(rows.get(i), submitted.get(i))) {
-                    orderedCorrectly = false;
-                    break;
-                }
-            }
-            if (!orderedCorrectly) {
-                return ValidationResult.failed("Rows are correct but in wrong order");
-            }
+            return ValidationResult.failed("Rows are correct but in wrong order");
         }
 
         for (int i = 0; i < rows.size(); i++) {

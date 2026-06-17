@@ -51,4 +51,10 @@ public class UserPersistenceAdapter implements UserRepository {
     public boolean existsByUsername(String username) {
         return jpaRepository.existsByUsername(username);
     }
+
+    @Override
+    @Transactional
+    public void addXp(UUID userId, int amount) {
+        jpaRepository.addXp(userId, amount);
+    }
 }

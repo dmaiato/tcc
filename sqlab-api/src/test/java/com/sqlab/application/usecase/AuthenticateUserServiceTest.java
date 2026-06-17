@@ -1,6 +1,7 @@
 package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.AuthenticateUserUseCase;
+import com.sqlab.application.port.out.PasswordHasher;
 import com.sqlab.application.port.out.TokenProvider;
 import com.sqlab.application.port.out.UserRepository;
 import com.sqlab.domain.exception.InvalidCredentialsException;
@@ -11,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
 class AuthenticateUserServiceTest {
 
     @Mock private UserRepository userRepository;
-    @Mock private PasswordEncoder passwordEncoder;
+    @Mock private PasswordHasher passwordHasher;
     @Mock private TokenProvider tokenProvider;
 
     private AuthenticateUserService service;
@@ -33,19 +33,22 @@ class AuthenticateUserServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new AuthenticateUserService(userRepository, passwordEncoder, tokenProvider);
+        service = new AuthenticateUserService(userRepository, passwordHasher, tokenProvider);
     }
 
     @Test
     void successfulAuthenticationReturnsTokenAndRole() {
         var user = new User(userId, "alice", "alice@example.com", "hash", 0, UserRole.USER, LocalDateTime.now());
         when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("password123", "hash")).thenReturn(true);
+        when(passwordHasher.matches("password123", "hash")).thenReturn(true);
         when(tokenProvider.generate(userId, "alice", UserRole.USER)).thenReturn("jwt-token");
 
         var result = service.handle(new AuthenticateUserUseCase.Command("alice@example.com", "password123"));
 
         assertThat(result.token()).isEqualTo("jwt-token");
+        assertThat(result.userId()).isEqualTo(userId);
+        assertThat(result.username()).isEqualTo("alice");
+        assertThat(result.email()).isEqualTo("alice@example.com");
         assertThat(result.role()).isEqualTo(UserRole.USER);
     }
 
@@ -60,7 +63,7 @@ class AuthenticateUserServiceTest {
     void throwsWhenPasswordIncorrect() {
         var user = new User(userId, "alice", "alice@example.com", "hash", 0, UserRole.USER, LocalDateTime.now());
         when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("wrong", "hash")).thenReturn(false);
+        when(passwordHasher.matches("wrong", "hash")).thenReturn(false);
 
         assertThatThrownBy(() -> service.handle(new AuthenticateUserUseCase.Command("alice@example.com", "wrong")))
                 .isInstanceOf(InvalidCredentialsException.class);
@@ -71,6 +74,6 @@ class AuthenticateUserServiceTest {
         when(userRepository.findByEmail("x@y")).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.handle(new AuthenticateUserUseCase.Command("x@y", "pwd")))
                 .isInstanceOf(InvalidCredentialsException.class)
-                .hasMessage("Credenciais inválidas.");
+                .hasMessage("Invalid credentials.");
     }
 }

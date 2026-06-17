@@ -8,6 +8,7 @@ import com.sqlab.domain.model.*;
 import com.sqlab.domain.exception.MissionNotFoundException;
 import com.sqlab.domain.model.Mission;
 import com.sqlab.infrastructure.adapter.in.web.dto.MissionDto;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -59,13 +60,20 @@ class MissionControllerTest {
     @MockitoBean
     private MissionRepository missionRepository;
 
+    @MockitoBean
+    private GetAdminMissionsUseCase getAdminMissionsUseCase;
+
+    @BeforeEach
+    void setUp() {
+    }
+
     private Mission createMission(UUID id, String title) {
         return Mission.builder()
                 .id(id).title(title).briefing("Brief").objective("Obj")
                 .hint(null).ddlScript("DDL").dmlScript(null)
-                .techniques(List.of("SELECT")).xpReward(100)
+                .techniques(List.of(new Technique(null, "SELECT"))).xpReward(100)
                 .expectedResult(new ExpectedTuple(List.of()))
-                .ordered(true).theme(Theme.ASTRONOMY).difficulty(DifficultyLevel.BEGINNER)
+                .ordered(true).theme(new Theme(UUID.randomUUID(), "ASTRONOMY", null, null)).difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(null).orderIndex(null).enabled(true).requiredLevel(1)
                 .build();
     }
@@ -79,7 +87,7 @@ class MissionControllerTest {
         mockMvc.perform(get("/api/missions"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].title").value("M1"))
-                .andExpect(jsonPath("$[0].theme").value("ASTRONOMY"))
+                .andExpect(jsonPath("$[0].theme.name").value("ASTRONOMY"))
                 .andExpect(jsonPath("$[0].difficulty").value("BEGINNER"));
     }
 
@@ -176,7 +184,7 @@ class MissionControllerTest {
 
         var req = new MissionDto.CreateMissionRequest(
                 "New Mission", "Brief", "Obj", null, "DDL", null, List.of("SELECT"),
-                100, true, Theme.ASTRONOMY, DifficultyLevel.BEGINNER,
+                100, true, "ASTRONOMY", DifficultyLevel.BEGINNER,
                 List.of(Map.of("id", 1)), null, null, true);
 
         mockMvc.perform(post("/api/missions")
@@ -185,7 +193,7 @@ class MissionControllerTest {
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("New Mission"))
-                .andExpect(jsonPath("$.theme").value("ASTRONOMY"));
+                .andExpect(jsonPath("$.theme.name").value("ASTRONOMY"));
     }
 
     @Test
@@ -210,7 +218,7 @@ class MissionControllerTest {
 
         var req = new MissionDto.UpdateMissionRequest(
                 "Updated Mission", "Brief", "Obj", null, "DDL", null, List.of("SELECT"),
-                200, false, Theme.CYBERSECURITY, DifficultyLevel.INTERMEDIATE,
+                200, false, "CYBERSECURITY", DifficultyLevel.INTERMEDIATE,
                 List.of(Map.of("id", 2)), null, null, false);
 
         mockMvc.perform(put("/api/missions/{id}", missionId)
@@ -234,12 +242,12 @@ class MissionControllerTest {
         var mission = Mission.builder()
                 .id(missionId).title("Admin View").briefing("Brief").objective("Obj")
                 .hint(null).ddlScript("DDL").dmlScript(null)
-                .techniques(List.of("SELECT")).xpReward(100)
+                .techniques(List.of(new Technique(null, "SELECT"))).xpReward(100)
                 .expectedResult(new ExpectedTuple(expectedResult))
-                .ordered(true).theme(Theme.ASTRONOMY).difficulty(DifficultyLevel.BEGINNER)
+                .ordered(true).theme(new Theme(UUID.randomUUID(), "ASTRONOMY", null, null)).difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(null).orderIndex(null).enabled(true).requiredLevel(1)
                 .build();
-        when(manageMissionUseCase.findById(missionId)).thenReturn(mission);
+        when(getAdminMissionsUseCase.findById(missionId)).thenReturn(new GetAdminMissionsUseCase.AdminMissionResult(mission, null, null));
         when(scenarioRepository.findById(any())).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/missions/{id}/admin", missionId).with(user(USER_ID)))
@@ -251,7 +259,7 @@ class MissionControllerTest {
     @Test
     void listAllAdmin_shouldReturnAllMissions() throws Exception {
         var mission = createMission(UUID.randomUUID(), "Admin List");
-        when(manageMissionUseCase.findAll()).thenReturn(List.of(mission));
+        when(getAdminMissionsUseCase.listAll()).thenReturn(List.of(new GetAdminMissionsUseCase.AdminMissionResult(mission, null, null)));
         when(scenarioRepository.findById(any())).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/missions/admin").with(user(USER_ID)))

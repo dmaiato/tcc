@@ -32,7 +32,7 @@ export class AdminMissionListComponent {
   expandedMission = signal<Mission | null>(null);
   expandedLoading = signal(false);
 
-  readonly themeStyles: Record<Theme, ThemeStyle> = {
+  readonly themeStyles: Record<string, ThemeStyle> = {
     ASTRONOMY: { label: 'Astronomy', icon: 'lucideStar', from: '#7c3aed', to: '#a855f7' },
     CYBERSECURITY: { label: 'Cybersecurity', icon: 'lucideShield', from: '#059669', to: '#10b981' },
     CRIMINAL: { label: 'Criminal', icon: 'lucideFingerprint', from: '#dc2626', to: '#f43f5e' },
@@ -63,7 +63,7 @@ export class AdminMissionListComponent {
   }
 
   getThemeStyle(theme: Theme): ThemeStyle {
-    return this.themeStyles[theme];
+    return this.themeStyles[theme.name];
   }
 
   requestDelete(missionId: string): void {
@@ -124,6 +124,6 @@ export class AdminMissionListComponent {
   }
 
   getThemeLabel(theme: Theme): string {
-    return this.themeStyles[theme].label;
+    return this.themeStyles[theme.name].label;
   }
 }

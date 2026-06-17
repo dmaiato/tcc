@@ -1,18 +1,10 @@
 package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.ValidateMissionUseCase;
-import com.sqlab.application.port.out.MissionRepository;
 import com.sqlab.application.port.out.ProgressRepository;
-import com.sqlab.application.port.out.ScenarioRepository;
 import com.sqlab.application.port.out.UserRepository;
-import com.sqlab.domain.exception.LevelRequiredException;
-import com.sqlab.domain.exception.MissionLockedException;
-import com.sqlab.domain.exception.MissionNotFoundException;
-import com.sqlab.domain.exception.ScenarioNotFoundException;
 import com.sqlab.domain.model.Mission;
 import com.sqlab.domain.model.Progress;
-import com.sqlab.domain.model.User;
-import com.sqlab.domain.model.UserRole;
 import com.sqlab.domain.model.ValidationResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,62 +13,27 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class ValidateMissionService implements ValidateMissionUseCase {
 
-    private final MissionRepository missionRepository;
     private final ProgressRepository progressRepository;
     private final UserRepository userRepository;
-    private final ScenarioRepository scenarioRepository;
+    private final MissionAccessValidator missionAccessValidator;
 
-    public ValidateMissionService(MissionRepository missionRepository,
-                                  ProgressRepository progressRepository,
+    public ValidateMissionService(ProgressRepository progressRepository,
                                   UserRepository userRepository,
-                                  ScenarioRepository scenarioRepository) {
-        this.missionRepository = missionRepository;
+                                  MissionAccessValidator missionAccessValidator) {
         this.progressRepository = progressRepository;
         this.userRepository = userRepository;
-        this.scenarioRepository = scenarioRepository;
+        this.missionAccessValidator = missionAccessValidator;
     }
 
     @Override
     public ValidationResult handle(Command command) {
-        Mission mission = missionRepository.findById(command.missionId())
-                .orElseThrow(() -> new MissionNotFoundException(command.missionId()));
-
-        if (!mission.isEnabled()) {
-            throw new MissionNotFoundException(command.missionId());
-        }
-
-        if (mission.getScenarioId() != null
-            && missionRepository.existsByScenarioIdAndEnabledFalse(mission.getScenarioId())) {
-            throw new MissionNotFoundException(command.missionId());
-        }
-
-        User user = userRepository.findById(command.userId())
-                .orElseThrow(() -> new MissionNotFoundException(command.missionId()));
-        if (mission.getRequiredLevel() > 0
-            && user.getRole() != UserRole.ADMIN
-            && User.computeLevel(user.getXp()) < mission.getRequiredLevel()) {
-            throw new LevelRequiredException(mission.getRequiredLevel(), User.computeLevel(user.getXp()));
-        }
-
-        if (mission.getScenarioId() != null) {
-            if (mission.getOrderIndex() != null && mission.getOrderIndex() > 1) {
-                boolean prevCompleted = missionRepository.isPreviousMissionCompleted(
-                        command.userId(), mission.getScenarioId(), mission.getOrderIndex() - 1);
-                if (!prevCompleted) {
-                    String scenarioTitle = scenarioRepository.findById(mission.getScenarioId())
-                            .map(s -> s.getTitle())
-                            .orElse("");
-                    throw new MissionLockedException(mission.getId(), mission.getScenarioId(), scenarioTitle);
-                }
-            }
-        }
+        Mission mission = missionAccessValidator.ensureAccessible(command.missionId(), command.userId());
 
         ValidationResult result = mission.validate(command.submittedTuples());
 
         if (result.correct() && !progressRepository.existsByUserIdAndMissionId(command.userId(), command.missionId())) {
             progressRepository.save(Progress.complete(command.userId(), command.missionId()));
-            user.addXp(mission.getXpReward());
-            userRepository.save(user);
+            userRepository.addXp(command.userId(), mission.getXpReward());
         }
 
         return result;

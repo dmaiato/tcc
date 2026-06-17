@@ -15,7 +15,6 @@ import java.util.UUID;
 public class ThemeJpaEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(nullable = false, unique = true, length = 20)
@@ -25,4 +24,11 @@ public class ThemeJpaEntity {
 
     @Column(length = 10)
     private String emoji;
+
+    @PrePersist
+    void prePersist() {
+        if (id == null) {
+            id = UUID.randomUUID();
+        }
+    }
 }

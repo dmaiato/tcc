@@ -1,7 +1,9 @@
 package com.sqlab.infrastructure.adapter.out.persistence;
 
+import com.sqlab.application.port.out.ScenarioMissionCascadePort;
 import com.sqlab.application.port.out.ScenarioRepository;
 import com.sqlab.domain.model.Scenario;
+import com.sqlab.domain.model.Theme;
 import com.sqlab.infrastructure.adapter.out.persistence.entity.ThemeJpaEntity;
 import com.sqlab.infrastructure.adapter.out.persistence.mapper.ScenarioMapper;
 import com.sqlab.infrastructure.adapter.out.persistence.repository.MissionJpaRepository;
@@ -17,7 +19,7 @@ import java.util.UUID;
 
 @Component
 @Transactional(readOnly = true)
-public class ScenarioPersistenceAdapter implements ScenarioRepository {
+public class ScenarioPersistenceAdapter implements ScenarioRepository, ScenarioMissionCascadePort {
 
     private final ScenarioJpaRepository jpaRepository;
     private final ThemeJpaRepository themeJpaRepository;
@@ -52,7 +54,7 @@ public class ScenarioPersistenceAdapter implements ScenarioRepository {
     @Override
     @Transactional
     public Scenario save(Scenario scenario) {
-        ThemeJpaEntity themeEntity = themeJpaRepository.findByName(scenario.getTheme().name())
+        ThemeJpaEntity themeEntity = themeJpaRepository.findByName(scenario.getTheme().getName())
                 .orElseThrow(() -> new IllegalArgumentException("Theme not found: " + scenario.getTheme()));
         return mapper.toDomain(jpaRepository.save(mapper.toJpa(scenario, themeEntity)));
     }
@@ -71,5 +73,15 @@ public class ScenarioPersistenceAdapter implements ScenarioRepository {
     @Override
     public int countMissionsByScenarioId(UUID scenarioId) {
         return missionJpaRepository.countByScenario_Id(scenarioId);
+    }
+
+    @Override
+    @Transactional
+    public void setEnabled(UUID scenarioId, boolean enabled) {
+        jpaRepository.findById(scenarioId).ifPresent(s -> {
+            s.setEnabled(enabled);
+            jpaRepository.save(s);
+        });
+        missionJpaRepository.setEnabledByScenarioId(scenarioId, enabled);
     }
 }

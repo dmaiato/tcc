@@ -1,5 +1,5 @@
-import type { Theme, DifficultyLevel } from './mission.model';
-export type { Theme, DifficultyLevel };
+import type { Theme, Technique, DifficultyLevel } from './mission.model';
+export type { Theme, Technique, DifficultyLevel };
 
 export interface ScenarioSummary {
   id: string;
@@ -62,7 +62,7 @@ export interface ScenarioAdminDetail {
 export interface CreateScenarioRequest {
   title: string;
   description: string;
-  theme: Theme;
+  theme: string;
   requiredLevel: number;
   enabled: boolean;
 }
@@ -70,7 +70,7 @@ export interface CreateScenarioRequest {
 export interface UpdateScenarioRequest {
   title: string;
   description: string;
-  theme: Theme;
+  theme: string;
   requiredLevel: number;
   enabled: boolean;
 }

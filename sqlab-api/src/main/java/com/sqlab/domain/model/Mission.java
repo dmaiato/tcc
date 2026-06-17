@@ -19,7 +19,7 @@ public class Mission {
     private final String hint;
     private final String ddlScript;
     private final String dmlScript;
-    private final List<String> techniques;
+    private final List<Technique> techniques;
     private final int xpReward;
     private final ExpectedTuple expectedResult;
     private final boolean ordered;

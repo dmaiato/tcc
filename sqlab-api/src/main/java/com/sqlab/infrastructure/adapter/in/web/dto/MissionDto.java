@@ -3,7 +3,6 @@ package com.sqlab.infrastructure.adapter.in.web.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.sqlab.domain.model.DifficultyLevel;
-import com.sqlab.domain.model.Theme;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -24,7 +23,7 @@ public class MissionDto {
             List<String> techniques,
             int xpReward,
             boolean ordered,
-            @NotNull Theme theme,
+            @NotBlank String theme,
             @NotNull DifficultyLevel difficulty,
             @NotEmpty List<Map<String, Object>> expectedResult,
             UUID scenarioId,
@@ -41,7 +40,7 @@ public class MissionDto {
             List<String> techniques,
             int xpReward,
             boolean ordered,
-            @NotNull Theme theme,
+            @NotBlank String theme,
             @NotNull DifficultyLevel difficulty,
             @NotEmpty List<Map<String, Object>> expectedResult,
             UUID scenarioId,
@@ -57,10 +56,9 @@ public class MissionDto {
             String hint,
             String ddlScript,
             String dmlScript,
-            List<String> techniques,
+            List<TechniqueDto.TechniqueResponse> techniques,
             int xpReward,
             boolean ordered,
-            Theme theme,
             DifficultyLevel difficulty,
             UUID scenarioId,
             String scenarioTitle,
@@ -68,21 +66,22 @@ public class MissionDto {
             Integer scenarioTotalMissions,
             boolean enabled,
             List<Map<String, Object>> expectedResult,
-            int requiredLevel) {}
+            int requiredLevel,
+            ThemeDto.ThemeResponse theme) {}
 
     @JsonInclude(Include.NON_NULL)
     public record MissionSummary(
             UUID id,
             String title,
             String scenarioTitle,
-            List<String> techniques,
+            List<TechniqueDto.TechniqueResponse> techniques,
             int xpReward,
             boolean ordered,
-            Theme theme,
             DifficultyLevel difficulty,
             UUID scenarioId,
             boolean enabled,
-            int requiredLevel) {}
+            int requiredLevel,
+            ThemeDto.ThemeResponse theme) {}
 
     public record ValidationRequest(@NotNull List<Map<String, Object>> tuples) {}
 

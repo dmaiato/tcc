@@ -32,4 +32,8 @@ public interface MissionJpaRepository extends JpaRepository<MissionJpaEntity, UU
     @Modifying
     @Query("UPDATE MissionJpaEntity m SET m.enabled = :enabled WHERE m.scenario.id = :scenarioId")
     int setEnabledByScenarioId(@Param("scenarioId") UUID scenarioId, @Param("enabled") boolean enabled);
+
+    @Modifying
+    @Query("UPDATE MissionJpaEntity m SET m.orderIndex = :orderIndex WHERE m.id = :id")
+    void setOrderIndex(@Param("id") UUID id, @Param("orderIndex") int orderIndex);
 }

@@ -2,6 +2,7 @@ package com.sqlab.infrastructure.adapter.out.persistence.mapper;
 
 import com.sqlab.domain.model.DifficultyLevel;
 import com.sqlab.domain.model.Mission;
+import com.sqlab.domain.model.Technique;
 import com.sqlab.domain.model.Theme;
 import com.sqlab.infrastructure.adapter.out.persistence.entity.*;
 import org.junit.jupiter.api.Test;
@@ -61,14 +62,14 @@ class MissionMapperTest {
         assertEquals("Mission X", domain.getTitle());
         assertEquals(100, domain.getXpReward());
         assertTrue(domain.isOrdered());
-        assertEquals(Theme.ASTRONOMY, domain.getTheme());
+        assertEquals(new Theme(UUID.randomUUID(), "ASTRONOMY", null, null), domain.getTheme());
         assertEquals(DifficultyLevel.ADVANCED, domain.getDifficulty());
         assertEquals(scenario.getId(), domain.getScenarioId());
         assertEquals(Integer.valueOf(2), domain.getOrderIndex());
         assertTrue(domain.isEnabled());
         assertEquals(3, domain.getRequiredLevel());
-        assertTrue(domain.getTechniques().contains("JOIN"));
-        assertTrue(domain.getTechniques().contains("SELECT"));
+        assertTrue(domain.getTechniques().stream().anyMatch(t -> t.getName().equals("JOIN")));
+        assertTrue(domain.getTechniques().stream().anyMatch(t -> t.getName().equals("SELECT")));
         assertEquals(2, domain.getTechniques().size());
     }
 
@@ -117,7 +118,7 @@ class MissionMapperTest {
 
         var domain = mapper.toDomain(entity);
 
-        assertEquals(List.of("ALPHA", "BETA", "ZEBRA"), domain.getTechniques());
+        assertEquals(List.of(new Technique(null, "ALPHA"), new Technique(null, "BETA"), new Technique(null, "ZEBRA")), domain.getTechniques());
     }
 
     @Test
@@ -130,11 +131,11 @@ class MissionMapperTest {
                 .hint("H")
                 .ddlScript("DDL")
                 .dmlScript("DML")
-                .techniques(List.of("SELECT"))
+                .techniques(List.of(new Technique(null, "SELECT")))
                 .xpReward(75)
                 .expectedResult(new com.sqlab.domain.model.ExpectedTuple(List.of(Map.of("v", 1))))
                 .ordered(false)
-                .theme(Theme.ASTRONOMY)
+                .theme(new Theme(UUID.randomUUID(), "ASTRONOMY", null, null))
                 .difficulty(DifficultyLevel.INTERMEDIATE)
                 .scenarioId(null)
                 .orderIndex(null)
@@ -142,7 +143,7 @@ class MissionMapperTest {
                 .requiredLevel(0)
                 .build();
 
-        var entity = mapper.toJpa(domain);
+        var entity = mapper.toJpa(domain, null);
 
         assertEquals(id, entity.getId());
         assertEquals("Mission", entity.getTitle());
@@ -166,7 +167,7 @@ class MissionMapperTest {
                 .xpReward(10)
                 .expectedResult(new com.sqlab.domain.model.ExpectedTuple(List.of(Map.of("x", 1))))
                 .ordered(false)
-                .theme(Theme.ASTRONOMY)
+                .theme(new Theme(UUID.randomUUID(), "ASTRONOMY", null, null))
                 .difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(UUID.randomUUID())
                 .orderIndex(1)
@@ -174,28 +175,34 @@ class MissionMapperTest {
                 .requiredLevel(0)
                 .build();
 
-        var entity = mapper.toJpa(domain);
+        var entity = mapper.toJpa(domain, null);
 
         assertEquals(Integer.valueOf(1), entity.getOrderIndex());
     }
 
     @Test
-    void toJpaDoesNotSetThemeOrScenario() {
+    void toJpaDoesNotSetTheme() {
         var domain = Mission.builder()
                 .id(id).title("M").briefing("B").objective("O")
                 .ddlScript("DDL")
                 .techniques(List.of())
                 .xpReward(10)
                 .expectedResult(new com.sqlab.domain.model.ExpectedTuple(List.of(Map.of("x", 1))))
-                .ordered(false).theme(Theme.ASTRONOMY)
+                .ordered(false).theme(new Theme(UUID.randomUUID(), "ASTRONOMY", null, null))
                 .difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(UUID.randomUUID()).orderIndex(1).enabled(true).requiredLevel(0)
                 .build();
 
-        var entity = mapper.toJpa(domain);
+        var scenario = ScenarioJpaEntity.builder()
+                .id(UUID.randomUUID()).build();
 
-        assertNull(entity.getTheme(), "theme é setado pelo adapter, não pelo mapper");
-        assertNull(entity.getScenario(), "scenario é setado pelo adapter, não pelo mapper");
-        assertTrue(entity.getTechniques().isEmpty(), "techniques são setadas pelo adapter");
+        var entityBeforeScenario = mapper.toJpa(domain, null);
+        assertNull(entityBeforeScenario.getScenario());
+
+        var entityWithScenario = mapper.toJpa(domain, scenario);
+        assertSame(scenario, entityWithScenario.getScenario());
+
+        assertNull(entityWithScenario.getTheme(), "theme is set by the adapter, not the mapper");
+        assertTrue(entityWithScenario.getTechniques().isEmpty(), "techniques are set by the adapter");
     }
 }

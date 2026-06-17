@@ -10,11 +10,14 @@ import org.springframework.stereotype.Component;
 public class ScenarioMapper {
 
     public Scenario toDomain(ScenarioJpaEntity entity) {
+        ThemeJpaEntity themeEntity = entity.getTheme();
+        Theme theme = new Theme(themeEntity.getId(), themeEntity.getName(),
+                themeEntity.getDescription(), themeEntity.getEmoji());
         return new Scenario(
                 entity.getId(),
                 entity.getTitle(),
                 entity.getDescription(),
-                Theme.valueOf(entity.getTheme().getName()),
+                theme,
                 entity.isEnabled(),
                 entity.getRequiredLevel()
         );

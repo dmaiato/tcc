@@ -5,10 +5,10 @@
 -- Themes
 INSERT INTO themes (id, name, description, emoji) VALUES
     ('b0000001-0000-0000-0000-000000000001', 'ASTRONOMY',     'Explore o cosmos com SQL',     '🌌'),
-    ('b0000002-0000-0000-0000-000000000002', 'BIOLOGY',       'Ciências da vida e dados',     '🧬'),
-    ('b0000003-0000-0000-0000-000000000003', 'CRIMINAL',      'Investigação e mistério',       '🔍'),
-    ('b0000004-0000-0000-0000-000000000004', 'CYBERSECURITY', 'Segurança digital e hacking',   '🛡️'),
-    ('b0000005-0000-0000-0000-000000000005', 'FINANCE',       'Finanças e contabilidade',      '💰')
+    ('b0000002-0000-0000-0000-000000000002', 'BIOLOGY',       'Life sciences and data',        '🧬'),
+    ('b0000003-0000-0000-0000-000000000003', 'CRIMINAL',      'Investigation and mystery',     '🔍'),
+    ('b0000004-0000-0000-0000-000000000004', 'CYBERSECURITY', 'Digital security and hacking',  '🛡️'),
+    ('b0000005-0000-0000-0000-000000000005', 'FINANCE',       'Finance and accounting',        '💰')
 ON CONFLICT (id) DO NOTHING;
 
 -- Scenarios

@@ -1,8 +1,10 @@
 package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.ManageMissionUseCase;
-import com.sqlab.application.port.in.ManageScenarioUseCase;
 import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.ScenarioMissionCascadePort;
+import com.sqlab.application.port.out.TechniqueRepository;
+import com.sqlab.application.port.out.ThemeRepository;
 import com.sqlab.domain.exception.MissionNotFoundException;
 import com.sqlab.domain.model.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,14 +27,22 @@ import static org.mockito.Mockito.*;
 class ManageMissionServiceTest {
 
     @Mock private MissionRepository missionRepository;
-    @Mock private ManageScenarioUseCase manageScenarioUseCase;
+    @Mock private ScenarioMissionCascadePort scenarioMissionCascadePort;
+    @Mock private ThemeRepository themeRepository;
+    @Mock private TechniqueRepository techniqueRepository;
 
     private ManageMissionService service;
     private final UUID missionId = UUID.randomUUID();
+    private final Theme astronomyTheme = new Theme(UUID.randomUUID(), "ASTRONOMY", null, null);
+    private final Technique selectTechnique = new Technique(null, "SELECT");
+    private final Technique joinTechnique = new Technique(null, "JOIN");
 
     @BeforeEach
     void setUp() {
-        service = new ManageMissionService(missionRepository, manageScenarioUseCase);
+        service = new ManageMissionService(missionRepository, scenarioMissionCascadePort, themeRepository, techniqueRepository);
+        lenient().when(themeRepository.findByName("ASTRONOMY")).thenReturn(Optional.of(astronomyTheme));
+        lenient().when(techniqueRepository.findByNameIn(Set.of("SELECT"))).thenReturn(List.of(selectTechnique));
+        lenient().when(techniqueRepository.findByNameIn(Set.of("JOIN"))).thenReturn(List.of(joinTechnique));
     }
 
     @Test
@@ -40,7 +51,7 @@ class ManageMissionServiceTest {
         var cmd = new ManageMissionUseCase.CreateMissionCommand(
                 "Title", "Briefing", "Objective", "Hint",
                 "DDL", "DML", List.of("SELECT"), 100, true,
-                Theme.ASTRONOMY, DifficultyLevel.BEGINNER,
+                "ASTRONOMY", DifficultyLevel.BEGINNER,
                 List.of(Map.of("x", 1)), null, null, null);
 
         var result = service.create(cmd);
@@ -57,7 +68,7 @@ class ManageMissionServiceTest {
         when(missionRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         var cmd = new ManageMissionUseCase.CreateMissionCommand(
                 "Title", "B", "O", null, "DDL", null,
-                List.of(), 50, false, Theme.ASTRONOMY, DifficultyLevel.BEGINNER,
+                List.of(), 50, false, "ASTRONOMY", DifficultyLevel.BEGINNER,
                 List.of(Map.of("x", 1)), scenarioId, null, null);
 
         var result = service.create(cmd);
@@ -70,14 +81,14 @@ class ManageMissionServiceTest {
         var existing = Mission.builder().id(missionId).title("Old").briefing("B").objective("O")
                 .ddlScript("DDL").techniques(List.of()).xpReward(10)
                 .expectedResult(new ExpectedTuple(List.of(Map.of("x", 1))))
-                .ordered(false).theme(Theme.ASTRONOMY).difficulty(DifficultyLevel.BEGINNER)
+                .ordered(false).theme(astronomyTheme).difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(null).orderIndex(null).enabled(true).build();
         when(missionRepository.findById(missionId)).thenReturn(Optional.of(existing));
         when(missionRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         var cmd = new ManageMissionUseCase.UpdateMissionCommand(
                 missionId, "Updated", "B", "O", null, "DDL", null,
-                List.of("JOIN"), 200, true, Theme.ASTRONOMY,
+                List.of("JOIN"), 200, true, "ASTRONOMY",
                 DifficultyLevel.ADVANCED, List.of(Map.of("y", 2)),
                 null, null, null);
 
@@ -90,7 +101,7 @@ class ManageMissionServiceTest {
     void updateThrowsWhenNotFound() {
         var cmd = new ManageMissionUseCase.UpdateMissionCommand(
                 missionId, "T", "B", "O", null, "DDL", null,
-                List.of(), 10, false, Theme.ASTRONOMY,
+                List.of(), 10, false, "ASTRONOMY",
                 DifficultyLevel.BEGINNER, List.of(Map.of("x", 1)),
                 null, null, null);
         when(missionRepository.findById(missionId)).thenReturn(Optional.empty());
@@ -102,7 +113,7 @@ class ManageMissionServiceTest {
         var mission = Mission.builder().id(missionId).title("T").briefing("B").objective("O")
                 .ddlScript("DDL").techniques(List.of()).xpReward(10)
                 .expectedResult(new ExpectedTuple(List.of(Map.of("x", 1))))
-                .ordered(false).theme(Theme.ASTRONOMY).difficulty(DifficultyLevel.BEGINNER)
+                .ordered(false).theme(astronomyTheme).difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(null).orderIndex(null).enabled(true).build();
         when(missionRepository.findById(missionId)).thenReturn(Optional.of(mission));
         service.delete(missionId);
@@ -120,7 +131,7 @@ class ManageMissionServiceTest {
     void validateScenarioConstraintThrows() {
         var cmd = new ManageMissionUseCase.UpdateMissionCommand(
                 missionId, "T", "B", "O", null, "DDL", null,
-                List.of(), 10, false, Theme.ASTRONOMY,
+                List.of(), 10, false, "ASTRONOMY",
                 DifficultyLevel.BEGINNER, List.of(Map.of("x", 1)),
                 UUID.randomUUID(), null, null);
         assertThatThrownBy(() -> service.update(cmd))

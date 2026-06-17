@@ -1,5 +1,6 @@
 package com.sqlab.infrastructure.config;
 
+import com.sqlab.application.port.out.TokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,10 +17,10 @@ import java.util.List;
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private final JwtTokenProvider jwtTokenProvider;
+    private final TokenProvider tokenProvider;
 
-    public JwtAuthFilter(JwtTokenProvider jwtTokenProvider) {
-        this.jwtTokenProvider = jwtTokenProvider;
+    public JwtAuthFilter(TokenProvider tokenProvider) {
+        this.tokenProvider = tokenProvider;
     }
 
     @Override
@@ -32,9 +33,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
 
-            if (jwtTokenProvider.isValid(token)) {
-                String userId = jwtTokenProvider.extractUserId(token);
-                String role = jwtTokenProvider.extractRole(token);
+            if (tokenProvider.isValid(token)) {
+                String userId = tokenProvider.extractUserId(token);
+                String role = tokenProvider.extractRole(token);
                 var auth = new UsernamePasswordAuthenticationToken(
                         userId, null,
                         List.of(new SimpleGrantedAuthority("ROLE_" + role)));

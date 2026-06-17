@@ -1,7 +1,6 @@
 package com.sqlab.application.port.in;
 
-import com.sqlab.domain.model.Progress;
-
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -9,5 +8,8 @@ public interface GetUserProgressUseCase {
 
     record Query(UUID userId) {}
 
-    List<Progress> handle(Query query);
+    record ProgressItem(UUID missionId, boolean completed, LocalDateTime completedAt,
+                        String missionTitle, UUID scenarioId, String scenarioTitle) {}
+
+    List<ProgressItem> handle(Query query);
 }

@@ -44,7 +44,7 @@ class AuthControllerTest {
     void register_shouldReturnTokenAndUser() throws Exception {
         var userId = UUID.randomUUID();
         var user = new User(userId, "alice", "alice@test.com", "hash", 0, UserRole.USER, LocalDateTime.now());
-        var authResult = new AuthenticateUserUseCase.AuthResult("jwt-token", UserRole.USER);
+        var authResult = new AuthenticateUserUseCase.AuthResult("jwt-token", userId, "alice", "alice@test.com", UserRole.USER);
 
         when(registerUserUseCase.handle(any())).thenReturn(user);
         when(authenticateUserUseCase.handle(any())).thenReturn(authResult);
@@ -85,7 +85,7 @@ class AuthControllerTest {
 
     @Test
     void login_shouldReturnTokenOnSuccess() throws Exception {
-        var authResult = new AuthenticateUserUseCase.AuthResult("login-token", UserRole.ADMIN);
+        var authResult = new AuthenticateUserUseCase.AuthResult("login-token", UUID.randomUUID(), "admin", "admin@test.com", UserRole.ADMIN);
         when(authenticateUserUseCase.handle(any())).thenReturn(authResult);
 
         var body = objectMapper.writeValueAsString(new AuthDto.LoginRequest("admin@test.com", "admin123"));
@@ -108,7 +108,7 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("Credenciais inválidas."));
+                .andExpect(jsonPath("$.message").value("Invalid credentials."));
     }
 
     @Test

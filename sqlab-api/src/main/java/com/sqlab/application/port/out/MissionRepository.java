@@ -26,5 +26,6 @@ public interface MissionRepository {
     int countByScenarioIdAndEnabledTrue(UUID scenarioId);
     Mission save(Mission mission);
     int setEnabledByScenarioId(UUID scenarioId, boolean enabled);
+    void setOrderIndex(UUID id, int orderIndex);
     void deleteById(UUID id);
 }

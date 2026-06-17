@@ -3,8 +3,10 @@ package com.sqlab.infrastructure.adapter.out.persistence;
 import com.sqlab.application.port.out.MissionRepository;
 import com.sqlab.domain.model.DifficultyLevel;
 import com.sqlab.domain.model.Mission;
+import com.sqlab.domain.model.Technique;
 import com.sqlab.domain.model.Theme;
 import com.sqlab.infrastructure.adapter.out.persistence.entity.MissionJpaEntity;
+import com.sqlab.infrastructure.adapter.out.persistence.entity.ScenarioJpaEntity;
 import com.sqlab.infrastructure.adapter.out.persistence.entity.TechniqueJpaEntity;
 import com.sqlab.infrastructure.adapter.out.persistence.entity.ThemeJpaEntity;
 import com.sqlab.infrastructure.adapter.out.persistence.mapper.MissionMapper;
@@ -17,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 @Transactional(readOnly = true)
@@ -60,7 +63,7 @@ public class MissionPersistenceAdapter implements MissionRepository {
 
     @Override
     public List<Mission> findByTheme(Theme theme) {
-        return jpaRepository.findByTheme_Name(theme.name()).stream().map(mapper::toDomain).toList();
+        return jpaRepository.findByTheme_Name(theme.getName()).stream().map(mapper::toDomain).toList();
     }
 
     @Override
@@ -70,7 +73,7 @@ public class MissionPersistenceAdapter implements MissionRepository {
 
     @Override
     public List<Mission> findByThemeAndDifficulty(Theme theme, DifficultyLevel difficulty) {
-        return jpaRepository.findByTheme_NameAndDifficulty(theme.name(), difficulty).stream().map(mapper::toDomain).toList();
+        return jpaRepository.findByTheme_NameAndDifficulty(theme.getName(), difficulty).stream().map(mapper::toDomain).toList();
     }
 
     @Override
@@ -124,24 +127,26 @@ public class MissionPersistenceAdapter implements MissionRepository {
     @Override
     @Transactional
     public Mission save(Mission mission) {
-        MissionJpaEntity entity = mapper.toJpa(mission);
+        ScenarioJpaEntity scenarioEntity = null;
+        if (mission.getScenarioId() != null) {
+            scenarioEntity = scenarioJpaRepository.findById(mission.getScenarioId()).orElse(null);
+        }
+        MissionJpaEntity entity = mapper.toJpa(mission, scenarioEntity);
 
-        ThemeJpaEntity themeEntity = themeJpaRepository.findByName(mission.getTheme().name())
+        ThemeJpaEntity themeEntity = themeJpaRepository.findByName(mission.getTheme().getName())
                 .orElseThrow(() -> new IllegalArgumentException("Theme not found: " + mission.getTheme()));
         entity.setTheme(themeEntity);
 
-        Set<TechniqueJpaEntity> techniqueEntities = new HashSet<>();
-        for (String techniqueName : mission.getTechniques()) {
-            TechniqueJpaEntity techniqueEntity = techniqueJpaRepository.findByName(techniqueName)
-                    .orElseThrow(() -> new IllegalArgumentException("Technique not found: " + techniqueName));
-            techniqueEntities.add(techniqueEntity);
+        Set<String> techniqueNames = mission.getTechniques().stream()
+                .map(Technique::getName)
+                .collect(Collectors.toSet());
+        List<TechniqueJpaEntity> found = techniqueJpaRepository.findByNameIn(techniqueNames);
+        if (found.size() != techniqueNames.size()) {
+            Set<String> foundNames = found.stream().map(TechniqueJpaEntity::getName).collect(Collectors.toSet());
+            techniqueNames.removeAll(foundNames);
+            throw new IllegalArgumentException("Techniques not found: " + techniqueNames);
         }
-        entity.setTechniques(techniqueEntities);
-
-        if (mission.getScenarioId() != null) {
-            scenarioJpaRepository.findById(mission.getScenarioId())
-                    .ifPresent(entity::setScenario);
-        }
+        entity.setTechniques(new HashSet<>(found));
 
         return mapper.toDomain(jpaRepository.save(entity));
     }
@@ -150,6 +155,12 @@ public class MissionPersistenceAdapter implements MissionRepository {
     @Transactional
     public int setEnabledByScenarioId(UUID scenarioId, boolean enabled) {
         return jpaRepository.setEnabledByScenarioId(scenarioId, enabled);
+    }
+
+    @Override
+    @Transactional
+    public void setOrderIndex(UUID id, int orderIndex) {
+        jpaRepository.setOrderIndex(id, orderIndex);
     }
 
     @Override

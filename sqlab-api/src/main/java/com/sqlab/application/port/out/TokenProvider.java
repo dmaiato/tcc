@@ -5,9 +5,12 @@ import com.sqlab.domain.model.UserRole;
 import java.util.UUID;
 
 /**
- * Porta de saída responsável pela geração de tokens de autenticação.
- * Desacopla o caso de uso da implementação concreta (ex: JWT).
+ * Output port responsible for generating authentication tokens.
+ * Decouples the use case from the concrete implementation (e.g., JWT).
  */
 public interface TokenProvider {
     String generate(UUID userId, String username, UserRole role);
+    String extractUserId(String token);
+    String extractRole(String token);
+    boolean isValid(String token);
 }

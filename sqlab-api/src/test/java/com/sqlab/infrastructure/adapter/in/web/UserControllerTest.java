@@ -1,10 +1,8 @@
 package com.sqlab.infrastructure.adapter.in.web;
 
+import com.sqlab.application.port.in.GetProfileUseCase;
 import com.sqlab.application.port.in.GetUserProgressUseCase;
 import com.sqlab.application.port.in.GetUserSkillsUseCase;
-import com.sqlab.application.port.out.MissionRepository;
-import com.sqlab.application.port.out.ScenarioRepository;
-import com.sqlab.application.port.out.UserRepository;
 import com.sqlab.domain.model.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +15,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -37,25 +33,20 @@ class UserControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
+    private GetProfileUseCase getProfileUseCase;
+
+    @MockitoBean
     private GetUserProgressUseCase getUserProgressUseCase;
 
     @MockitoBean
     private GetUserSkillsUseCase getUserSkillsUseCase;
 
-    @MockitoBean
-    private UserRepository userRepository;
-
-    @MockitoBean
-    private MissionRepository missionRepository;
-
-    @MockitoBean
-    private ScenarioRepository scenarioRepository;
-
     @Test
     void getProfile_shouldReturnProfile() throws Exception {
         var id = UUID.fromString(USER_ID);
         var user = new User(id, "alice", "alice@test.com", "hash", 250, UserRole.USER, LocalDateTime.of(2025, 1, 1, 0, 0));
-        when(userRepository.findById(id)).thenReturn(Optional.of(user));
+        when(getProfileUseCase.handle(any())).thenReturn(
+                new GetProfileUseCase.ProfileResponse(user, List.of(), List.of()));
 
         mockMvc.perform(get("/api/users/me").with(authentication(new UsernamePasswordAuthenticationToken(USER_ID, null))))
                 .andExpect(status().isOk())
@@ -69,7 +60,7 @@ class UserControllerTest {
 
     @Test
     void getProfile_shouldReturn404WhenUserNotFound() throws Exception {
-        when(userRepository.findById(any())).thenReturn(Optional.empty());
+        when(getProfileUseCase.handle(any())).thenThrow(new com.sqlab.domain.exception.UserNotFoundException(UUID.fromString(USER_ID)));
 
         mockMvc.perform(get("/api/users/me").with(authentication(new UsernamePasswordAuthenticationToken(USER_ID, null))))
                 .andExpect(status().isNotFound());
@@ -77,25 +68,13 @@ class UserControllerTest {
 
     @Test
     void getProgress_shouldReturnProgressList() throws Exception {
-        var userId = UUID.fromString(USER_ID);
         var missionId = UUID.randomUUID();
         var scenarioId = UUID.randomUUID();
         var completedAt = LocalDateTime.of(2025, 6, 1, 10, 30);
 
         when(getUserProgressUseCase.handle(any())).thenReturn(List.of(
-                new Progress(UUID.randomUUID(), userId, missionId, true, completedAt)
+                new GetUserProgressUseCase.ProgressItem(missionId, true, completedAt, "Mission 1", scenarioId, "Scenario 1")
         ));
-        var mission = Mission.builder()
-                .id(missionId).title("Mission 1").briefing("Brief").objective("Obj")
-                .hint(null).ddlScript("DDL").dmlScript(null)
-                .techniques(List.of()).xpReward(100)
-                .expectedResult(new ExpectedTuple(List.of()))
-                .ordered(true).theme(Theme.ASTRONOMY).difficulty(DifficultyLevel.BEGINNER)
-                .scenarioId(scenarioId).orderIndex(null).enabled(true).requiredLevel(1)
-                .build();
-        when(missionRepository.findAllById(Set.of(missionId))).thenReturn(List.of(mission));
-        when(scenarioRepository.findAllById(Set.of(scenarioId))).thenReturn(
-                List.of(new Scenario(scenarioId, "Scenario 1", "Desc", Theme.ASTRONOMY, true, 1)));
 
         mockMvc.perform(get("/api/users/me/progress").with(authentication(new UsernamePasswordAuthenticationToken(USER_ID, null))))
                 .andExpect(status().isOk())

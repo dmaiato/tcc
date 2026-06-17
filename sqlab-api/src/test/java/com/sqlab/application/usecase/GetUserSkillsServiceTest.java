@@ -45,9 +45,9 @@ class GetUserSkillsServiceTest {
         when(progressRepository.findCompletedMissionIdsByUserId(userId)).thenReturn(Set.of(missionId));
 
         var mission = Mission.builder().id(missionId).title("M").briefing("B").objective("O")
-                .ddlScript("DDL").techniques(List.of("JOIN", "SELECT")).xpReward(10)
+                .ddlScript("DDL").techniques(List.of(new Technique(null, "JOIN"), new Technique(null, "SELECT"))).xpReward(10)
                 .expectedResult(new ExpectedTuple(List.of(Map.of("x", 1))))
-                .ordered(false).theme(Theme.ASTRONOMY).difficulty(DifficultyLevel.BEGINNER)
+                .ordered(false).theme(new Theme(UUID.randomUUID(), "ASTRONOMY", null, null)).difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(null).orderIndex(null).enabled(true).build();
         when(missionRepository.findAllById(Set.of(missionId))).thenReturn(List.of(mission));
 
@@ -62,14 +62,14 @@ class GetUserSkillsServiceTest {
         when(progressRepository.findCompletedMissionIdsByUserId(userId)).thenReturn(Set.of(m1, m2));
         when(missionRepository.findAllById(Set.of(m1, m2))).thenReturn(List.of(
                 Mission.builder().id(m1).title("M1").briefing("B").objective("O")
-                        .ddlScript("DDL").techniques(List.of("SELECT", "JOIN")).xpReward(10)
+                        .ddlScript("DDL").techniques(List.of(new Technique(null, "SELECT"), new Technique(null, "JOIN"))).xpReward(10)
                         .expectedResult(new ExpectedTuple(List.of(Map.of("x", 1))))
-                        .ordered(false).theme(Theme.ASTRONOMY).difficulty(DifficultyLevel.BEGINNER)
+                        .ordered(false).theme(new Theme(UUID.randomUUID(), "ASTRONOMY", null, null)).difficulty(DifficultyLevel.BEGINNER)
                         .scenarioId(null).orderIndex(null).enabled(true).build(),
                 Mission.builder().id(m2).title("M2").briefing("B").objective("O")
-                        .ddlScript("DDL").techniques(List.of("JOIN", "GROUP BY")).xpReward(10)
+                        .ddlScript("DDL").techniques(List.of(new Technique(null, "JOIN"), new Technique(null, "GROUP BY"))).xpReward(10)
                         .expectedResult(new ExpectedTuple(List.of(Map.of("x", 1))))
-                        .ordered(false).theme(Theme.ASTRONOMY).difficulty(DifficultyLevel.BEGINNER)
+                        .ordered(false).theme(new Theme(UUID.randomUUID(), "ASTRONOMY", null, null)).difficulty(DifficultyLevel.BEGINNER)
                         .scenarioId(null).orderIndex(null).enabled(true).build()
         ));
 

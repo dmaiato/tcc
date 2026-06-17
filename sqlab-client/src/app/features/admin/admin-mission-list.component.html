@@ -142,9 +142,9 @@
                           <div>
                             <h4 class="font-mono text-[9px] text-muted-foreground uppercase tracking-wider mb-1.5">Techniques</h4>
                             <div class="flex flex-wrap gap-1">
-                              @for (tech of detail.techniques; track tech) {
+                              @for (tech of detail.techniques; track tech.id) {
                                 <span class="font-mono text-[9px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
-                                  {{ tech }}
+                                  {{ tech.name }}
                                 </span>
                               }
                             </div>

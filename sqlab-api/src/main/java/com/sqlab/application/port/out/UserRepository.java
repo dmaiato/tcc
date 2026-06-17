@@ -12,4 +12,5 @@ public interface UserRepository {
     Optional<User> findByUsername(String username);
     boolean existsByEmail(String email);
     boolean existsByUsername(String username);
+    void addXp(UUID userId, int amount);
 }

@@ -34,7 +34,7 @@
                 {{ diff.label }}
               </span>
             }
-            @if (getThemeConfig(m.theme || 'SQL'); as cat) {
+            @if (getThemeConfig(m.theme); as cat) {
               <span class="font-mono text-[10px] px-2 py-0.5 rounded" [class]="cat.bgColor + ' ' + cat.color">
                 {{ cat.icon }} {{ cat.label }}
               </span>

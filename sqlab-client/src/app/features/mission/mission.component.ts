@@ -346,11 +346,9 @@ export class MissionComponent implements OnInit, OnDestroy {
   }
 
   getThemeLabel(theme: Theme): string {
-    const labels: Record<Theme, string> = {
-      'ASTRONOMY': 'Astronomy', 'CYBERSECURITY': 'Cybersecurity',
-      'CRIMINAL': 'Criminal', 'FINANCE': 'Finance', 'BIOLOGY': 'Biology'
-    };
-    return labels[theme] || theme;
+    if (!theme) return '';
+    const name = theme.name.charAt(0) + theme.name.slice(1).toLowerCase();
+    return theme.emoji ? `${theme.emoji} ${name}` : name;
   }
 
   getDifficultyLabel(difficulty: DifficultyLevel): string {

@@ -30,7 +30,7 @@ public class AuthController {
         AuthenticateUserUseCase.AuthResult auth = authenticateUserUseCase.handle(
                 new AuthenticateUserUseCase.Command(request.email(), request.password())
         );
-        return ResponseEntity.ok(new AuthDto.AuthResponseWithUser(auth.token(), user.getId(), user.getUsername(), user.getEmail(), auth.role().name()));
+        return ResponseEntity.ok(new AuthDto.AuthResponseWithUser(auth.token(), auth.userId(), auth.username(), auth.email(), auth.role().name()));
     }
 
     @PostMapping("/login")
@@ -38,6 +38,6 @@ public class AuthController {
         AuthenticateUserUseCase.AuthResult auth = authenticateUserUseCase.handle(
                 new AuthenticateUserUseCase.Command(request.email(), request.password())
         );
-        return ResponseEntity.ok(new AuthDto.AuthResponseWithUser(auth.token(), null, null, null, auth.role().name()));
+        return ResponseEntity.ok(new AuthDto.AuthResponseWithUser(auth.token(), auth.userId(), auth.username(), auth.email(), auth.role().name()));
     }
 }

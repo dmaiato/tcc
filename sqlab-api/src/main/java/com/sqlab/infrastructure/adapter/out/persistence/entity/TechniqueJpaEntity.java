@@ -17,7 +17,6 @@ import java.util.UUID;
 public class TechniqueJpaEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(nullable = false, unique = true, length = 50)
@@ -25,4 +24,11 @@ public class TechniqueJpaEntity {
 
     @ManyToMany(mappedBy = "techniques")
     private Set<MissionJpaEntity> missions = new HashSet<>();
+
+    @PrePersist
+    void prePersist() {
+        if (id == null) {
+            id = UUID.randomUUID();
+        }
+    }
 }

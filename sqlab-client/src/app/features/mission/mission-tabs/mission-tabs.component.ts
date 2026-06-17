@@ -2,6 +2,7 @@ import { Component, Input, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataViewerComponent, ColumnInfo } from '../data-viewer/data-viewer.component';
 import { NgIconsModule } from '@ng-icons/core';
+import { Theme } from '../../../core/models/mission.model';
 
 interface MissionSchema {
   name: string;
@@ -14,7 +15,7 @@ interface Mission {
   title: string;
   briefing: string;
   objective: string;
-  theme: string;
+  theme: Theme;
   difficulty: string;
   xpReward: number;
   completed?: boolean;
@@ -85,17 +86,10 @@ export class MissionTabsComponent {
     return configs[d] || { label: d, bgColor: 'bg-muted', color: 'text-muted-foreground' };
   }
 
-  getThemeConfig(theme: string): { label: string; bgColor: string; color: string; icon: string } {
-    const t = theme || 'SQL';
-    const configs: Record<string, { label: string; bgColor: string; color: string; icon: string }> = {
-      'SQL': { label: 'SQL', bgColor: 'bg-muted/50', color: 'text-muted-foreground', icon: '🔍' },
-      'JOIN': { label: 'JOIN', bgColor: 'bg-muted/50', color: 'text-muted-foreground', icon: '🔗' },
-      'SUBQUERIES': { label: 'Subqueries', bgColor: 'bg-muted/50', color: 'text-muted-foreground', icon: '📦' },
-      'AGGREGATION': { label: 'Aggregation', bgColor: 'bg-muted/50', color: 'text-muted-foreground', icon: '📊' },
-      'WINDOW_FUNCTIONS': { label: 'Window Functions', bgColor: 'bg-muted/50', color: 'text-muted-foreground', icon: '🪟' },
-      'CTES': { label: 'CTEs', bgColor: 'bg-muted/50', color: 'text-muted-foreground', icon: '📜' }
-    };
-    return configs[t] || { label: t, bgColor: 'bg-muted/50', color: 'text-muted-foreground', icon: '📋' };
+  getThemeConfig(theme: Theme): { label: string; bgColor: string; color: string; icon: string } {
+    if (!theme) return { label: 'SQL', bgColor: 'bg-muted/50', color: 'text-muted-foreground', icon: '🔍' };
+    const name = theme.name.charAt(0) + theme.name.slice(1).toLowerCase();
+    return { label: name, bgColor: 'bg-muted/50', color: 'text-muted-foreground', icon: theme.emoji || '📋' };
   }
 
   private parseDDL(ddl: string): MissionSchema[] {

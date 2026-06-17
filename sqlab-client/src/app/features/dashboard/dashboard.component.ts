@@ -29,7 +29,7 @@ export class DashboardComponent {
   completedIds = signal<Set<string>>(new Set());
   isLoading = signal(true);
 
-  selectedTheme = signal<Theme | 'ALL'>('ALL');
+  selectedTheme = signal<string | null>(null);
   selectedDifficulty = signal<DifficultyLevel | 'ALL'>('ALL');
 
   isThemeDropdownOpen = signal(false);
@@ -40,8 +40,8 @@ export class DashboardComponent {
     const theme = this.selectedTheme();
     const difficulty = this.selectedDifficulty();
 
-    if (theme !== 'ALL') {
-      result = result.filter(m => m.theme === theme);
+    if (theme !== null) {
+      result = result.filter(m => m.theme.name === theme);
     }
     if (difficulty !== 'ALL') {
       result = result.filter(m => m.difficulty === difficulty);
@@ -98,7 +98,7 @@ export class DashboardComponent {
     this.isDifficultyDropdownOpen.set(false);
   }
 
-  setTheme(theme: Theme | 'ALL'): void {
+  setTheme(theme: string | null): void {
     this.selectedTheme.set(theme);
     this.closeDropdowns();
   }
@@ -109,24 +109,22 @@ export class DashboardComponent {
   }
 
   clearFilters(): void {
-    this.selectedTheme.set('ALL');
+    this.selectedTheme.set(null);
     this.selectedDifficulty.set('ALL');
     this.closeDropdowns();
   }
 
   get hasActiveFilters(): boolean {
-    return this.selectedTheme() !== 'ALL' || this.selectedDifficulty() !== 'ALL';
+    return this.selectedTheme() !== null || this.selectedDifficulty() !== 'ALL';
   }
 
-  getThemeLabel(theme: Theme): string {
-    const labels: Record<Theme, string> = {
-      'ASTRONOMY': '🔭 Astronomy',
-      'CYBERSECURITY': '🔒 Cybersecurity',
-      'CRIMINAL': '🔍 Criminal',
-      'FINANCE': '💰 Finance',
-      'BIOLOGY': '🧬 Biology'
-    };
-    return labels[theme] || theme;
+  getThemeLabel(theme: Theme | string): string {
+    if (!theme) return '';
+    if (typeof theme === 'string') {
+      return theme.charAt(0) + theme.slice(1).toLowerCase();
+    }
+    const name = theme.name.charAt(0) + theme.name.slice(1).toLowerCase();
+    return theme.emoji ? `${theme.emoji} ${name}` : name;
   }
 
   getDifficultyLabel(difficulty: DifficultyLevel): string {
@@ -151,7 +149,7 @@ export class DashboardComponent {
 
   getThemeButtonLabel(): string {
     const theme = this.selectedTheme();
-    return theme === 'ALL' ? 'Theme' : this.getThemeLabel(theme as Theme);
+    return theme === null ? 'Theme' : theme.charAt(0) + theme.slice(1).toLowerCase();
   }
 
   getDifficultyButtonLabel(): string {

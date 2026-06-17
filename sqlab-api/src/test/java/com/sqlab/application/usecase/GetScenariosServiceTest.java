@@ -1,6 +1,9 @@
 package com.sqlab.application.usecase;
 
+import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.ProgressRepository;
 import com.sqlab.application.port.out.ScenarioRepository;
+import com.sqlab.application.port.out.UserRepository;
 import com.sqlab.domain.exception.ScenarioNotFoundException;
 import com.sqlab.domain.model.Scenario;
 import com.sqlab.domain.model.Theme;
@@ -22,17 +25,20 @@ import static org.mockito.Mockito.*;
 class GetScenariosServiceTest {
 
     @Mock private ScenarioRepository scenarioRepository;
+    @Mock private MissionRepository missionRepository;
+    @Mock private ProgressRepository progressRepository;
+    @Mock private UserRepository userRepository;
 
     private GetScenariosService service;
 
     @BeforeEach
     void setUp() {
-        service = new GetScenariosService(scenarioRepository);
+        service = new GetScenariosService(scenarioRepository, missionRepository, progressRepository, userRepository);
     }
 
     @Test
     void listAll() {
-        var scenario = new Scenario(UUID.randomUUID(), "S1", "D", Theme.ASTRONOMY, true, 1);
+        var scenario = new Scenario(UUID.randomUUID(), "S1", "D", new Theme(UUID.randomUUID(), "ASTRONOMY", null, null), true, 1);
         when(scenarioRepository.findAll()).thenReturn(List.of(scenario));
         var result = service.handle();
         assertThat(result).hasSize(1);
@@ -41,7 +47,7 @@ class GetScenariosServiceTest {
     @Test
     void findById() {
         var id = UUID.randomUUID();
-        var scenario = new Scenario(id, "S1", "D", Theme.ASTRONOMY, true, 1);
+        var scenario = new Scenario(id, "S1", "D", new Theme(UUID.randomUUID(), "ASTRONOMY", null, null), true, 1);
         when(scenarioRepository.findById(id)).thenReturn(Optional.of(scenario));
         var result = service.handle(id);
         assertThat(result.getId()).isEqualTo(id);

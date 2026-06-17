@@ -2,7 +2,6 @@ package com.sqlab.application.port.in;
 
 import com.sqlab.domain.model.DifficultyLevel;
 import com.sqlab.domain.model.Mission;
-import com.sqlab.domain.model.Theme;
 
 import java.util.List;
 import java.util.Map;
@@ -17,10 +16,10 @@ public interface ManageMissionUseCase {
             String hint,
             String ddlScript,
             String dmlScript,
-            List<String> techniques,
+            List<String> techniqueNames,
             int xpReward,
             boolean ordered,
-            Theme theme,
+            String themeName,
             DifficultyLevel difficulty,
             List<Map<String, Object>> expectedResult,
             UUID scenarioId,
@@ -35,10 +34,10 @@ public interface ManageMissionUseCase {
             String hint,
             String ddlScript,
             String dmlScript,
-            List<String> techniques,
+            List<String> techniqueNames,
             int xpReward,
             boolean ordered,
-            Theme theme,
+            String themeName,
             DifficultyLevel difficulty,
             List<Map<String, Object>> expectedResult,
             UUID scenarioId,

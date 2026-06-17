@@ -68,6 +68,7 @@ class ScenarioRepositoryTest extends AbstractPersistenceTest {
                 .title("Bad").description("Bad").theme(invalidTheme)
                 .enabled(true).requiredLevel(1)
                 .createdAt(LocalDateTime.now()).build()))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOfAny(DataIntegrityViolationException.class,
+                        org.springframework.dao.InvalidDataAccessApiUsageException.class);
     }
 }

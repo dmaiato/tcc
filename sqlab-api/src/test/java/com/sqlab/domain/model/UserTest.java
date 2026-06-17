@@ -1,22 +1,13 @@
 package com.sqlab.domain.model;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class UserTest {
-
-    @Mock
-    private PasswordEncoder passwordEncoder;
 
     private final UUID id = UUID.randomUUID();
     private final LocalDateTime now = LocalDateTime.now();
@@ -62,20 +53,6 @@ class UserTest {
     void addXpWithNegativeThrows() {
         var user = createUser();
         assertThrows(IllegalArgumentException.class, () -> user.addXp(-10));
-    }
-
-    @Test
-    void matchesPasswordDelegatesToEncoder() {
-        var user = createUser();
-        when(passwordEncoder.matches("raw123", "hash123")).thenReturn(true);
-        assertTrue(user.matchesPassword("raw123", passwordEncoder));
-    }
-
-    @Test
-    void matchesPasswordWrongReturnsFalse() {
-        var user = createUser();
-        when(passwordEncoder.matches("wrong", "hash123")).thenReturn(false);
-        assertFalse(user.matchesPassword("wrong", passwordEncoder));
     }
 
     @Test

@@ -21,11 +21,11 @@ class MissionTest {
                 .hint("Hint")
                 .ddlScript("CREATE TABLE...")
                 .dmlScript("INSERT...")
-                .techniques(List.of("SELECT"))
+                .techniques(List.of(new Technique(null, "SELECT")))
                 .xpReward(100)
                 .expectedResult(expected)
                 .ordered(ordered)
-                .theme(Theme.ASTRONOMY)
+                .theme(new Theme(UUID.randomUUID(), "ASTRONOMY", null, null))
                 .difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(null)
                 .orderIndex(null)
@@ -78,11 +78,11 @@ class MissionTest {
                 .hint("Hint")
                 .ddlScript("DDL")
                 .dmlScript("DML")
-                .techniques(List.of("SELECT", "JOIN"))
+                .techniques(List.of(new Technique(null, "SELECT"), new Technique(null, "JOIN")))
                 .xpReward(200)
                 .expectedResult(expected)
                 .ordered(true)
-                .theme(Theme.ASTRONOMY)
+                .theme(new Theme(UUID.randomUUID(), "ASTRONOMY", null, null))
                 .difficulty(DifficultyLevel.ADVANCED)
                 .scenarioId(id)
                 .orderIndex(1)
@@ -94,7 +94,7 @@ class MissionTest {
         assertEquals("Title", mission.getTitle());
         assertEquals(200, mission.getXpReward());
         assertTrue(mission.isOrdered());
-        assertEquals(Theme.ASTRONOMY, mission.getTheme());
+        assertEquals(new Theme(UUID.randomUUID(), "ASTRONOMY", null, null), mission.getTheme());
         assertEquals(DifficultyLevel.ADVANCED, mission.getDifficulty());
         assertEquals(1, mission.getOrderIndex());
         assertTrue(mission.isEnabled());

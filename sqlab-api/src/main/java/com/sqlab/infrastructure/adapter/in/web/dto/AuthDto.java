@@ -16,10 +16,6 @@ public class AuthDto {
             @NotBlank @Email String email,
             @NotBlank String password) {}
 
-    public record UserResponse(UUID id, String username, String email, int xp) {}
-
-    public record TokenResponse(String token) {}
-
     public record AuthResponseWithUser(String token, UUID id, String username, String email, String role) {
         public AuthResponseWithUser(String token) {
             this(token, null, null, null, null);

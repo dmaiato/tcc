@@ -1,6 +1,6 @@
 -- V1__init_schema.sql
 -- Schema completo normalizado (1NF, 2NF, 3NF, BCNF)
--- Junção de tabelas techniques → mission_techniques substitui TEXT[] (corrige 1NF)
+-- Junction table techniques → mission_techniques replaces TEXT[] (fixes 1NF)
 -- themes como tabela separada garante integridade referencial (corrige 2NF)
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";

@@ -4,7 +4,7 @@ import { NgIconsModule } from '@ng-icons/core';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { MissionService } from '../../core/mission.service';
 import { ScenarioService } from '../../core/scenario.service';
-import { CreateMissionRequest, UpdateMissionRequest, Theme, DifficultyLevel } from '../../core/models/mission.model';
+import { CreateMissionRequest, UpdateMissionRequest, DifficultyLevel } from '../../core/models/mission.model';
 import { ToastService } from '../../shared/toast/toast.service';
 import { CodeEditorDialogComponent } from '../../shared/code-editor-dialog/code-editor-dialog.component';
 @Component({
@@ -35,14 +35,14 @@ export class MissionFormComponent implements OnInit {
   formDmlScript = signal('');
   formXpReward = signal(100);
   formOrdered = signal(false);
-  formTheme = signal<Theme>('CRIMINAL');
+  formTheme = signal<string>('CRIMINAL');
   formDifficulty = signal<DifficultyLevel>('BEGINNER');
   formTechniques = signal<string[]>([]);
   formExpectedResult = signal('');
   formEnabled = signal<boolean | null>(null);
 
   readonly allTechniques = ['SELECT', 'WHERE', 'ORDER BY', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'GROUP BY', 'HAVING', 'COUNT', 'SUM', 'AVG', 'UPDATE', 'DELETE', 'INSERT', 'LIKE', 'IN', 'BETWEEN', 'DISTINCT', 'SUBSELECT'];
-  readonly themes: Theme[] = ['ASTRONOMY', 'CYBERSECURITY', 'CRIMINAL', 'FINANCE', 'BIOLOGY'];
+  readonly themes: string[] = ['ASTRONOMY', 'CYBERSECURITY', 'CRIMINAL', 'FINANCE', 'BIOLOGY'];
   readonly difficulties: DifficultyLevel[] = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT'];
 
   get isEditing(): boolean {
@@ -69,9 +69,9 @@ export class MissionFormComponent implements OnInit {
           this.formDmlScript.set(detail.dmlScript || '');
           this.formXpReward.set(detail.xpReward);
           this.formOrdered.set(detail.ordered);
-          this.formTheme.set(detail.theme);
+          this.formTheme.set(detail.theme.name);
           this.formDifficulty.set(detail.difficulty);
-          this.formTechniques.set([...detail.techniques]);
+          this.formTechniques.set(detail.techniques.map(t => t.name));
           this.formExpectedResult.set(detail.expectedResult ? JSON.stringify(detail.expectedResult, null, 2) : '');
           this.formEnabled.set(detail.enabled !== false);
           this.expandedSection.set(new Set(['details']));
@@ -87,7 +87,7 @@ export class MissionFormComponent implements OnInit {
       if (this.scenarioId) {
         this.scenarioService.getAdminDetail(this.scenarioId).subscribe({
           next: (detail) => {
-            this.formTheme.set(detail.theme);
+            this.formTheme.set(detail.theme.name);
           }
         });
       }

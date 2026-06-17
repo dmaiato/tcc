@@ -3,9 +3,12 @@ package com.sqlab.application.usecase;
 import com.sqlab.application.port.in.ManageScenarioUseCase;
 import com.sqlab.application.port.out.MissionRepository;
 import com.sqlab.application.port.out.ScenarioRepository;
+import com.sqlab.application.port.out.ThemeRepository;
 import com.sqlab.domain.exception.ScenarioNotFoundException;
+import com.sqlab.domain.exception.ThemeNotFoundException;
 import com.sqlab.domain.model.Mission;
 import com.sqlab.domain.model.Scenario;
+import com.sqlab.domain.model.Theme;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,20 +22,29 @@ public class ManageScenarioService implements ManageScenarioUseCase {
 
     private final ScenarioRepository scenarioRepository;
     private final MissionRepository missionRepository;
+    private final ThemeRepository themeRepository;
 
     public ManageScenarioService(ScenarioRepository scenarioRepository,
-                                  MissionRepository missionRepository) {
+                                  MissionRepository missionRepository,
+                                  ThemeRepository themeRepository) {
         this.scenarioRepository = scenarioRepository;
         this.missionRepository = missionRepository;
+        this.themeRepository = themeRepository;
+    }
+
+    private Theme resolveTheme(String name) {
+        return themeRepository.findByName(name.toUpperCase())
+                .orElseThrow(() -> new ThemeNotFoundException(name));
     }
 
     @Override
     public Scenario create(CreateScenarioCommand command) {
+        Theme theme = resolveTheme(command.themeName());
         Scenario scenario = new Scenario(
                 UUID.randomUUID(),
                 command.title(),
                 command.description(),
-                command.theme(),
+                theme,
                 command.enabled() != null ? command.enabled() : true,
                 command.requiredLevel()
         );
@@ -44,6 +56,7 @@ public class ManageScenarioService implements ManageScenarioUseCase {
         Scenario existing = scenarioRepository.findById(command.id())
                 .orElseThrow(() -> new ScenarioNotFoundException(command.id()));
 
+        Theme theme = resolveTheme(command.themeName());
         boolean enabled = command.enabled() != null ? command.enabled() : existing.isEnabled();
         boolean enabledChanged = enabled != existing.isEnabled();
 
@@ -51,7 +64,7 @@ public class ManageScenarioService implements ManageScenarioUseCase {
                 command.id(),
                 command.title(),
                 command.description(),
-                command.theme(),
+                theme,
                 enabled,
                 command.requiredLevel()
         );
@@ -119,44 +132,17 @@ public class ManageScenarioService implements ManageScenarioUseCase {
 
         for (int i = 0; i < size; i++) {
             UUID missionId = command.missionIds().get(i);
-            Mission original = findMissionById(existingMissions, missionId);
-            Mission reordered = copyWithOrderIndex(original, -(size + i + 1));
-            missionRepository.save(reordered);
+            missionRepository.setOrderIndex(missionId, -(size + i + 1));
         }
 
         for (int i = 0; i < size; i++) {
             UUID missionId = command.missionIds().get(i);
-            Mission original = findMissionById(existingMissions, missionId);
-            Mission reordered = copyWithOrderIndex(original, i + 1);
-            missionRepository.save(reordered);
+            missionRepository.setOrderIndex(missionId, i + 1);
         }
     }
 
-    private Mission findMissionById(List<Mission> missions, UUID id) {
-        return missions.stream()
-                .filter(m -> m.getId().equals(id))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Mission not found: " + id));
-    }
-
-    private Mission copyWithOrderIndex(Mission original, int orderIndex) {
-        return Mission.builder()
-                .id(original.getId())
-                .title(original.getTitle())
-                .briefing(original.getBriefing())
-                .objective(original.getObjective())
-                .hint(original.getHint())
-                .ddlScript(original.getDdlScript())
-                .dmlScript(original.getDmlScript())
-                .techniques(original.getTechniques())
-                .xpReward(original.getXpReward())
-                .expectedResult(original.getExpectedResult())
-                .ordered(original.isOrdered())
-                .theme(original.getTheme())
-                .difficulty(original.getDifficulty())
-                .scenarioId(original.getScenarioId())
-                .orderIndex(orderIndex)
-                .enabled(original.isEnabled())
-                .build();
+    @Override
+    public int countMissionsByScenarioId(UUID scenarioId) {
+        return missionRepository.countByScenarioId(scenarioId);
     }
 }

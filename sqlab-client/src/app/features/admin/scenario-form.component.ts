@@ -14,7 +14,6 @@ import { ScenarioService } from '../../core/scenario.service';
 import {
   CreateScenarioRequest,
   UpdateScenarioRequest,
-  Theme,
   ScenarioMissionSummary,
   DifficultyLevel,
 } from '../../core/models/scenario.model';
@@ -48,7 +47,7 @@ export class ScenarioFormComponent implements OnInit {
 
   formTitle = signal('');
   formDescription = signal('');
-  formTheme = signal<Theme>('CRIMINAL');
+  formTheme = signal<string>('CRIMINAL');
   formEnabled = signal<boolean | null>(null);
   formRequiredLevel = signal(0);
 
@@ -56,7 +55,7 @@ export class ScenarioFormComponent implements OnInit {
   originalOrder = signal<string[]>([]);
   orderChanged = signal(false);
 
-  readonly themes: Theme[] = ['ASTRONOMY', 'CYBERSECURITY', 'CRIMINAL', 'FINANCE', 'BIOLOGY'];
+  readonly themes: string[] = ['ASTRONOMY', 'CYBERSECURITY', 'CRIMINAL', 'FINANCE', 'BIOLOGY'];
 
   readonly difficultyColors: Record<DifficultyLevel, string> = {
     BEGINNER: '#22c55e',
@@ -117,7 +116,7 @@ export class ScenarioFormComponent implements OnInit {
         next: (detail) => {
           this.formTitle.set(detail.title);
           this.formDescription.set(detail.description);
-          this.formTheme.set(detail.theme);
+          this.formTheme.set(detail.theme.name);
           this.formEnabled.set(detail.enabled);
           this.formRequiredLevel.set(detail.requiredLevel);
           this.missions.set(detail.missions);

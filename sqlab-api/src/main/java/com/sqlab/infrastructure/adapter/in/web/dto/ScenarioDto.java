@@ -1,7 +1,6 @@
 package com.sqlab.infrastructure.adapter.in.web.dto;
 
 import com.sqlab.domain.model.DifficultyLevel;
-import com.sqlab.domain.model.Theme;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -14,15 +13,15 @@ public class ScenarioDto {
     public record ScenarioSummary(
             UUID id,
             String title,
-            Theme theme,
             int totalMissions,
             int completedMissions,
-            int requiredLevel) {}
+            int requiredLevel,
+            ThemeDto.ThemeResponse theme) {}
 
     public record ScenarioMissionItem(
             UUID id,
             String title,
-            List<String> techniques,
+            List<TechniqueDto.TechniqueResponse> techniques,
             int xpReward,
             DifficultyLevel difficulty,
             String status,
@@ -32,22 +31,22 @@ public class ScenarioDto {
             UUID id,
             String title,
             String description,
-            Theme theme,
             List<ScenarioMissionItem> missions,
             Map<String, Integer> userProgress,
-            int requiredLevel) {}
+            int requiredLevel,
+            ThemeDto.ThemeResponse theme) {}
 
     public record CreateScenarioRequest(
             @NotBlank String title,
             @NotBlank String description,
-            @NotNull Theme theme,
+            @NotBlank String theme,
             @NotNull Boolean enabled,
             int requiredLevel) {}
 
     public record UpdateScenarioRequest(
             @NotBlank String title,
             @NotBlank String description,
-            @NotNull Theme theme,
+            @NotBlank String theme,
             @NotNull Boolean enabled,
             int requiredLevel) {}
 
@@ -55,10 +54,10 @@ public class ScenarioDto {
             UUID id,
             String title,
             String description,
-            Theme theme,
             int totalMissions,
             boolean enabled,
-            int requiredLevel) {}
+            int requiredLevel,
+            ThemeDto.ThemeResponse theme) {}
 
     public record ScenarioMissionSummary(
             UUID id,
@@ -71,11 +70,11 @@ public class ScenarioDto {
             UUID id,
             String title,
             String description,
-            Theme theme,
             boolean enabled,
             int totalMissions,
             List<ScenarioMissionSummary> missions,
-            int requiredLevel) {}
+            int requiredLevel,
+            ThemeDto.ThemeResponse theme) {}
 
     public record ReorderMissionsRequest(
             @NotNull List<@NotNull UUID> missionIds) {}

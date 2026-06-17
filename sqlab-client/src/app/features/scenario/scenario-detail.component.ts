@@ -110,7 +110,7 @@ import { ScenarioDetail, ScenarioMissionItem, Theme, DifficultyLevel } from '../
                       <span class="font-mono text-[10px] text-muted-foreground">{{ mission.xpReward }} XP</span>
                       @if (mission.techniques.length > 0) {
                         <span class="font-mono text-[10px] text-muted-foreground">·</span>
-                        <span class="font-mono text-[10px] text-muted-foreground truncate">{{ mission.techniques.join(', ') }}</span>
+                        <span class="font-mono text-[10px] text-muted-foreground truncate">{{ mission.techniques.map(t => t.name).join(', ') }}</span>
                       }
                     </div>
                   </div>
@@ -174,11 +174,9 @@ export class ScenarioDetailComponent implements OnInit {
   }
 
   getThemeLabel(theme: Theme): string {
-    const labels: Record<Theme, string> = {
-      'ASTRONOMY': 'Astronomy', 'CYBERSECURITY': 'Cybersecurity',
-      'CRIMINAL': 'Criminal', 'FINANCE': 'Finance', 'BIOLOGY': 'Biology'
-    };
-    return labels[theme] || theme;
+    if (!theme) return '';
+    const name = theme.name.charAt(0) + theme.name.slice(1).toLowerCase();
+    return theme.emoji ? `${theme.emoji} ${name}` : name;
   }
 
   getDifficultyLabel(difficulty: DifficultyLevel): string {

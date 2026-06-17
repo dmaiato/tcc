@@ -3,6 +3,7 @@ package com.sqlab.application.usecase;
 import com.sqlab.application.port.in.ManageScenarioUseCase;
 import com.sqlab.application.port.out.MissionRepository;
 import com.sqlab.application.port.out.ScenarioRepository;
+import com.sqlab.application.port.out.ThemeRepository;
 import com.sqlab.domain.exception.ScenarioNotFoundException;
 import com.sqlab.domain.model.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,49 +26,54 @@ class ManageScenarioServiceTest {
 
     @Mock private ScenarioRepository scenarioRepository;
     @Mock private MissionRepository missionRepository;
+    @Mock private ThemeRepository themeRepository;
 
     private ManageScenarioService service;
     private final UUID scenarioId = UUID.randomUUID();
+    private final Theme astronomyTheme = new Theme(UUID.randomUUID(), "ASTRONOMY", null, null);
+    private final Theme cybersecurityTheme = new Theme(UUID.randomUUID(), "CYBERSECURITY", null, null);
 
     @BeforeEach
     void setUp() {
-        service = new ManageScenarioService(scenarioRepository, missionRepository);
+        service = new ManageScenarioService(scenarioRepository, missionRepository, themeRepository);
+        lenient().when(themeRepository.findByName("ASTRONOMY")).thenReturn(Optional.of(astronomyTheme));
+        lenient().when(themeRepository.findByName("CYBERSECURITY")).thenReturn(Optional.of(cybersecurityTheme));
     }
 
     @Test
     void createScenario() {
         when(scenarioRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-        var cmd = new ManageScenarioUseCase.CreateScenarioCommand("S1", "Desc", Theme.ASTRONOMY, true, 1);
+        var cmd = new ManageScenarioUseCase.CreateScenarioCommand("S1", "Desc", "ASTRONOMY", true, 1);
         var result = service.create(cmd);
         assertThat(result.getTitle()).isEqualTo("S1");
-        assertThat(result.getTheme()).isEqualTo(Theme.ASTRONOMY);
+        assertThat(result.getTheme()).isEqualTo(astronomyTheme);
         assertThat(result.isEnabled()).isTrue();
     }
 
     @Test
     void updateScenario() {
-        var existing = new Scenario(scenarioId, "Old", "Desc", Theme.ASTRONOMY, true, 1);
+        var existing = new Scenario(scenarioId, "Old", "Desc", astronomyTheme, true, 1);
         when(scenarioRepository.findById(scenarioId)).thenReturn(Optional.of(existing));
         when(scenarioRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var cmd = new ManageScenarioUseCase.UpdateScenarioCommand(scenarioId, "New", "NewDesc", Theme.CYBERSECURITY, false, 2);
+        var cmd = new ManageScenarioUseCase.UpdateScenarioCommand(scenarioId, "New", "NewDesc", "CYBERSECURITY", false, 2);
         var result = service.update(cmd);
         assertThat(result.getTitle()).isEqualTo("New");
-        assertThat(result.getTheme()).isEqualTo(Theme.CYBERSECURITY);
+        assertThat(result.getTheme()).isEqualTo(cybersecurityTheme);
         assertThat(result.isEnabled()).isFalse();
         verify(missionRepository).setEnabledByScenarioId(scenarioId, false);
     }
 
     @Test
     void updateThrowsWhenNotFound() {
-        var cmd = new ManageScenarioUseCase.UpdateScenarioCommand(scenarioId, "T", "D", Theme.ASTRONOMY, true, 1);
+        var cmd = new ManageScenarioUseCase.UpdateScenarioCommand(scenarioId, "T", "D", "ASTRONOMY", true, 1);
         when(scenarioRepository.findById(scenarioId)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.update(cmd)).isInstanceOf(ScenarioNotFoundException.class);
     }
 
     @Test
     void deleteScenario() {
-        var existing = new Scenario(scenarioId, "T", "D", Theme.ASTRONOMY, true, 1);
+        var existing = new Scenario(scenarioId, "T", "D", astronomyTheme, true, 1);
         when(scenarioRepository.findById(scenarioId)).thenReturn(Optional.of(existing));
         service.delete(scenarioId);
         verify(scenarioRepository).deleteById(scenarioId);
@@ -85,23 +91,25 @@ class ManageScenarioServiceTest {
         var m1 = Mission.builder().id(UUID.randomUUID()).title("M1").briefing("B").objective("O")
                 .ddlScript("DDL").techniques(List.of()).xpReward(10)
                 .expectedResult(new ExpectedTuple(List.of(Map.of("x", 1))))
-                .ordered(false).theme(Theme.ASTRONOMY).difficulty(DifficultyLevel.BEGINNER)
+                .ordered(false).theme(astronomyTheme).difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(scenarioId).orderIndex(1).enabled(true).build();
         var m2 = Mission.builder().id(UUID.randomUUID()).title("M2").briefing("B").objective("O")
                 .ddlScript("DDL").techniques(List.of()).xpReward(10)
                 .expectedResult(new ExpectedTuple(List.of(Map.of("x", 1))))
-                .ordered(false).theme(Theme.ASTRONOMY).difficulty(DifficultyLevel.BEGINNER)
+                .ordered(false).theme(astronomyTheme).difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(scenarioId).orderIndex(2).enabled(true).build();
 
         when(scenarioRepository.findById(scenarioId)).thenReturn(Optional.of(
-                new Scenario(scenarioId, "S", "D", Theme.ASTRONOMY, true, 0)));
+                new Scenario(scenarioId, "S", "D", astronomyTheme, true, 0)));
         when(missionRepository.findByScenarioIdOrderByOrderIndex(scenarioId)).thenReturn(List.of(m1, m2));
-        when(missionRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         var cmd = new ManageScenarioUseCase.ReorderMissionsCommand(scenarioId, List.of(m2.getId(), m1.getId()));
         service.reorderMissions(cmd);
 
-        verify(missionRepository, times(4)).save(any());
+        verify(missionRepository).setOrderIndex(m2.getId(), -3);
+        verify(missionRepository).setOrderIndex(m1.getId(), -4);
+        verify(missionRepository).setOrderIndex(m2.getId(), 1);
+        verify(missionRepository).setOrderIndex(m1.getId(), 2);
     }
 
     @Test
@@ -116,14 +124,20 @@ class ManageScenarioServiceTest {
         var m1 = Mission.builder().id(UUID.randomUUID()).title("M1").briefing("B").objective("O")
                 .ddlScript("DDL").techniques(List.of()).xpReward(10)
                 .expectedResult(new ExpectedTuple(List.of(Map.of("x", 1))))
-                .ordered(false).theme(Theme.ASTRONOMY).difficulty(DifficultyLevel.BEGINNER)
+                .ordered(false).theme(astronomyTheme).difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(scenarioId).orderIndex(1).enabled(true).build();
         when(scenarioRepository.findById(scenarioId)).thenReturn(Optional.of(
-                new Scenario(scenarioId, "S", "D", Theme.ASTRONOMY, true, 0)));
+                new Scenario(scenarioId, "S", "D", astronomyTheme, true, 0)));
         when(missionRepository.findByScenarioIdOrderByOrderIndex(scenarioId)).thenReturn(List.of(m1));
         var cmd = new ManageScenarioUseCase.ReorderMissionsCommand(scenarioId, List.of());
         assertThatThrownBy(() -> service.reorderMissions(cmd))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("count mismatch");
+    }
+
+    @Test
+    void countMissionsByScenarioId() {
+        when(missionRepository.countByScenarioId(scenarioId)).thenReturn(5);
+        assertThat(service.countMissionsByScenarioId(scenarioId)).isEqualTo(5);
     }
 }

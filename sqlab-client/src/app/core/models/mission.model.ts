@@ -1,4 +1,14 @@
-export type Theme = 'ASTRONOMY' | 'CYBERSECURITY' | 'CRIMINAL' | 'FINANCE' | 'BIOLOGY';
+export interface Theme {
+  id: string;
+  name: string;
+  description?: string;
+  emoji?: string;
+}
+
+export interface Technique {
+  id: string;
+  name: string;
+}
 
 export type DifficultyLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT';
 
@@ -10,7 +20,7 @@ export interface Mission {
   hint?: string;
   ddlScript: string;
   dmlScript: string;
-  techniques: string[];
+  techniques: Technique[];
   xpReward: number;
   ordered: boolean;
   theme: Theme;
@@ -27,7 +37,7 @@ export interface Mission {
 export interface MissionSummary {
   id: string;
   title: string;
-  techniques: string[];
+  techniques: Technique[];
   xpReward: number;
   ordered: boolean;
   theme: Theme;
@@ -67,7 +77,7 @@ export interface ScenarioDetail {
 export interface ScenarioMissionItem {
   id: string;
   title: string;
-  techniques: string[];
+  techniques: Technique[];
   xpReward: number;
   requiredLevel: number;
   difficulty: DifficultyLevel;
@@ -93,7 +103,7 @@ export interface CreateMissionRequest {
   techniques: string[];
   xpReward: number;
   ordered: boolean;
-  theme: Theme;
+  theme: string;
   difficulty: DifficultyLevel;
   expectedResult: Record<string, unknown>[];
   scenarioId?: string;
@@ -111,7 +121,7 @@ export interface UpdateMissionRequest {
   techniques: string[];
   xpReward: number;
   ordered: boolean;
-  theme: Theme;
+  theme: string;
   difficulty: DifficultyLevel;
   expectedResult: Record<string, unknown>[];
   scenarioId?: string;

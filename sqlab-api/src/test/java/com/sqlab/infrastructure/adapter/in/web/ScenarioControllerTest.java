@@ -1,12 +1,9 @@
 package com.sqlab.infrastructure.adapter.in.web;
 
 import tools.jackson.databind.ObjectMapper;
-import com.sqlab.application.port.in.GetMissionsUseCase;
+import com.sqlab.application.port.in.GetAdminScenariosUseCase;
 import com.sqlab.application.port.in.GetScenariosUseCase;
 import com.sqlab.application.port.in.ManageScenarioUseCase;
-import com.sqlab.application.port.out.MissionRepository;
-import com.sqlab.application.port.out.ProgressRepository;
-import com.sqlab.application.port.out.UserRepository;
 import com.sqlab.domain.exception.ScenarioNotFoundException;
 import com.sqlab.domain.model.*;
 import com.sqlab.infrastructure.adapter.in.web.dto.ScenarioDto;
@@ -21,7 +18,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -50,34 +46,15 @@ class ScenarioControllerTest {
     private ManageScenarioUseCase manageScenarioUseCase;
 
     @MockitoBean
-    private MissionRepository missionRepository;
+    private GetAdminScenariosUseCase getAdminScenariosUseCase;
 
-    @MockitoBean
-    private ProgressRepository progressRepository;
-
-    @MockitoBean
-    private UserRepository userRepository;
-
-    private Scenario createScenario(UUID id, String title) {
-        return new Scenario(id, title, "Description", Theme.ASTRONOMY, true, 1);
-    }
+    private final Theme astronomyTheme = new Theme(UUID.randomUUID(), "ASTRONOMY", null, null);
 
     @Test
     void listAll_shouldReturnScenarios() throws Exception {
         var scenarioId = UUID.randomUUID();
-        var scenario = createScenario(scenarioId, "Scenario 1");
-        var mission = Mission.builder()
-                .id(UUID.randomUUID()).title("M1").briefing("B").objective("O")
-                .hint(null).ddlScript("DDL").dmlScript(null)
-                .techniques(List.of()).xpReward(100)
-                .expectedResult(new ExpectedTuple(List.of()))
-                .ordered(true).theme(Theme.ASTRONOMY).difficulty(DifficultyLevel.BEGINNER)
-                .scenarioId(scenarioId).orderIndex(1).enabled(true).requiredLevel(1)
-                .build();
-
-        when(getScenariosUseCase.handleEnabled()).thenReturn(List.of(scenario));
-        when(progressRepository.findCompletedMissionIdsByUserId(any())).thenReturn(Set.of());
-        when(missionRepository.findByScenarioIdInOrderByOrderIndex(any())).thenReturn(List.of(mission));
+        var summary = new GetScenariosUseCase.ScenarioSummaryResult(scenarioId, "Scenario 1", 1, 0, 1, astronomyTheme);
+        when(getScenariosUseCase.handleEnabledWithProgress(any())).thenReturn(List.of(summary));
 
         mockMvc.perform(get("/api/scenarios").with(authentication(new UsernamePasswordAuthenticationToken(USER_ID, null))))
                 .andExpect(status().isOk())
@@ -88,19 +65,7 @@ class ScenarioControllerTest {
 
     @Test
     void listAll_shouldFilterOutScenariosWithDisabledMissions() throws Exception {
-        var scenarioId = UUID.randomUUID();
-        var scenario = createScenario(scenarioId, "Disabled");
-        var disabledMission = Mission.builder()
-                .id(UUID.randomUUID()).title("M1").briefing("B").objective("O")
-                .hint(null).ddlScript("DDL").dmlScript(null)
-                .techniques(List.of()).xpReward(100)
-                .expectedResult(new ExpectedTuple(List.of()))
-                .ordered(true).theme(Theme.ASTRONOMY).difficulty(DifficultyLevel.BEGINNER)
-                .scenarioId(scenarioId).orderIndex(1).enabled(false).requiredLevel(1)
-                .build();
-
-        when(getScenariosUseCase.handleEnabled()).thenReturn(List.of(scenario));
-        when(missionRepository.findByScenarioIdInOrderByOrderIndex(any())).thenReturn(List.of(disabledMission));
+        when(getScenariosUseCase.handleEnabledWithProgress(any())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/scenarios").with(authentication(new UsernamePasswordAuthenticationToken(USER_ID, null))))
                 .andExpect(status().isOk())
@@ -110,20 +75,19 @@ class ScenarioControllerTest {
     @Test
     void findById_shouldReturnScenarioDetail() throws Exception {
         var scenarioId = UUID.randomUUID();
-        var scenario = createScenario(scenarioId, "Detail");
+        var userUuid = UUID.fromString(USER_ID);
+        var scenario = new Scenario(scenarioId, "Detail", "Description", astronomyTheme, true, 1);
         var mission = Mission.builder()
                 .id(UUID.randomUUID()).title("M1").briefing("B").objective("O")
                 .hint(null).ddlScript("DDL").dmlScript(null)
-                .techniques(List.of("SELECT")).xpReward(100)
+                .techniques(List.of(new Technique(null, "SELECT"))).xpReward(100)
                 .expectedResult(new ExpectedTuple(List.of()))
-                .ordered(true).theme(Theme.ASTRONOMY).difficulty(DifficultyLevel.BEGINNER)
+                .ordered(true).theme(astronomyTheme).difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(scenarioId).orderIndex(1).enabled(true).requiredLevel(1)
                 .build();
 
-        when(getScenariosUseCase.handle(scenarioId)).thenReturn(scenario);
-        when(progressRepository.findCompletedMissionIdsByUserId(any())).thenReturn(Set.of());
-        when(missionRepository.findByScenarioIdOrderByOrderIndex(scenarioId)).thenReturn(List.of(mission));
-        when(userRepository.findById(any())).thenReturn(Optional.empty());
+        var detail = new GetScenariosUseCase.ScenarioDetailResult(scenario, List.of(new GetScenariosUseCase.MissionStatus(mission, "AVAILABLE")), 0, 1);
+        when(getScenariosUseCase.handleDetail(scenarioId, userUuid)).thenReturn(detail);
 
         mockMvc.perform(get("/api/scenarios/{id}", scenarioId).with(authentication(new UsernamePasswordAuthenticationToken(USER_ID, null))))
                 .andExpect(status().isOk())
@@ -135,7 +99,8 @@ class ScenarioControllerTest {
     @Test
     void findById_shouldThrow404WhenNotFound() throws Exception {
         var scenarioId = UUID.randomUUID();
-        when(getScenariosUseCase.handle(scenarioId)).thenThrow(new ScenarioNotFoundException(scenarioId));
+        var userUuid = UUID.fromString(USER_ID);
+        when(getScenariosUseCase.handleDetail(scenarioId, userUuid)).thenThrow(new ScenarioNotFoundException(scenarioId));
 
         mockMvc.perform(get("/api/scenarios/{id}", scenarioId).with(authentication(new UsernamePasswordAuthenticationToken(USER_ID, null))))
                 .andExpect(status().isNotFound());
@@ -144,21 +109,20 @@ class ScenarioControllerTest {
     @Test
     void findById_shouldMarkMissionAsCompleted() throws Exception {
         var scenarioId = UUID.randomUUID();
+        var userUuid = UUID.fromString(USER_ID);
         var missionId = UUID.randomUUID();
-        var scenario = createScenario(scenarioId, "Completed Scenario");
+        var scenario = new Scenario(scenarioId, "Completed Scenario", "Description", astronomyTheme, true, 1);
         var mission = Mission.builder()
                 .id(missionId).title("M1").briefing("B").objective("O")
                 .hint(null).ddlScript("DDL").dmlScript(null)
                 .techniques(List.of()).xpReward(100)
                 .expectedResult(new ExpectedTuple(List.of()))
-                .ordered(true).theme(Theme.ASTRONOMY).difficulty(DifficultyLevel.BEGINNER)
+                .ordered(true).theme(astronomyTheme).difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(scenarioId).orderIndex(1).enabled(true).requiredLevel(1)
                 .build();
 
-        when(getScenariosUseCase.handle(scenarioId)).thenReturn(scenario);
-        when(progressRepository.findCompletedMissionIdsByUserId(any())).thenReturn(Set.of(missionId));
-        when(missionRepository.findByScenarioIdOrderByOrderIndex(scenarioId)).thenReturn(List.of(mission));
-        when(userRepository.findById(any())).thenReturn(Optional.empty());
+        var detail = new GetScenariosUseCase.ScenarioDetailResult(scenario, List.of(new GetScenariosUseCase.MissionStatus(mission, "COMPLETED")), 1, 1);
+        when(getScenariosUseCase.handleDetail(scenarioId, userUuid)).thenReturn(detail);
 
         mockMvc.perform(get("/api/scenarios/{id}", scenarioId).with(authentication(new UsernamePasswordAuthenticationToken(USER_ID, null))))
                 .andExpect(status().isOk())
@@ -168,31 +132,31 @@ class ScenarioControllerTest {
 
     @Test
     void listAllAdmin_shouldReturnAllScenarios() throws Exception {
-        var scenario = createScenario(UUID.randomUUID(), "Admin View");
-        when(getScenariosUseCase.handle()).thenReturn(List.of(scenario));
-        when(missionRepository.countByScenarioId(any())).thenReturn(3);
+        var scenario = new Scenario(UUID.randomUUID(), "Admin View", "Desc", astronomyTheme, true, 1);
+        var result = new GetAdminScenariosUseCase.ScenarioListResult(scenario, 0);
+        when(getAdminScenariosUseCase.listAll()).thenReturn(List.of(result));
 
         mockMvc.perform(get("/api/admin/scenarios").with(user(USER_ID)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].title").value("Admin View"))
-                .andExpect(jsonPath("$[0].totalMissions").value(3));
+                .andExpect(jsonPath("$[0].totalMissions").value(0));
     }
 
     @Test
     void findByIdAdmin_shouldReturnAdminDetail() throws Exception {
         var scenarioId = UUID.randomUUID();
-        var scenario = createScenario(scenarioId, "Admin Detail");
+        var scenario = new Scenario(scenarioId, "Admin Detail", "Desc", astronomyTheme, true, 1);
         var mission = Mission.builder()
                 .id(UUID.randomUUID()).title("M1").briefing("B").objective("O")
                 .hint(null).ddlScript("DDL").dmlScript(null)
                 .techniques(List.of()).xpReward(100)
                 .expectedResult(new ExpectedTuple(List.of()))
-                .ordered(true).theme(Theme.ASTRONOMY).difficulty(DifficultyLevel.BEGINNER)
+                .ordered(true).theme(astronomyTheme).difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(scenarioId).orderIndex(1).enabled(true).requiredLevel(1)
                 .build();
 
-        when(getScenariosUseCase.handle(scenarioId)).thenReturn(scenario);
-        when(missionRepository.findByScenarioIdOrderByOrderIndex(scenarioId)).thenReturn(List.of(mission));
+        var result = new GetAdminScenariosUseCase.ScenarioDetailResult(scenario, List.of(mission));
+        when(getAdminScenariosUseCase.findById(scenarioId)).thenReturn(result);
 
         mockMvc.perform(get("/api/admin/scenarios/{id}", scenarioId).with(user(USER_ID)))
                 .andExpect(status().isOk())
@@ -203,10 +167,10 @@ class ScenarioControllerTest {
     @Test
     void create_shouldReturnCreatedScenario() throws Exception {
         var scenarioId = UUID.randomUUID();
-        var scenario = createScenario(scenarioId, "New Scenario");
+        var scenario = new Scenario(scenarioId, "New Scenario", "Desc", astronomyTheme, true, 1);
         when(manageScenarioUseCase.create(any())).thenReturn(scenario);
 
-        var req = new ScenarioDto.CreateScenarioRequest("New Scenario", "Desc", Theme.ASTRONOMY, true, 1);
+        var req = new ScenarioDto.CreateScenarioRequest("New Scenario", "Desc", "ASTRONOMY", true, 1);
 
         mockMvc.perform(post("/api/admin/scenarios")
                         .with(user(USER_ID))
@@ -233,11 +197,11 @@ class ScenarioControllerTest {
     @Test
     void update_shouldReturnUpdatedScenario() throws Exception {
         var scenarioId = UUID.randomUUID();
-        var scenario = createScenario(scenarioId, "Updated");
+        var scenario = new Scenario(scenarioId, "Updated", "New Desc", astronomyTheme, true, 2);
         when(manageScenarioUseCase.update(any())).thenReturn(scenario);
-        when(missionRepository.countByScenarioId(scenarioId)).thenReturn(5);
+        when(manageScenarioUseCase.countMissionsByScenarioId(scenarioId)).thenReturn(5);
 
-        var req = new ScenarioDto.UpdateScenarioRequest("Updated", "New Desc", Theme.BIOLOGY, true, 2);
+        var req = new ScenarioDto.UpdateScenarioRequest("Updated", "New Desc", "BIOLOGY", true, 2);
 
         mockMvc.perform(put("/api/admin/scenarios/{id}", scenarioId)
                         .with(user(USER_ID))

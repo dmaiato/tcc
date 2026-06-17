@@ -52,10 +52,10 @@ class AdminValidateMissionIntegrationTest {
                 .objective("Objective")
                 .ddlScript("CREATE TABLE t (name TEXT)")
                 .dmlScript("INSERT INTO t VALUES ('Alice')")
-                .techniques(List.of("SELECT"))
+                .techniques(List.of(new Technique(null, "SELECT")))
                 .xpReward(100)
                 .expectedResult(expected)
-                .theme(Theme.CRIMINAL)
+                .theme(new Theme(UUID.randomUUID(), "CRIMINAL", null, null))
                 .difficulty(DifficultyLevel.BEGINNER)
                 .build();
     }
