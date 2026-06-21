@@ -1,13 +1,14 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { NgIconsModule } from '@ng-icons/core';
 import { ProfileService, ProfileData } from '../../core/profile.service';
 import { MissionProgress } from '../../core/models/mission.model';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, NgIconsModule],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css'
 })

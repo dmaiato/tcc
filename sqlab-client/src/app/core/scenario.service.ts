@@ -9,7 +9,7 @@ import {
   CreateScenarioRequest,
   UpdateScenarioRequest,
   ReorderMissionsRequest
-} from './models/scenario.model';
+} from './models/mission.model';
 
 @Injectable({
   providedIn: 'root'
@@ -27,10 +27,6 @@ export class ScenarioService {
 
   getAllAdmin(): Observable<ScenarioResponse[]> {
     return this.api.get<ScenarioResponse[]>('/admin/scenarios');
-  }
-
-  getByIdAdmin(id: string): Observable<ScenarioAdminDetail> {
-    return this.api.get<ScenarioAdminDetail>(`/admin/scenarios/${id}`);
   }
 
   getAdminDetail(id: string): Observable<ScenarioAdminDetail> {

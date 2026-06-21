@@ -7,14 +7,14 @@
         class="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group"
       >
         <div
-          class="transition-transform duration-200"
+          class="transition-transform duration-200 flex items-center justify-center"
           [class.rotate-90]="isExpanded(table.name)"
         >
           <ng-icon name="lucideChevronRight" class="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
         </div>
         <ng-icon name="lucideTable2" class="w-4 h-4 text-primary" />
-        <span class="font-mono text-sm font-medium text-primary">{{ table.name }}</span>
-        <span class="font-mono text-[10px] text-muted-foreground ml-auto">
+        <span class="font-mono text-[12px] font-medium text-primary">{{ table.name }}</span>
+        <span class="font-mono text-[12px] text-muted-foreground ml-auto">
           {{ table.columns.length }} cols · {{ getRowCount(table) }} rows
         </span>
       </button>
@@ -24,11 +24,11 @@
         <div class="overflow-hidden">
           <!-- Columns block -->
           <div class="px-4 pb-2 border-t border-border/50">
-            <div class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground py-2">Columns</div>
-            <div class="grid gap-1">
+            <div class="font-mono text-[11px] uppercase tracking-wider text-muted-foreground py-2">Columns</div>
+            <div class="grid gap-2">
               @for (col of table.columns; track col.name) {
-                <div class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted/30">
-                  <span class="text-muted-foreground">
+                <div class="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/30">
+                  <span class="text-muted-foreground flex items-center justify-center">
                     @if (getTypeIcon(col) === 'key') {
                       <ng-icon name="lucideKey" class="w-3 h-3" />
                     } @else if (getTypeIcon(col) === 'hash') {
@@ -48,7 +48,7 @@
                     }
                   </span>
                   <span class="font-mono text-xs font-medium">{{ col.name }}</span>
-                  <span class="font-mono text-[10px] text-muted-foreground ml-auto px-1.5 py-0.5 rounded bg-muted">
+                  <span class="font-mono text-[11px] text-muted-foreground ml-auto px-1.5 py-0.5 rounded bg-muted">
                     {{ col.type }}
                   </span>
                 </div>
@@ -59,7 +59,7 @@
           <!-- Sample data table -->
           @if (table.sampleData && table.sampleData.length > 0) {
             <div class="px-4 pb-3 border-t border-border/50">
-              <div class="font-mono text-[10px] uppercase tracking-wider text-muted-foreground py-2">Sample Data</div>
+              <div class="font-mono text-[11px] uppercase tracking-wider text-muted-foreground py-2">Sample Data</div>
               <div class="rounded-md border border-border overflow-x-auto">
                 <table class="w-full font-mono text-xs">
                   <thead>

@@ -3,7 +3,9 @@ import { CommonModule } from '@angular/common';
 import { NgIconsModule } from '@ng-icons/core';
 import { Router, RouterLink } from '@angular/router';
 import { ScenarioService } from '../../core/scenario.service';
-import { ScenarioResponse, ScenarioAdminDetail, Theme, DifficultyLevel } from '../../core/models/scenario.model';
+import { DifficultyBadgeComponent } from '../../shared/difficulty-badge/difficulty-badge.component';
+import { ThemeBadgeComponent } from '../../shared/theme-badge/theme-badge.component';
+import { ScenarioResponse, ScenarioAdminDetail, Theme, DifficultyLevel } from '../../core/models/mission.model';
 import { ToastService } from '../../shared/toast/toast.service';
 
 interface ThemeStyle {
@@ -16,9 +18,8 @@ interface ThemeStyle {
 @Component({
   selector: 'app-admin-scenario-list',
   standalone: true,
-  imports: [CommonModule, NgIconsModule, RouterLink],
-  templateUrl: './admin-scenario-list.component.html',
-  styleUrl: './admin-scenario-list.component.css'
+  imports: [CommonModule, NgIconsModule, RouterLink, DifficultyBadgeComponent, ThemeBadgeComponent],
+  templateUrl: './admin-scenario-list.component.html'
 })
 export class AdminScenarioListComponent {
   private readonly scenarioService = inject(ScenarioService);
@@ -113,13 +114,4 @@ export class AdminScenarioListComponent {
     });
   }
 
-  getDifficultyColor(diff: DifficultyLevel): string {
-    switch (diff) {
-      case 'BEGINNER': return 'text-primary bg-primary/10 border-primary/20';
-      case 'INTERMEDIATE': return 'text-accent bg-accent/10 border-accent/20';
-      case 'ADVANCED': return 'text-destructive bg-destructive/10 border-destructive/20';
-      case 'EXPERT': return 'text-destructive bg-destructive/20 border-destructive/30';
-      default: return 'text-muted-foreground bg-muted/10 border-border/20';
-    }
-  }
 }

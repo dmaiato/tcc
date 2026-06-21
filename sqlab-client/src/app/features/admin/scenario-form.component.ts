@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, computed } from '@angular/core';
+import { Component, inject, signal, OnInit, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgIconsModule } from '@ng-icons/core';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
@@ -16,7 +16,8 @@ import {
   UpdateScenarioRequest,
   ScenarioMissionSummary,
   DifficultyLevel,
-} from '../../core/models/scenario.model';
+} from '../../core/models/mission.model';
+import { DifficultyBadgeComponent } from '../../shared/difficulty-badge/difficulty-badge.component';
 import { ToastService } from '../../shared/toast/toast.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 
@@ -29,9 +30,10 @@ interface DifficultyStat {
 @Component({
   selector: 'app-scenario-form',
   standalone: true,
-  imports: [CommonModule, NgIconsModule, CdkDropList, CdkDrag, CdkDropListGroup, RouterLink, ConfirmDialogComponent],
+  imports: [CommonModule, NgIconsModule, CdkDropList, CdkDrag, CdkDropListGroup, RouterLink, ConfirmDialogComponent, DifficultyBadgeComponent],
   templateUrl: './scenario-form.component.html',
-  styleUrl: './scenario-form.component.css'
+  styleUrl: './scenario-form.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ScenarioFormComponent implements OnInit {
   private readonly scenarioService = inject(ScenarioService);
@@ -64,20 +66,6 @@ export class ScenarioFormComponent implements OnInit {
     EXPERT: '#dc2626',
   };
 
-  readonly difficultyColorClasses: Record<DifficultyLevel, string> = {
-    BEGINNER: 'text-green-500 bg-green-500/10 border-green-500/20',
-    INTERMEDIATE: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
-    ADVANCED: 'text-red-500 bg-red-500/10 border-red-500/20',
-    EXPERT: 'text-red-600 bg-red-600/10 border-red-600/20',
-  };
-
-  readonly difficultyLabels: Record<DifficultyLevel, string> = {
-    BEGINNER: 'Beginner',
-    INTERMEDIATE: 'Intermediate',
-    ADVANCED: 'Advanced',
-    EXPERT: 'Expert',
-  };
-
   readonly difficultyShort: Record<DifficultyLevel, string> = {
     BEGINNER: 'B',
     INTERMEDIATE: 'I',
@@ -95,17 +83,9 @@ export class ScenarioFormComponent implements OnInit {
       .map(d => ({ difficulty: d, count: map.get(d) ?? 0, color: this.difficultyColors[d] }));
   });
 
-  get totalMissions(): number {
-    return this.missions().length;
-  }
-
-  get isEditing(): boolean {
-    return this.editId !== null;
-  }
-
-  get formTitleText(): string {
-    return this.isEditing ? 'Update Scenario' : 'Create New Scenario';
-  }
+  readonly totalMissions = computed(() => this.missions().length);
+  readonly isEditing = computed(() => this.editId !== null);
+  readonly formTitleText = computed(() => this.isEditing() ? 'Update Scenario' : 'Create New Scenario');
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -198,7 +178,7 @@ export class ScenarioFormComponent implements OnInit {
     this.submitting.set(true);
 
     const saveMetadata = () => {
-      if (this.isEditing) {
+      if (this.isEditing()) {
         const data: UpdateScenarioRequest = {
           title: this.formTitle().trim(),
           description: this.formDescription().trim(),
@@ -221,9 +201,9 @@ export class ScenarioFormComponent implements OnInit {
 
     saveMetadata().subscribe({
       next: (result) => {
-        const scenarioId = this.isEditing ? this.editId! : result.id;
+        const scenarioId = this.isEditing() ? this.editId! : result.id;
 
-        if (this.isEditing && this.hasOrderChanged()) {
+        if (this.isEditing() && this.hasOrderChanged()) {
           const missionIds = this.missions().map(m => m.id);
           this.scenarioService.reorderMissions(scenarioId, {
             missionIds
@@ -242,13 +222,13 @@ export class ScenarioFormComponent implements OnInit {
           });
         } else {
           this.submitting.set(false);
-          this.toast.success(this.isEditing ? 'Scenario updated' : 'Scenario created');
+          this.toast.success(this.isEditing() ? 'Scenario updated' : 'Scenario created');
           this.router.navigate(['/admin/scenarios']);
         }
       },
       error: () => {
         this.submitting.set(false);
-        this.toast.error(this.isEditing ? 'Failed to update scenario' : 'Failed to create scenario');
+        this.toast.error(this.isEditing() ? 'Failed to update scenario' : 'Failed to create scenario');
       }
     });
   }

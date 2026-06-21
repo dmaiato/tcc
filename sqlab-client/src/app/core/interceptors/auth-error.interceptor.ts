@@ -11,10 +11,16 @@ export const authErrorInterceptor: HttpInterceptorFn = (
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      if ((error.status === 401 || error.status === 403)
-          && !req.url.includes('/auth/')) {
+      if (error.status === 401 && !req.url.includes('/auth/')) {
         authService.logout();
         return EMPTY;
+      }
+      if (error.status === 403 && !req.url.includes('/auth/')) {
+        const code = error.error?.code;
+        if (code !== 'MISSION_LOCKED' && code !== 'LEVEL_REQUIRED') {
+          authService.logout();
+          return EMPTY;
+        }
       }
       return throwError(() => error);
     })

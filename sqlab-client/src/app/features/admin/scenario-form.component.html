@@ -4,20 +4,20 @@
       <div class="rounded-xl border-2 border-accent/30 bg-card p-5 space-y-5">
         <div class="flex items-center gap-2 mb-2">
           <span class="text-accent"><ng-icon name="lucideBookOpen" class="w-4 h-4" /></span>
-          <h2 class="font-sans text-sm font-semibold text-foreground">{{ formTitleText }}</h2>
-          @if (isEditing && formEnabled() !== null && !formEnabled()) {
-            <span class="font-mono text-[9px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/20 shrink-0">
+          <h2 class="font-sans text-sm font-semibold text-foreground">{{ formTitleText() }}</h2>
+          @if (isEditing() && formEnabled() !== null && !formEnabled()) {
+            <span class="font-mono text-[11px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/20 shrink-0">
               Disabled
             </span>
           }
-          @if (isEditing && formEnabled() !== null) {
+          @if (isEditing() && formEnabled() !== null) {
             <div class="ml-auto flex items-center gap-2">
               <button (click)="toggleEnabled()" type="button"
                 class="flex items-center gap-1 px-2 py-1 rounded hover:bg-muted/50 transition-colors"
                 [class.text-accent]="formEnabled()"
                 [class.text-destructive]="!formEnabled()">
                 <ng-icon [name]="formEnabled() ? 'lucideEye' : 'lucideEyeOff'" class="size-3.5" />
-                <span class="font-mono text-[10px]">{{ formEnabled() ? 'Enabled' : 'Disabled' }}</span>
+                <span class="font-mono text-[11px]">{{ formEnabled() ? 'Enabled' : 'Disabled' }}</span>
               </button>
             </div>
           }
@@ -25,17 +25,17 @@
 
         <div class="space-y-3">
           <div>
-            <label class="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">Title *</label>
+            <label class="font-mono text-[11px] text-muted-foreground uppercase tracking-wider block mb-1">Title *</label>
             <input [value]="formTitle()" (input)="formTitle.set($any($event.target).value)" placeholder="e.g., Space Exploration"
               class="w-full font-mono text-xs bg-muted/30 border border-border rounded-md px-3 py-2 text-foreground placeholder:text-muted-foreground/50 focus:border-accent outline-none" />
           </div>
           <div>
-            <label class="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">Description *</label>
+            <label class="font-mono text-[11px] text-muted-foreground uppercase tracking-wider block mb-1">Description *</label>
             <textarea [value]="formDescription()" (input)="formDescription.set($any($event.target).value)" placeholder="Thematic context for the scenario"
               rows="4" class="w-full font-mono text-xs bg-muted/30 border border-border rounded-md px-3 py-2 text-foreground placeholder:text-muted-foreground/50 focus:border-accent outline-none resize-y min-h-[82px]"></textarea>
           </div>
           <div>
-            <label class="font-mono text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">Theme</label>
+            <label class="font-mono text-[11px] text-muted-foreground uppercase tracking-wider block mb-1">Theme</label>
             <select [value]="formTheme()" (change)="formTheme.set($any($event.target).value)"
               class="w-full font-mono text-xs bg-muted/30 border border-border rounded-md px-3 py-2 text-foreground focus:border-accent outline-none">
               @for (t of themes; track t) {
@@ -51,7 +51,7 @@
           </div>
         </div>
 
-        @if (isEditing) {
+        @if (isEditing()) {
           <div class="border-t border-border pt-4">
             @if (loadingMissions()) {
               <div class="text-center py-6">
@@ -59,9 +59,9 @@
               </div>
             } @else {
               <div class="flex items-center justify-between mb-3">
-                <span class="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">{{ missions().length }} mission{{ missions().length !== 1 ? 's' : '' }}</span>
+                <span class="font-mono text-[11px] text-muted-foreground uppercase tracking-wider">{{ missions().length }} mission{{ missions().length !== 1 ? 's' : '' }}</span>
                 <a [routerLink]="'/admin/mission/new'" [queryParams]="{ scenarioId: editId }"
-                  class="flex items-center gap-1.5 font-mono text-[10px] text-accent hover:text-accent/80 transition-colors">
+                  class="flex items-center gap-1.5 font-mono text-[11px] text-accent hover:text-accent/80 transition-colors">
                   <ng-icon name="lucidePlus" class="w-3 h-3" />
                   <span>Add Mission</span>
                 </a>
@@ -76,16 +76,14 @@
                         [class.border-accent/30]="orderChanged()">
                         <div class="flex items-center gap-2 text-muted-foreground min-w-0 flex-1">
                           <ng-icon name="lucideGripVertical" class="w-3.5 h-3.5 shrink-0 text-muted-foreground/40" />
-                          <span class="font-mono text-[9px] text-muted-foreground/40 w-6 shrink-0 text-right">
+                          <span class="font-mono text-[11px] text-muted-foreground/40 w-6 shrink-0 text-right">
                             {{ (i + 1).toString().padStart(2, '0') }}
                           </span>
                           <span class="font-sans text-xs text-foreground truncate">{{ mission.title }}</span>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
-                          <span class="font-mono text-[9px] px-1.5 py-0.5 rounded border {{ difficultyColorClasses[mission.difficulty] }}">
-                            {{ difficultyLabels[mission.difficulty] }}
-                          </span>
-                          <span class="font-mono text-[9px] text-accent shrink-0">{{ mission.xpReward }} XP</span>
+                          <app-difficulty-badge [difficulty]="mission.difficulty" />
+                          <span class="font-mono text-[11px] text-accent shrink-0">{{ mission.xpReward }} XP</span>
                           <a [routerLink]="'/admin/mission/' + mission.id + '/edit'"
                             class="flex items-center justify-center size-6 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors shrink-0"
                             title="Edit mission">
@@ -103,7 +101,7 @@
                 </div>
               } @else {
                 <div class="text-center py-6 rounded-lg border border-dashed border-border">
-                  <p class="font-mono text-[10px] text-muted-foreground">No missions yet for this scenario.</p>
+                  <p class="font-mono text-[11px] text-muted-foreground">No missions yet for this scenario.</p>
                 </div>
               }
             }
@@ -111,8 +109,8 @@
         }
 
         <div class="flex items-center justify-between gap-3 pt-3 border-t border-border">
-          @if (isEditing && orderChanged()) {
-            <p class="font-mono text-[9px] text-accent/70">Order has been modified. Save to persist changes.</p>
+          @if (isEditing() && orderChanged()) {
+            <p class="font-mono text-[11px] text-accent/70">Order has been modified. Save to persist changes.</p>
           }
           <div class="flex items-center gap-3 ml-auto">
             <button (click)="cancel()" type="button"
@@ -126,7 +124,7 @@
               } @else {
                 <ng-icon name="lucideBookOpen" class="w-3.5 h-3.5" />
               }
-              {{ submitting() ? 'Saving...' : (isEditing ? 'Update Scenario' : 'Create Scenario') }}
+              {{ submitting() ? 'Saving...' : (isEditing() ? 'Update Scenario' : 'Create Scenario') }}
             </button>
           </div>
         </div>

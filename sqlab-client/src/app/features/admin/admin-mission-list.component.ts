@@ -3,22 +3,16 @@ import { CommonModule } from '@angular/common';
 import { NgIconsModule } from '@ng-icons/core';
 import { Router, RouterLink } from '@angular/router';
 import { MissionService } from '../../core/mission.service';
-import { Mission, Theme, DifficultyLevel } from '../../core/models/mission.model';
+import { DifficultyBadgeComponent } from '../../shared/difficulty-badge/difficulty-badge.component';
+import { ThemeBadgeComponent } from '../../shared/theme-badge/theme-badge.component';
+import { Mission } from '../../core/models/mission.model';
 import { ToastService } from '../../shared/toast/toast.service';
-
-interface ThemeStyle {
-  label: string;
-  icon: string;
-  from: string;
-  to: string;
-}
 
 @Component({
   selector: 'app-admin-mission-list',
   standalone: true,
-  imports: [CommonModule, NgIconsModule, RouterLink],
-  templateUrl: './admin-mission-list.component.html',
-  styleUrl: './admin-mission-list.component.css'
+  imports: [CommonModule, NgIconsModule, RouterLink, DifficultyBadgeComponent, ThemeBadgeComponent],
+  templateUrl: './admin-mission-list.component.html'
 })
 export class AdminMissionListComponent {
   private readonly missionService = inject(MissionService);
@@ -31,14 +25,6 @@ export class AdminMissionListComponent {
   expandedId = signal<string | null>(null);
   expandedMission = signal<Mission | null>(null);
   expandedLoading = signal(false);
-
-  readonly themeStyles: Record<string, ThemeStyle> = {
-    ASTRONOMY: { label: 'Astronomy', icon: 'lucideStar', from: '#7c3aed', to: '#a855f7' },
-    CYBERSECURITY: { label: 'Cybersecurity', icon: 'lucideShield', from: '#059669', to: '#10b981' },
-    CRIMINAL: { label: 'Criminal', icon: 'lucideFingerprint', from: '#dc2626', to: '#f43f5e' },
-    FINANCE: { label: 'Finance', icon: 'lucideTrendingUp', from: '#d97706', to: '#f59e0b' },
-    BIOLOGY: { label: 'Biology', icon: 'lucideFlaskConical', from: '#0d9488', to: '#14b8a6' }
-  };
 
   get totalMissions(): number {
     return this.missions().length;
@@ -60,10 +46,6 @@ export class AdminMissionListComponent {
         this.toast.error('Failed to load missions');
       }
     });
-  }
-
-  getThemeStyle(theme: Theme): ThemeStyle {
-    return this.themeStyles[theme.name];
   }
 
   requestDelete(missionId: string): void {
@@ -111,19 +93,5 @@ export class AdminMissionListComponent {
         this.expandedId.set(null);
       }
     });
-  }
-
-  getDifficultyColor(diff: DifficultyLevel): string {
-    switch (diff) {
-      case 'BEGINNER': return 'text-primary bg-primary/10 border-primary/20';
-      case 'INTERMEDIATE': return 'text-accent bg-accent/10 border-accent/20';
-      case 'ADVANCED': return 'text-destructive bg-destructive/10 border-destructive/20';
-      case 'EXPERT': return 'text-destructive bg-destructive/20 border-destructive/30';
-      default: return 'text-muted-foreground bg-muted/10 border-border/20';
-    }
-  }
-
-  getThemeLabel(theme: Theme): string {
-    return this.themeStyles[theme.name].label;
   }
 }

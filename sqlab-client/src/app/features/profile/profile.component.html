@@ -42,9 +42,7 @@
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div class="rounded-lg bg-card border border-border p-4 text-center">
           <div class="flex items-center justify-center gap-1.5 text-primary mb-1">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
-            </svg>
+            <ng-icon name="lucideZap" class="w-4 h-4" color="var(--color-primary)" />
             <span class="font-mono text-lg font-bold">{{ prof.user.xp }}</span>
           </div>
           <p class="font-mono text-[10px] text-muted-foreground">Total XP</p>
@@ -52,9 +50,7 @@
 
         <div class="rounded-lg bg-card border border-border p-4 text-center">
           <div class="flex items-center justify-center gap-1.5 text-accent mb-1">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-            </svg>
+            <ng-icon name="lucideStar" class="w-4 h-4" color="var(--color-accent)" />
             <span class="font-mono text-lg font-bold">{{ prof.user.level }}</span>
           </div>
           <p class="font-mono text-[10px] text-muted-foreground">Level</p>
@@ -62,14 +58,7 @@
 
         <div class="rounded-lg bg-card border border-border p-4 text-center">
           <div class="flex items-center justify-center gap-1.5 text-secondary mb-1">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-              <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-              <path d="M4 22h16"></path>
-              <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
-              <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
-              <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
-            </svg>
+            <ng-icon name="lucideCheckCircle" class="w-4 h-4" color="var(--color-secondary)" />
             <span class="font-mono text-lg font-bold">{{ solvedCount() }}</span>
           </div>
           <p class="font-mono text-[10px] text-muted-foreground">Solved</p>
@@ -77,10 +66,7 @@
 
         <div class="rounded-lg bg-card border border-border p-4 text-center">
           <div class="flex items-center justify-center gap-1.5 text-muted-foreground mb-1">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="M12 6v6l4 2"></path>
-            </svg>
+            <ng-icon name="lucideBookOpen" class="w-4 h-4" color="var(--color-muted-foreground)" />
             <span class="font-mono text-lg font-bold">{{ skillCount() }}</span>
           </div>
           <p class="font-mono text-[10px] text-muted-foreground">Skills</p>
@@ -91,7 +77,7 @@
         <div>
           <div class="flex items-center gap-2 mb-3">
             <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-secondary to-primary flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="16 18 22 12 16 6"></polyline>
                 <polyline points="8 6 2 12 8 18"></polyline>
               </svg>
@@ -115,7 +101,7 @@
         <div>
           <div class="flex items-center gap-2 mb-3">
             <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-primary flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-accent-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
                 <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
                 <path d="M4 22h16"></path>

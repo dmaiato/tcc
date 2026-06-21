@@ -1,20 +1,25 @@
-import { Component, inject, signal, computed, HostListener, ElementRef } from '@angular/core';
+import { Component, inject, signal, computed, HostListener, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NgIconsModule } from '@ng-icons/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { MissionService } from '../../core/mission.service';
+import { ToastService } from '../../shared/toast/toast.service';
+import { DifficultyBadgeComponent } from '../../shared/difficulty-badge/difficulty-badge.component';
+import { ThemeBadgeComponent } from '../../shared/theme-badge/theme-badge.component';
 import { MissionSummary, Theme, DifficultyLevel } from '../../core/models/mission.model';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, NgIconsModule, RouterLink, DifficultyBadgeComponent, ThemeBadgeComponent],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.css'
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardComponent {
   private readonly authService = inject(AuthService);
   private readonly missionService = inject(MissionService);
+  private readonly toastService = inject(ToastService);
   private readonly elementRef = inject(ElementRef);
 
   @HostListener('document:click', ['$event'])
@@ -54,15 +59,7 @@ export class DashboardComponent {
   }
 
   private loadData(): void {
-    this.missionService.getMissions().subscribe({
-      next: (missions) => {
-        this.missions.set(missions);
-        this.isLoading.set(false);
-      },
-      error: () => {
-        this.isLoading.set(false);
-      }
-    });
+    this.reloadMissions();
 
     this.missionService.getUserProgress().subscribe({
       next: (progress) => {
@@ -75,6 +72,23 @@ export class DashboardComponent {
         this.completedIds.set(completed);
       },
       error: () => {
+        this.toastService.error('Failed to load progress data');
+      }
+    });
+  }
+
+  private reloadMissions(): void {
+    this.isLoading.set(true);
+    this.missionService.getSummary(
+      this.selectedTheme(),
+      this.selectedDifficulty()
+    ).subscribe({
+      next: (missions) => {
+        this.missions.set(missions);
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.isLoading.set(false);
       }
     });
   }
@@ -101,22 +115,33 @@ export class DashboardComponent {
   setTheme(theme: string | null): void {
     this.selectedTheme.set(theme);
     this.closeDropdowns();
+    this.reloadMissions();
   }
 
   setDifficulty(difficulty: DifficultyLevel | 'ALL'): void {
     this.selectedDifficulty.set(difficulty);
     this.closeDropdowns();
+    this.reloadMissions();
   }
 
   clearFilters(): void {
     this.selectedTheme.set(null);
     this.selectedDifficulty.set('ALL');
     this.closeDropdowns();
+    this.reloadMissions();
   }
 
-  get hasActiveFilters(): boolean {
-    return this.selectedTheme() !== null || this.selectedDifficulty() !== 'ALL';
-  }
+  readonly availableThemes = computed(() => {
+    const themes = this.missions().map(m => m.theme);
+    const seen = new Set<string>();
+    return themes.filter(t => {
+      if (seen.has(t.name)) return false;
+      seen.add(t.name);
+      return true;
+    });
+  });
+
+  readonly hasActiveFilters = computed(() => this.selectedTheme() !== null || this.selectedDifficulty() !== 'ALL');
 
   getThemeLabel(theme: Theme | string): string {
     if (!theme) return '';
@@ -127,26 +152,6 @@ export class DashboardComponent {
     return theme.emoji ? `${theme.emoji} ${name}` : name;
   }
 
-  getDifficultyLabel(difficulty: DifficultyLevel): string {
-    const labels: Record<DifficultyLevel, string> = {
-      'BEGINNER': 'Beginner',
-      'INTERMEDIATE': 'Intermediate',
-      'ADVANCED': 'Advanced',
-      'EXPERT': 'Expert'
-    };
-    return labels[difficulty] || difficulty;
-  }
-
-  getDifficultyClass(difficulty: DifficultyLevel): string {
-    const classes: Record<DifficultyLevel, string> = {
-      'BEGINNER': 'text-primary',
-      'INTERMEDIATE': 'text-accent',
-      'ADVANCED': 'text-destructive',
-      'EXPERT': 'text-destructive'
-    };
-    return classes[difficulty] || 'text-muted-foreground';
-  }
-
   getThemeButtonLabel(): string {
     const theme = this.selectedTheme();
     return theme === null ? 'Theme' : theme.charAt(0) + theme.slice(1).toLowerCase();
@@ -154,6 +159,11 @@ export class DashboardComponent {
 
   getDifficultyButtonLabel(): string {
     const difficulty = this.selectedDifficulty();
-    return difficulty === 'ALL' ? 'Difficulty' : this.getDifficultyLabel(difficulty);
+    if (difficulty === 'ALL') return 'Difficulty';
+    const labels: Record<string, string> = {
+      'BEGINNER': 'Beginner', 'INTERMEDIATE': 'Intermediate',
+      'ADVANCED': 'Advanced', 'EXPERT': 'Expert'
+    };
+    return labels[difficulty] || difficulty;
   }
 }

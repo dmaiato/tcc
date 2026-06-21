@@ -1,4 +1,4 @@
-import { Component, inject, signal, HostListener, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, HostListener, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgIconsModule } from '@ng-icons/core';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
@@ -12,7 +12,7 @@ import { CodeEditorDialogComponent } from '../../shared/code-editor-dialog/code-
   standalone: true,
   imports: [CommonModule, NgIconsModule, CodeEditorDialogComponent, RouterLink],
   templateUrl: './mission-form.component.html',
-  styleUrl: './mission-form.component.css'
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MissionFormComponent implements OnInit {
   private readonly missionService = inject(MissionService);
@@ -45,13 +45,8 @@ export class MissionFormComponent implements OnInit {
   readonly themes: string[] = ['ASTRONOMY', 'CYBERSECURITY', 'CRIMINAL', 'FINANCE', 'BIOLOGY'];
   readonly difficulties: DifficultyLevel[] = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT'];
 
-  get isEditing(): boolean {
-    return this.editId !== null;
-  }
-
-  get formTitleText(): string {
-    return this.isEditing ? 'Update Mission' : 'Create New Mission';
-  }
+  readonly isEditing = computed(() => this.editId !== null);
+  readonly formTitleText = computed(() => this.isEditing() ? 'Update Mission' : 'Create New Mission');
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -118,10 +113,10 @@ export class MissionFormComponent implements OnInit {
       difficulty: this.formDifficulty(),
       expectedResult: this.parseExpectedResult()
     };
-    if (this.scenarioId && !this.isEditing) {
+    if (this.scenarioId && !this.isEditing()) {
       base['scenarioId'] = this.scenarioId;
     }
-    return { data: base as unknown as CreateMissionRequest | UpdateMissionRequest, hasId: this.isEditing };
+    return { data: base as unknown as CreateMissionRequest | UpdateMissionRequest, hasId: this.isEditing() };
   }
 
   private parseExpectedResult(): Record<string, unknown>[] {
@@ -155,7 +150,7 @@ export class MissionFormComponent implements OnInit {
     const { data } = this.buildRequest();
     console.log('Submitting mission:', data, 'scenarioId:', this.scenarioId);
 
-    if (this.isEditing) {
+    if (this.isEditing()) {
       this.missionService.updateMission(this.editId!, data as UpdateMissionRequest).subscribe({
         next: () => {
           this.submitting.set(false);

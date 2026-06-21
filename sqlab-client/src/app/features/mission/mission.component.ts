@@ -1,10 +1,12 @@
-import { Component, inject, signal, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, HostListener, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NgIconsModule } from '@ng-icons/core';
 import { PgliteService, QueryResult } from '../../core/pglite.service';
 import { MissionService } from '../../core/mission.service';
+import { ScenarioService } from '../../core/scenario.service';
 import { ToastService } from '../../shared/toast/toast.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { Mission, Theme, DifficultyLevel } from '../../core/models/mission.model';
@@ -25,7 +27,9 @@ export class MissionComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly pgliteService = inject(PgliteService);
   private readonly missionService = inject(MissionService);
+  private readonly scenarioService = inject(ScenarioService);
   private readonly toastService = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
   readonly authService = inject(AuthService);
 
   mission = signal<Mission | null>(null);
@@ -60,7 +64,9 @@ export class MissionComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadMissions();
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(params => {
       const id = params.get('id');
       if (!id) {
         this.router.navigate(['/dashboard']);
@@ -84,7 +90,7 @@ export class MissionComponent implements OnInit, OnDestroy {
   }
 
   private loadMissions(): void {
-    this.missionService.getAllMissions().subscribe({
+    this.missionService.getAll().subscribe({
       next: (missions) => {
         this.allMissions.set(missions);
         this.totalMissions.set(missions.length);
@@ -95,10 +101,14 @@ export class MissionComponent implements OnInit, OnDestroy {
   }
 
   private loadScenarioMissions(scenarioId: string): void {
-    this.missionService.getScenario(scenarioId).subscribe({
+    this.scenarioService.getById(scenarioId).subscribe({
       next: (scenario) => {
         this.scenarioMissionIds.set(scenario.missions.map(m => m.id));
         this.updateNavigation();
+      },
+      error: () => {
+        this.toastService.error('Failed to load scenario missions');
+        this.router.navigate(['/dashboard']);
       }
     });
   }
@@ -156,12 +166,13 @@ export class MissionComponent implements OnInit, OnDestroy {
     return true;
   }
 
-  private loadSchema(): void {
-    this.pgliteService.getSchema().then(schema => {
+  private async loadSchema(): Promise<void> {
+    try {
+      const schema = await this.pgliteService.getSchema();
       this.schema.set(schema);
-    }).catch(() => {
+    } catch {
       this.schema.set([]);
-    });
+    }
   }
 
   private loadExpectedResult(mission: Mission): void {

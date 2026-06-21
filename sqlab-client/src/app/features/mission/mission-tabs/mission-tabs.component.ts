@@ -2,7 +2,9 @@ import { Component, Input, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataViewerComponent, ColumnInfo } from '../data-viewer/data-viewer.component';
 import { NgIconsModule } from '@ng-icons/core';
-import { Theme } from '../../../core/models/mission.model';
+import { DifficultyBadgeComponent } from '../../../shared/difficulty-badge/difficulty-badge.component';
+import { ThemeBadgeComponent } from '../../../shared/theme-badge/theme-badge.component';
+import { Theme, DifficultyLevel } from '../../../core/models/mission.model';
 
 interface MissionSchema {
   name: string;
@@ -16,7 +18,7 @@ interface Mission {
   briefing: string;
   objective: string;
   theme: Theme;
-  difficulty: string;
+  difficulty: DifficultyLevel;
   xpReward: number;
   completed?: boolean;
   ddlScript?: string;
@@ -27,7 +29,7 @@ interface Mission {
 @Component({
   selector: 'app-mission-tabs',
   standalone: true,
-  imports: [CommonModule, DataViewerComponent, NgIconsModule],
+  imports: [CommonModule, DataViewerComponent, NgIconsModule, DifficultyBadgeComponent, ThemeBadgeComponent],
   templateUrl: './mission-tabs.component.html',
   styleUrl: './mission-tabs.component.css'
 })
@@ -73,23 +75,6 @@ export class MissionTabsComponent {
 
   toggleHint(): void {
     this.showHint.set(!this.showHint());
-  }
-
-  getDifficultyConfig(difficulty: string): { label: string; bgColor: string; color: string } {
-    const d = difficulty || 'BEGINNER';
-    const configs: Record<string, { label: string; bgColor: string; color: string }> = {
-      'BEGINNER': { label: 'Beginner', bgColor: 'bg-primary/10', color: 'text-primary' },
-      'INTERMEDIATE': { label: 'Intermediate', bgColor: 'bg-accent/10', color: 'text-accent' },
-      'ADVANCED': { label: 'Advanced', bgColor: 'bg-destructive/10', color: 'text-destructive' },
-      'EXPERT': { label: 'Expert', bgColor: 'bg-destructive/10', color: 'text-destructive' }
-    };
-    return configs[d] || { label: d, bgColor: 'bg-muted', color: 'text-muted-foreground' };
-  }
-
-  getThemeConfig(theme: Theme): { label: string; bgColor: string; color: string; icon: string } {
-    if (!theme) return { label: 'SQL', bgColor: 'bg-muted/50', color: 'text-muted-foreground', icon: '🔍' };
-    const name = theme.name.charAt(0) + theme.name.slice(1).toLowerCase();
-    return { label: name, bgColor: 'bg-muted/50', color: 'text-muted-foreground', icon: theme.emoji || '📋' };
   }
 
   private parseDDL(ddl: string): MissionSchema[] {

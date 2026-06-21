@@ -3,14 +3,7 @@
     <div class="max-w-5xl mx-auto px-5 py-8">
       <div class="flex items-center gap-3 mb-6">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-accent-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-            <path d="M4 22h16"></path>
-            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
-            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
-            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
-          </svg>
+          <ng-icon name="lucideAward" class="w-5 h-5" color="var(--color-badge-icon)" />
         </div>
         <div>
           <h1 class="font-sans text-2xl font-bold tracking-tight text-foreground">Mission Select</h1>
@@ -22,18 +15,14 @@
         <div class="relative">
           <button (click)="toggleThemeDropdown(); $event.stopPropagation()" type="button" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-mono text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
             {{ getThemeButtonLabel() }}
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M6 9l6 6 6-6"></path>
-            </svg>
+            <ng-icon name="lucideChevronDown" class="w-3 h-3" />
           </button>
           @if (isThemeDropdownOpen()) {
             <div class="absolute left-0 top-full mt-1 w-40 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50">
               <button (click)="setTheme(null); $event.stopPropagation()" type="button" class="flex items-center gap-2 w-full px-3 py-2 text-xs font-mono text-foreground hover:bg-muted/50 transition-colors" [class.bg-primary/10]="selectedTheme() === null">All Themes</button>
-              <button (click)="setTheme('CRIMINAL'); $event.stopPropagation()" type="button" class="flex items-center gap-2 w-full px-3 py-2 text-xs font-mono text-foreground hover:bg-muted/50 transition-colors" [class.bg-primary/10]="selectedTheme() === 'CRIMINAL'">{{ getThemeLabel('CRIMINAL') }}</button>
-              <button (click)="setTheme('FINANCE'); $event.stopPropagation()" type="button" class="flex items-center gap-2 w-full px-3 py-2 text-xs font-mono text-foreground hover:bg-muted/50 transition-colors" [class.bg-primary/10]="selectedTheme() === 'FINANCE'">{{ getThemeLabel('FINANCE') }}</button>
-              <button (click)="setTheme('ASTRONOMY'); $event.stopPropagation()" type="button" class="flex items-center gap-2 w-full px-3 py-2 text-xs font-mono text-foreground hover:bg-muted/50 transition-colors" [class.bg-primary/10]="selectedTheme() === 'ASTRONOMY'">{{ getThemeLabel('ASTRONOMY') }}</button>
-              <button (click)="setTheme('CYBERSECURITY'); $event.stopPropagation()" type="button" class="flex items-center gap-2 w-full px-3 py-2 text-xs font-mono text-foreground hover:bg-muted/50 transition-colors" [class.bg-primary/10]="selectedTheme() === 'CYBERSECURITY'">{{ getThemeLabel('CYBERSECURITY') }}</button>
-              <button (click)="setTheme('BIOLOGY'); $event.stopPropagation()" type="button" class="flex items-center gap-2 w-full px-3 py-2 text-xs font-mono text-foreground hover:bg-muted/50 transition-colors" [class.bg-primary/10]="selectedTheme() === 'BIOLOGY'">{{ getThemeLabel('BIOLOGY') }}</button>
+              @for (theme of availableThemes(); track theme.name) {
+                <button (click)="setTheme(theme.name); $event.stopPropagation()" type="button" class="flex items-center gap-2 w-full px-3 py-2 text-xs font-mono text-foreground hover:bg-muted/50 transition-colors" [class.bg-primary/10]="selectedTheme() === theme.name">{{ getThemeLabel(theme) }}</button>
+              }
             </div>
           }
         </div>
@@ -41,9 +30,7 @@
         <div class="relative">
           <button (click)="toggleDifficultyDropdown(); $event.stopPropagation()" type="button" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-mono text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
             {{ getDifficultyButtonLabel() }}
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M6 9l6 6 6-6"></path>
-            </svg>
+            <ng-icon name="lucideChevronDown" class="w-3 h-3" />
           </button>
           @if (isDifficultyDropdownOpen()) {
             <div class="absolute left-0 top-full mt-1 w-40 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50">
@@ -56,12 +43,9 @@
           }
         </div>
 
-        @if (hasActiveFilters) {
+        @if (hasActiveFilters()) {
           <button (click)="clearFilters(); $event.stopPropagation()" type="button" class="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-mono text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+            <ng-icon name="lucideX" class="w-3 h-3" />
             Clear
           </button>
         }
@@ -81,28 +65,21 @@
             <a [routerLink]="mission.scenarioId ? ['/scenarios', mission.scenarioId] : ['/mission', mission.id]" class="group relative rounded-xl border border-border bg-card p-4 hover:bg-muted/30 transition-colors card-shine focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
               @if (isCompleted(mission.id)) {
                 <div class="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
+                  <ng-icon name="lucideCheck" class="w-3 h-3 text-primary" />
                 </div>
               }
               <div class="flex items-center gap-2 mb-2">
-                <span class="font-mono text-[10px] uppercase tracking-widest px-2 py-0.5 rounded" [ngClass]="{'bg-primary/10': mission.difficulty === 'BEGINNER', 'bg-accent/10': mission.difficulty === 'INTERMEDIATE', 'bg-destructive/10': mission.difficulty === 'ADVANCED' || mission.difficulty === 'EXPERT'}">
-                  <span [ngClass]="getDifficultyClass(mission.difficulty)">{{ getDifficultyLabel(mission.difficulty) }}</span>
-                </span>
-                <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{{ getThemeLabel(mission.theme) }}</span>
+                <app-difficulty-badge [difficulty]="mission.difficulty" />
+                <app-theme-badge [theme]="mission.theme" />
                 @if (mission.scenarioId) {
-                  <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-accent/10 text-accent">Scenario</span>
+                  <span class="font-mono text-[11px] px-1.5 py-0.5 rounded bg-accent/10 text-accent">Scenario</span>
                 }
               </div>
               <h3 class="font-sans text-sm font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">{{ mission.title }}</h3>
               <div class="flex items-center gap-2 text-xs">
-                <span class="font-mono text-[10px] text-accent">{{ mission.xpReward }} XP</span>
+                <span class="font-mono text-[11px] text-accent">{{ mission.xpReward }} XP</span>
                 <span class="text-muted-foreground">·</span>
                 <div class="flex items-center gap-1 text-muted-foreground">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                  </svg>
                   <span class="font-mono text-xs">{{ mission.techniques.slice(0, 2).map(t => t.name).join(', ') }}</span>
                 </div>
               </div>

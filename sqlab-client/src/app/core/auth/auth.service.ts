@@ -4,10 +4,9 @@ import { Router } from '@angular/router';
 import { Observable, tap, catchError, of, map, switchMap } from 'rxjs';
 import { ApiService } from '../api.service';
 import { User, UserResponse } from '../models/user.model';
-import { LoginRequest, RegisterRequest, AuthResponse, RefreshRequest, AuthResponseWithUser } from '../models/auth-response.model';
+import { LoginRequest, RegisterRequest, AuthResponseWithUser } from '../models/auth-response.model';
 
 const ACCESS_TOKEN_KEY = 'accessToken';
-const REFRESH_TOKEN_KEY = 'refreshToken';
 const USER_KEY = 'user';
 
 @Injectable({
@@ -20,7 +19,6 @@ export class AuthService {
 
   private _user = signal<User | null>(null);
   private _token = signal<string | null>(null);
-  private _refreshToken = signal<string | null>(null);
 
   readonly currentUser = this._user.asReadonly();
   readonly currentToken = this._token.asReadonly();
@@ -35,12 +33,10 @@ export class AuthService {
 
   private loadFromStorage(): void {
     const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
-    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
     const userStr = localStorage.getItem(USER_KEY);
 
     if (accessToken && userStr) {
       this._token.set(accessToken);
-      this._refreshToken.set(refreshToken);
       try {
         this._user.set(JSON.parse(userStr));
       } catch {
@@ -51,17 +47,13 @@ export class AuthService {
 
   readonly isAdmin = computed(() => this._user()?.role === 'ADMIN');
 
-  private saveToStorage(accessToken: string, refreshToken: string, user: User): void {
+  private saveToStorage(accessToken: string, user: User): void {
     localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-    if (refreshToken) {
-      localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-    }
     localStorage.setItem(USER_KEY, JSON.stringify(user));
   }
 
   private clearStorage(): void {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
   }
 
@@ -80,9 +72,8 @@ export class AuthService {
           role: response.role as 'USER' | 'ADMIN'
         };
         this._token.set(response.token);
-        this._refreshToken.set('');
         this._user.set(user);
-        this.saveToStorage(response.token, '', user);
+        this.saveToStorage(response.token, user);
       }),
       tap(() => {
         this.isLoading.set(false);
@@ -111,9 +102,8 @@ export class AuthService {
           role: response.role as 'USER' | 'ADMIN'
         };
         this._token.set(response.token);
-        this._refreshToken.set('');
         this._user.set(user);
-        this.saveToStorage(response.token, '', user);
+        this.saveToStorage(response.token, user);
       }),
       tap(() => {
         this.isLoading.set(false);
@@ -128,38 +118,10 @@ export class AuthService {
   }
 
   logout(): void {
-    const refreshToken = this._refreshToken();
-
-    if (refreshToken) {
-      this.api.post('/auth/logout', { refreshToken } as RefreshRequest).pipe(
-        catchError(() => of(null))
-      ).subscribe();
-    }
-
     this._token.set(null);
     this._user.set(null);
-    this._refreshToken.set(null);
     this.clearStorage();
     this.router.navigate(['/login']);
-  }
-
-  refreshToken(): Observable<boolean> {
-    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-    if (!refreshToken) {
-      return of(false);
-    }
-
-    return this.api.post<AuthResponse>('/auth/refresh', { refreshToken } as RefreshRequest).pipe(
-      tap(response => {
-        this._token.set(response.accessToken);
-        localStorage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
-      }),
-      map(() => true),
-      catchError(() => {
-        this.logout();
-        return of(false);
-      })
-    );
   }
 
   getToken(): string | null {
@@ -185,7 +147,4 @@ export class AuthService {
     );
   }
 
-  user(): { (): User | null } {
-    return this.currentUser;
-  }
 }

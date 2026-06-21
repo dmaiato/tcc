@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { HttpParams } from '@angular/common/http';
 import { ApiService } from './api.service';
-import { MissionSummary, Mission, MissionProgress, ScenarioDetail, ScenarioSummary, CreateMissionRequest, UpdateMissionRequest } from './models/mission.model';
+import { MissionSummary, Mission, MissionProgress, CreateMissionRequest, UpdateMissionRequest } from './models/mission.model';
 
 @Injectable({
   providedIn: 'root'
@@ -9,11 +10,18 @@ import { MissionSummary, Mission, MissionProgress, ScenarioDetail, ScenarioSumma
 export class MissionService {
   private readonly api = inject(ApiService);
 
-  getMissions(): Observable<MissionSummary[]> {
-    return this.api.get<MissionSummary[]>('/missions');
+  getSummary(theme?: string | null, difficulty?: string): Observable<MissionSummary[]> {
+    let params = new HttpParams();
+    if (theme) {
+      params = params.set('theme', theme);
+    }
+    if (difficulty && difficulty !== 'ALL') {
+      params = params.set('difficulty', difficulty);
+    }
+    return this.api.get<MissionSummary[]>('/missions', params);
   }
 
-  getAllMissions(): Observable<Mission[]> {
+  getAll(): Observable<Mission[]> {
     return this.api.get<Mission[]>('/missions');
   }
 
@@ -35,14 +43,6 @@ export class MissionService {
 
   getUserProgress(): Observable<MissionProgress[]> {
     return this.api.get<MissionProgress[]>('/users/me/progress');
-  }
-
-  getScenarios(): Observable<ScenarioSummary[]> {
-    return this.api.get<ScenarioSummary[]>('/scenarios');
-  }
-
-  getScenario(id: string): Observable<ScenarioDetail> {
-    return this.api.get<ScenarioDetail>(`/scenarios/${id}`);
   }
 
   createMission(data: CreateMissionRequest): Observable<Mission> {

@@ -7,7 +7,6 @@ import { RouterLink } from '@angular/router';
   selector: 'app-admin',
   standalone: true,
   imports: [CommonModule, NgIconsModule, RouterLink],
-  templateUrl: './admin.component.html',
-  styleUrl: './admin.component.css'
+  templateUrl: './admin.component.html'
 })
 export class AdminComponent {}

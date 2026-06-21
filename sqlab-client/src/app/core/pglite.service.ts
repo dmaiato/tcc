@@ -87,7 +87,7 @@ export class PgliteService {
     try {
       const result = await this.db.query(sql);
       const isDataModifying = this.isDataModifyingQuery(sql);
-      if (isDataModifying && result.affectedRows > 0) {
+      if (isDataModifying) {
         this.isModified.set(true);
       }
       return {
@@ -114,7 +114,8 @@ export class PgliteService {
            trimmed.startsWith('DELETE') ||
            trimmed.startsWith('CREATE') ||
            trimmed.startsWith('DROP') ||
-           trimmed.startsWith('ALTER');
+           trimmed.startsWith('ALTER') ||
+           trimmed.startsWith('TRUNCATE');
   }
 
   async getSchema(): Promise<{ name: string; columns: { name: string; type: string; isPrimaryKey: boolean; isForeignKey: boolean }[] }[]> {
