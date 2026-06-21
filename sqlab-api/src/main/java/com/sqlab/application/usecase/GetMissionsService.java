@@ -1,7 +1,8 @@
 package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.GetMissionsUseCase;
-import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.MissionQueryPort;
+import com.sqlab.application.port.out.MissionValidationPort;
 import com.sqlab.application.port.out.ScenarioRepository;
 import com.sqlab.application.port.out.ThemeRepository;
 import com.sqlab.domain.exception.LevelRequiredException;
@@ -25,16 +26,19 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class GetMissionsService implements GetMissionsUseCase {
 
-    private final MissionRepository missionRepository;
+    private final MissionQueryPort missionQueryPort;
+    private final MissionValidationPort missionValidationPort;
     private final ScenarioRepository scenarioRepository;
     private final MissionAccessValidator missionAccessValidator;
     private final ThemeRepository themeRepository;
 
-    public GetMissionsService(MissionRepository missionRepository,
+    public GetMissionsService(MissionQueryPort missionQueryPort,
+                              MissionValidationPort missionValidationPort,
                               ScenarioRepository scenarioRepository,
                               MissionAccessValidator missionAccessValidator,
                               ThemeRepository themeRepository) {
-        this.missionRepository = missionRepository;
+        this.missionQueryPort = missionQueryPort;
+        this.missionValidationPort = missionValidationPort;
         this.scenarioRepository = scenarioRepository;
         this.missionAccessValidator = missionAccessValidator;
         this.themeRepository = themeRepository;
@@ -51,13 +55,13 @@ public class GetMissionsService implements GetMissionsUseCase {
         Theme theme = resolveTheme(query.theme());
         List<Mission> missions;
         if (theme != null && query.difficulty() != null) {
-            missions = missionRepository.findByThemeAndDifficulty(theme, query.difficulty());
+            missions = missionQueryPort.findByThemeAndDifficulty(theme, query.difficulty());
         } else if (theme != null) {
-            missions = missionRepository.findByTheme(theme);
+            missions = missionQueryPort.findByTheme(theme);
         } else if (query.difficulty() != null) {
-            missions = missionRepository.findByDifficulty(query.difficulty());
+            missions = missionQueryPort.findByDifficulty(query.difficulty());
         } else {
-            missions = missionRepository.findByEnabledTrue();
+            missions = missionQueryPort.findByEnabledTrue();
         }
 
         List<Mission> enabledMissions = missions.stream()
@@ -69,7 +73,7 @@ public class GetMissionsService implements GetMissionsUseCase {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
-        Set<UUID> disabledScenarios = missionRepository.findScenarioIdsWithDisabledMissions(scenarioIds);
+        Set<UUID> disabledScenarios = missionValidationPort.findScenarioIdsWithDisabledMissions(scenarioIds);
 
         return enabledMissions.stream()
                 .filter(m -> m.getScenarioId() == null || !disabledScenarios.contains(m.getScenarioId()))
@@ -87,7 +91,7 @@ public class GetMissionsService implements GetMissionsUseCase {
         Integer scenarioTotalMissions = null;
         String scenarioTitle = null;
         if (mission.getScenarioId() != null) {
-            scenarioTotalMissions = missionRepository.countByScenarioIdAndEnabledTrue(mission.getScenarioId());
+            scenarioTotalMissions = missionQueryPort.countByScenarioIdAndEnabledTrue(mission.getScenarioId());
             scenarioTitle = scenarioRepository.findById(mission.getScenarioId())
                     .map(s -> s.getTitle())
                     .orElse(null);

@@ -1,7 +1,7 @@
 package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.AdminValidateMissionUseCase;
-import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.MissionQueryPort;
 import com.sqlab.domain.exception.MissionNotFoundException;
 import com.sqlab.domain.model.ExpectedTuple;
 import com.sqlab.domain.model.Mission;
@@ -25,13 +25,13 @@ import static org.mockito.Mockito.*;
 class AdminValidateMissionServiceTest {
 
     @Mock
-    private MissionRepository missionRepository;
+    private MissionQueryPort missionQueryPort;
 
     private AdminValidateMissionService service;
 
     @BeforeEach
     void setUp() {
-        service = new AdminValidateMissionService(missionRepository);
+        service = new AdminValidateMissionService(missionQueryPort);
     }
 
     @Test
@@ -40,7 +40,7 @@ class AdminValidateMissionServiceTest {
         List<Map<String, Object>> tuples = List.of(Map.of("name", "Alice"));
 
         Mission mission = mock(Mission.class);
-        when(missionRepository.findById(missionId)).thenReturn(Optional.of(mission));
+        when(missionQueryPort.findById(missionId)).thenReturn(Optional.of(mission));
         when(mission.validate(tuples)).thenReturn(ValidationResult.CORRECT);
 
         ValidationResult result = service.handle(
@@ -53,7 +53,7 @@ class AdminValidateMissionServiceTest {
     @Test
     void shouldThrowWhenMissionNotFound() {
         UUID missionId = UUID.randomUUID();
-        when(missionRepository.findById(missionId)).thenReturn(Optional.empty());
+        when(missionQueryPort.findById(missionId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.handle(
                 new AdminValidateMissionUseCase.Command(missionId, List.of())))

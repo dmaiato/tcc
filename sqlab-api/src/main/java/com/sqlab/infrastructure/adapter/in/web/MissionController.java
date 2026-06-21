@@ -91,7 +91,7 @@ public class MissionController {
 
     @PostMapping
     public ResponseEntity<MissionDto.MissionResponse> create(
-            @Valid @RequestBody MissionDto.CreateMissionRequest request) {
+            @Valid @RequestBody MissionDto.UpsertMissionRequest request) {
         ManageMissionUseCase.CreateMissionCommand command = new ManageMissionUseCase.CreateMissionCommand(
                 request.title(), request.briefing(), request.objective(),
                 request.hint(), request.ddlScript(), request.dmlScript(),
@@ -108,7 +108,7 @@ public class MissionController {
     @PutMapping("/{missionId}")
     public ResponseEntity<MissionDto.MissionResponse> update(
             @PathVariable UUID missionId,
-            @Valid @RequestBody MissionDto.UpdateMissionRequest request) {
+            @Valid @RequestBody MissionDto.UpsertMissionRequest request) {
         ManageMissionUseCase.UpdateMissionCommand command = new ManageMissionUseCase.UpdateMissionCommand(
                 missionId,
                 request.title(), request.briefing(), request.objective(),

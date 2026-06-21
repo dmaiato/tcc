@@ -1,6 +1,6 @@
 package com.sqlab.application.usecase;
 
-import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.MissionQueryPort;
 import com.sqlab.application.port.out.ScenarioRepository;
 import com.sqlab.domain.exception.ScenarioNotFoundException;
 import com.sqlab.domain.model.Mission;
@@ -26,13 +26,13 @@ class GetAdminScenariosServiceTest {
     @Mock
     private ScenarioRepository scenarioRepository;
     @Mock
-    private MissionRepository missionRepository;
+    private MissionQueryPort missionQueryPort;
 
     private GetAdminScenariosService service;
 
     @BeforeEach
     void setUp() {
-        service = new GetAdminScenariosService(scenarioRepository, missionRepository);
+        service = new GetAdminScenariosService(scenarioRepository, missionQueryPort);
     }
 
     @Test
@@ -42,8 +42,8 @@ class GetAdminScenariosServiceTest {
         var s2 = new Scenario(UUID.randomUUID(), "S2", "D2", theme, true, 2);
 
         when(scenarioRepository.findAll()).thenReturn(List.of(s1, s2));
-        when(missionRepository.countByScenarioId(s1.getId())).thenReturn(3);
-        when(missionRepository.countByScenarioId(s2.getId())).thenReturn(5);
+        when(missionQueryPort.countByScenarioId(s1.getId())).thenReturn(3);
+        when(missionQueryPort.countByScenarioId(s2.getId())).thenReturn(5);
 
         var results = service.listAll();
 
@@ -60,7 +60,7 @@ class GetAdminScenariosServiceTest {
         var missions = List.<Mission>of();
 
         when(scenarioRepository.findById(id)).thenReturn(Optional.of(scenario));
-        when(missionRepository.findByScenarioIdOrderByOrderIndex(id)).thenReturn(missions);
+        when(missionQueryPort.findByScenarioIdOrderByOrderIndex(id)).thenReturn(missions);
 
         var result = service.findById(id);
 

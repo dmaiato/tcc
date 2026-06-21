@@ -17,12 +17,12 @@ INSERT INTO scenarios (id, title, description, theme_id, required_level) VALUES
      'Night at the Blue Moon',
      'It''s 3 AM and Detective Estranho has just arrived at the Blue Moon Cabaret. A body was found in the alley, and the clues are in the register book. As you investigate, you discover this night holds more secrets than a simple murder — a web of lies involving patrons, interrogations, and alibis that don''t hold up.',
      'b0000003-0000-0000-0000-000000000003',
-     2),
+     1),
     ('00000000-0000-0000-0000-0000000000a2',
      'The Mendes & Sons Affair',
      'The Mendes & Sons accounting scandal unfolds as Detective Estranho follows the money trail from suspicious corporate accounts to a network of money laundering across multiple bank branches.',
      'b0000005-0000-0000-0000-000000000005',
-     3)
+     2)
 ON CONFLICT (id) DO NOTHING;
 
 -- Techniques
@@ -37,7 +37,8 @@ INSERT INTO techniques (id, name) VALUES
     ('c0000008-0000-0000-0000-000000000008', 'AVG'),
     ('c0000009-0000-0000-0000-000000000009', 'COUNT'),
     ('c000000a-0000-0000-0000-00000000000a', 'UPDATE'),
-    ('c000000b-0000-0000-0000-00000000000b', 'JOIN')
+    ('c000000b-0000-0000-0000-00000000000b', 'JOIN'),
+    ('c000000c-0000-0000-0000-00000000000c', 'INSERT')
 ON CONFLICT (id) DO NOTHING;
 
 -- Missions (sem coluna techniques, com theme_id UUID, scenario_id e order_index embutidos)
@@ -688,6 +689,112 @@ VALUES
     'EXPERT',
     NULL,
     NULL
+),
+
+-- ========================================================================
+-- MISSION 12 — BEGINNER / ASTRONOMY
+-- Teaches: INSERT, SELECT
+-- Expected solution:
+--   INSERT INTO asteroid_catalog (designation, diameter_km, discovery_year, is_potentially_hazardous)
+--   VALUES ('2026-XK1', 1.20, 2026, TRUE);
+--   SELECT * FROM asteroid_catalog;
+-- ========================================================================
+(
+    '00000000-0000-0000-0000-000000000012',
+    'The New Discovery',
+
+    'Dr. Tavares bursts into the control room at 2 AM, her eyes wide with excitement — something she hasn''t felt in years. The automated survey telescope detected an unknown object in the main asteroid belt, and the initial readings are intriguing. "It''s a new one," she whispers, pulling up the orbital data on the main screen. "Designation 2026-XK1. About 1.2 kilometers across. And it''s flagged as potentially hazardous." She turns to you, a faint smile crossing her exhausted face. "Add it to the catalog. We can''t afford to lose track of a rock that could wipe out a city."',
+
+    'Add the newly discovered asteroid to the asteroid_catalog table. Insert a row with designation = ''2026-XK1'', diameter_km = 1.20, discovery_year = 2026, and is_potentially_hazardous = TRUE. Then select all rows to verify.',
+
+    'Use INSERT INTO table_name (column1, column2, ...) VALUES (value1, value2, ...). The id column is automatically generated. After inserting, run SELECT * FROM asteroid_catalog to see all records.',
+
+    '
+        CREATE TABLE asteroid_catalog (
+            id                      SERIAL PRIMARY KEY,
+            designation             VARCHAR(50) NOT NULL,
+            diameter_km             NUMERIC(8,2) NOT NULL,
+            discovery_year          INTEGER NOT NULL,
+            is_potentially_hazardous BOOLEAN NOT NULL DEFAULT FALSE
+        );
+    ',
+    '
+        INSERT INTO asteroid_catalog (designation, diameter_km, discovery_year, is_potentially_hazardous) VALUES
+            (''Ceres'',    939.40, 1801, FALSE),
+            (''Vesta'',    525.40, 1807, FALSE),
+            (''Apophis'',    0.37, 2004, TRUE);
+    ',
+    100,
+    '[
+        {"id": 1, "designation": "Ceres",     "diameter_km": 939.40, "discovery_year": 1801, "is_potentially_hazardous": false},
+        {"id": 2, "designation": "Vesta",     "diameter_km": 525.40, "discovery_year": 1807, "is_potentially_hazardous": false},
+        {"id": 3, "designation": "Apophis",   "diameter_km": 0.37,   "discovery_year": 2004, "is_potentially_hazardous": true},
+        {"id": 4, "designation": "2026-XK1",  "diameter_km": 1.20,   "discovery_year": 2026, "is_potentially_hazardous": true}
+    ]',
+    FALSE,
+    'b0000001-0000-0000-0000-000000000001',
+    'BEGINNER',
+    NULL,
+    NULL
+),
+
+-- ========================================================================
+-- MISSION 13 — INTERMEDIATE / CYBERSECURITY
+-- Teaches: UPDATE, WHERE, SELECT (subquery)
+-- Expected solution:
+--   UPDATE employee_credentials
+--   SET access_level = 'Level 1'
+--   WHERE employee_name IN (SELECT employee_name FROM breach_report);
+--   SELECT * FROM employee_credentials;
+-- ========================================================================
+(
+    '00000000-0000-0000-0000-000000000013',
+    'Access Revoked',
+
+    'The forensic analysis of the NexusCorp breach is complete. Dra. Nakamura, head of IT Security, stares at the screen with bloodshot eyes, her knuckles white against the edge of the table. The breach report on your terminal lists compromised employees — names and the data they exposed. "Cross-reference with our employee credentials table," she says, her voice ice-cold. "Anyone on that list gets their access dropped to Level 1 immediately. No exceptions. No second chances. Then show me the full roster — I want everyone''s status at a glance."',
+
+    'Lower the access level to ''Level 1'' for all employees whose names appear on the breach_report. Then list all rows from employee_credentials.',
+
+    'Use UPDATE with a subquery in the WHERE clause: UPDATE ... SET ... WHERE employee_name IN (SELECT employee_name FROM breach_report). Then run SELECT * FROM employee_credentials.',
+
+    '
+        CREATE TABLE employee_credentials (
+            id             SERIAL PRIMARY KEY,
+            employee_name  VARCHAR(100) NOT NULL,
+            department     VARCHAR(50) NOT NULL,
+            access_level   VARCHAR(20) NOT NULL,
+            is_compromised BOOLEAN NOT NULL DEFAULT FALSE
+        );
+        CREATE TABLE breach_report (
+            id             SERIAL PRIMARY KEY,
+            employee_name  VARCHAR(100) NOT NULL,
+            breached_data  VARCHAR(100) NOT NULL
+        );
+    ',
+    '
+        INSERT INTO employee_credentials (employee_name, department, access_level, is_compromised) VALUES
+            (''Alex Silva'',   ''Engineering'', ''Level 3'', TRUE),
+            (''João Lima'',    ''Engineering'', ''Level 2'', TRUE),
+            (''Maria Santos'', ''HR'',          ''Level 2'', FALSE),
+            (''Carla Dias'',   ''IT Security'', ''Level 4'', FALSE),
+            (''Bob Torres'',   ''IT Security'', ''Level 3'', FALSE);
+        INSERT INTO breach_report (employee_name, breached_data) VALUES
+            (''Alex Silva'', ''/financial/balance, /admin/users''),
+            (''João Lima'',  ''/admin/backup, /admin/logs'');
+    ',
+    250,
+    '[
+        {"id": 1, "employee_name": "Alex Silva",   "department": "Engineering", "access_level": "Level 1", "is_compromised": true},
+        {"id": 2, "employee_name": "João Lima",    "department": "Engineering", "access_level": "Level 1", "is_compromised": true},
+        {"id": 3, "employee_name": "Maria Santos", "department": "HR",          "access_level": "Level 2", "is_compromised": false},
+        {"id": 4, "employee_name": "Carla Dias",   "department": "IT Security", "access_level": "Level 4", "is_compromised": false},
+        {"id": 5, "employee_name": "Bob Torres",   "department": "IT Security", "access_level": "Level 3", "is_compromised": false}
+    ]',
+    FALSE,
+    'b0000004-0000-0000-0000-000000000004',
+    'INTERMEDIATE',
+    NULL,
+    NULL
 );
 
 -- Mission-Techniques associations
@@ -740,5 +847,12 @@ INSERT INTO mission_techniques (mission_id, technique_id) VALUES
     ('00000000-0000-0000-0000-000000000011', 'c0000005-0000-0000-0000-000000000005'),
     ('00000000-0000-0000-0000-000000000011', 'c0000006-0000-0000-0000-000000000006'),
     ('00000000-0000-0000-0000-000000000011', 'c0000009-0000-0000-0000-000000000009'),
-    ('00000000-0000-0000-0000-000000000011', 'c0000004-0000-0000-0000-000000000004')
+    ('00000000-0000-0000-0000-000000000011', 'c0000004-0000-0000-0000-000000000004'),
+    -- Mission 12: INSERT, SELECT
+    ('00000000-0000-0000-0000-000000000012', 'c000000c-0000-0000-0000-00000000000c'),
+    ('00000000-0000-0000-0000-000000000012', 'c0000001-0000-0000-0000-000000000001'),
+    -- Mission 13: UPDATE, WHERE, SELECT
+    ('00000000-0000-0000-0000-000000000013', 'c000000a-0000-0000-0000-00000000000a'),
+    ('00000000-0000-0000-0000-000000000013', 'c0000002-0000-0000-0000-000000000002'),
+    ('00000000-0000-0000-0000-000000000013', 'c0000001-0000-0000-0000-000000000001')
 ON CONFLICT DO NOTHING;

@@ -1,12 +1,14 @@
 package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.ManageMissionUseCase;
-import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.MissionCommandPort;
+import com.sqlab.application.port.out.MissionQueryPort;
 import com.sqlab.application.port.out.ScenarioMissionCascadePort;
 import com.sqlab.application.port.out.TechniqueRepository;
 import com.sqlab.application.port.out.ThemeRepository;
 import com.sqlab.domain.exception.MissionNotFoundException;
 import com.sqlab.domain.exception.ThemeNotFoundException;
+import com.sqlab.domain.model.DifficultyLevel;
 import com.sqlab.domain.model.ExpectedTuple;
 import com.sqlab.domain.model.Mission;
 import com.sqlab.domain.model.Technique;
@@ -23,16 +25,19 @@ import java.util.stream.Collectors;
 @Transactional
 public class ManageMissionService implements ManageMissionUseCase {
 
-    private final MissionRepository missionRepository;
+    private final MissionQueryPort missionQueryPort;
+    private final MissionCommandPort missionCommandPort;
     private final ScenarioMissionCascadePort scenarioMissionCascadePort;
     private final ThemeRepository themeRepository;
     private final TechniqueRepository techniqueRepository;
 
-    public ManageMissionService(MissionRepository missionRepository,
+    public ManageMissionService(MissionQueryPort missionQueryPort,
+                                MissionCommandPort missionCommandPort,
                                 ScenarioMissionCascadePort scenarioMissionCascadePort,
                                 ThemeRepository themeRepository,
                                 TechniqueRepository techniqueRepository) {
-        this.missionRepository = missionRepository;
+        this.missionQueryPort = missionQueryPort;
+        this.missionCommandPort = missionCommandPort;
         this.scenarioMissionCascadePort = scenarioMissionCascadePort;
         this.themeRepository = themeRepository;
         this.techniqueRepository = techniqueRepository;
@@ -64,64 +69,73 @@ public class ManageMissionService implements ManageMissionUseCase {
         return names.stream().map(techniqueByName::get).toList();
     }
 
+    private Mission buildMission(UUID id, String title, String briefing,
+                                  String objective, String hint,
+                                  String ddlScript, String dmlScript,
+                                  List<Technique> techniques, int xpReward,
+                                  List<Map<String, Object>> expectedResult,
+                                  boolean ordered, com.sqlab.domain.model.Theme theme,
+                                  DifficultyLevel difficulty,
+                                  UUID scenarioId, Integer orderIndex,
+                                  boolean enabled) {
+        return Mission.builder()
+                .id(id)
+                .title(title)
+                .briefing(briefing)
+                .objective(objective)
+                .hint(hint)
+                .ddlScript(ddlScript)
+                .dmlScript(dmlScript)
+                .techniques(techniques)
+                .xpReward(xpReward)
+                .expectedResult(new ExpectedTuple(expectedResult))
+                .ordered(ordered)
+                .theme(theme)
+                .difficulty(difficulty)
+                .scenarioId(scenarioId)
+                .orderIndex(orderIndex)
+                .enabled(enabled)
+                .build();
+    }
+
     @Override
     public Mission create(CreateMissionCommand command) {
         UUID scenarioId = command.scenarioId();
         Integer orderIndex = command.orderIndex();
         if (scenarioId != null && orderIndex == null) {
-            orderIndex = missionRepository.countByScenarioId(scenarioId) + 1;
+            orderIndex = missionQueryPort.countByScenarioId(scenarioId) + 1;
         }
         var theme = resolveTheme(command.themeName());
         var techniques = resolveTechniques(command.techniqueNames());
-        Mission mission = Mission.builder()
-                .id(UUID.randomUUID())
-                .title(command.title())
-                .briefing(command.briefing())
-                .objective(command.objective())
-                .hint(command.hint())
-                .ddlScript(command.ddlScript())
-                .dmlScript(command.dmlScript())
-                .techniques(techniques)
-                .xpReward(command.xpReward())
-                .expectedResult(new ExpectedTuple(command.expectedResult()))
-                .ordered(command.ordered())
-                .theme(theme)
-                .difficulty(command.difficulty())
-                .scenarioId(scenarioId)
-                .orderIndex(orderIndex)
-                .enabled(command.enabled() != null ? command.enabled() : true)
-                .build();
+        Mission mission = buildMission(
+                UUID.randomUUID(),
+                command.title(), command.briefing(), command.objective(),
+                command.hint(), command.ddlScript(), command.dmlScript(),
+                techniques, command.xpReward(), command.expectedResult(),
+                command.ordered(), theme, command.difficulty(),
+                scenarioId, orderIndex,
+                command.enabled() != null ? command.enabled() : true);
 
-        return missionRepository.save(mission);
+        return missionCommandPort.save(mission);
     }
 
     @Override
     public Mission update(UpdateMissionCommand command) {
         validateScenarioConstraint(command.scenarioId(), command.orderIndex());
-        Mission existing = missionRepository.findById(command.id())
+        Mission existing = missionQueryPort.findById(command.id())
                 .orElseThrow(() -> new MissionNotFoundException(command.id()));
 
         var theme = resolveTheme(command.themeName());
         var techniques = resolveTechniques(command.techniqueNames());
-
-        Mission updated = Mission.builder()
-                .id(command.id())
-                .title(command.title())
-                .briefing(command.briefing())
-                .objective(command.objective())
-                .hint(command.hint())
-                .ddlScript(command.ddlScript())
-                .dmlScript(command.dmlScript())
-                .techniques(techniques)
-                .xpReward(command.xpReward())
-                .expectedResult(new ExpectedTuple(command.expectedResult()))
-                .ordered(command.ordered())
-                .theme(theme)
-                .difficulty(command.difficulty())
-                .scenarioId(command.scenarioId() != null ? command.scenarioId() : existing.getScenarioId())
-                .orderIndex(command.orderIndex() != null ? command.orderIndex() : existing.getOrderIndex())
-                .enabled(command.enabled() != null ? command.enabled() : existing.isEnabled())
-                .build();
+        Mission updated = buildMission(
+                command.id(),
+                command.title(), command.briefing(), command.objective(),
+                command.hint(), command.ddlScript(), command.dmlScript(),
+                techniques, command.xpReward(), command.expectedResult(),
+                command.ordered(), theme, command.difficulty(),
+                command.scenarioId() != null ? command.scenarioId() : existing.getScenarioId(),
+                command.orderIndex() != null ? command.orderIndex() : existing.getOrderIndex(),
+                command.enabled() != null ? command.enabled() : existing.isEnabled());
 
         if (command.enabled() != null
                 && command.enabled() != existing.isEnabled()
@@ -129,27 +143,27 @@ public class ManageMissionService implements ManageMissionUseCase {
             scenarioMissionCascadePort.setEnabled(existing.getScenarioId(), command.enabled());
         }
 
-        return missionRepository.save(updated);
+        return missionCommandPort.save(updated);
     }
 
     @Override
     public void delete(UUID missionId) {
-        if (missionRepository.findById(missionId).isEmpty()) {
+        if (missionQueryPort.findById(missionId).isEmpty()) {
             throw new MissionNotFoundException(missionId);
         }
-        missionRepository.deleteById(missionId);
+        missionCommandPort.deleteById(missionId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Mission findById(UUID missionId) {
-        return missionRepository.findById(missionId)
+        return missionQueryPort.findById(missionId)
                 .orElseThrow(() -> new MissionNotFoundException(missionId));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Mission> findAll() {
-        return missionRepository.findAll();
+        return missionQueryPort.findAll();
     }
 }

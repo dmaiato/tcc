@@ -1,9 +1,10 @@
 package com.sqlab.infrastructure.adapter.out.persistence;
 
-import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.MissionCommandPort;
+import com.sqlab.application.port.out.MissionQueryPort;
+import com.sqlab.application.port.out.MissionValidationPort;
 import com.sqlab.domain.model.DifficultyLevel;
 import com.sqlab.domain.model.Mission;
-import com.sqlab.domain.model.Technique;
 import com.sqlab.domain.model.Theme;
 import com.sqlab.infrastructure.adapter.out.persistence.entity.MissionJpaEntity;
 import com.sqlab.infrastructure.adapter.out.persistence.entity.ScenarioJpaEntity;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Transactional(readOnly = true)
-public class MissionPersistenceAdapter implements MissionRepository {
+public class MissionPersistenceAdapter implements MissionQueryPort, MissionCommandPort, MissionValidationPort {
 
     private final MissionJpaRepository jpaRepository;
     private final ThemeJpaRepository themeJpaRepository;
@@ -133,20 +134,13 @@ public class MissionPersistenceAdapter implements MissionRepository {
         }
         MissionJpaEntity entity = mapper.toJpa(mission, scenarioEntity);
 
-        ThemeJpaEntity themeEntity = themeJpaRepository.findByName(mission.getTheme().getName())
-                .orElseThrow(() -> new IllegalArgumentException("Theme not found: " + mission.getTheme()));
+        ThemeJpaEntity themeEntity = themeJpaRepository.getReferenceById(mission.getTheme().getId());
         entity.setTheme(themeEntity);
 
-        Set<String> techniqueNames = mission.getTechniques().stream()
-                .map(Technique::getName)
-                .collect(Collectors.toSet());
-        List<TechniqueJpaEntity> found = techniqueJpaRepository.findByNameIn(techniqueNames);
-        if (found.size() != techniqueNames.size()) {
-            Set<String> foundNames = found.stream().map(TechniqueJpaEntity::getName).collect(Collectors.toSet());
-            techniqueNames.removeAll(foundNames);
-            throw new IllegalArgumentException("Techniques not found: " + techniqueNames);
-        }
-        entity.setTechniques(new HashSet<>(found));
+        Set<TechniqueJpaEntity> techEntities = mission.getTechniques().stream()
+                .map(t -> techniqueJpaRepository.getReferenceById(t.getId()))
+                .collect(Collectors.toCollection(HashSet::new));
+        entity.setTechniques(techEntities);
 
         return mapper.toDomain(jpaRepository.save(entity));
     }

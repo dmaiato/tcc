@@ -1,7 +1,7 @@
 package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.GetUserProgressUseCase;
-import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.MissionQueryPort;
 import com.sqlab.application.port.out.ProgressRepository;
 import com.sqlab.application.port.out.ScenarioRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
 class GetUserProgressServiceTest {
 
     @Mock private ProgressRepository progressRepository;
-    @Mock private MissionRepository missionRepository;
+    @Mock private MissionQueryPort missionQueryPort;
     @Mock private ScenarioRepository scenarioRepository;
 
     private GetUserProgressService service;
@@ -30,7 +30,7 @@ class GetUserProgressServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new GetUserProgressService(progressRepository, missionRepository, scenarioRepository);
+        service = new GetUserProgressService(progressRepository, missionQueryPort, scenarioRepository);
     }
 
     @Test
@@ -46,7 +46,7 @@ class GetUserProgressServiceTest {
         var completedAt = LocalDateTime.now();
         var progress = com.sqlab.domain.model.Progress.complete(userId, missionId);
         when(progressRepository.findByUserId(userId)).thenReturn(List.of(progress));
-        when(missionRepository.findAllById(Set.of(missionId))).thenReturn(List.of());
+        when(missionQueryPort.findAllById(Set.of(missionId))).thenReturn(List.of());
         var result = service.handle(new GetUserProgressUseCase.Query(userId));
         assertThat(result).hasSize(1);
         assertThat(result.get(0).missionId()).isEqualTo(missionId);

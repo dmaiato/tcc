@@ -1,7 +1,8 @@
 package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.ManageScenarioUseCase;
-import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.MissionCommandPort;
+import com.sqlab.application.port.out.MissionQueryPort;
 import com.sqlab.application.port.out.ScenarioRepository;
 import com.sqlab.application.port.out.ThemeRepository;
 import com.sqlab.domain.exception.ScenarioNotFoundException;
@@ -25,7 +26,8 @@ import static org.mockito.Mockito.*;
 class ManageScenarioServiceTest {
 
     @Mock private ScenarioRepository scenarioRepository;
-    @Mock private MissionRepository missionRepository;
+    @Mock private MissionQueryPort missionQueryPort;
+    @Mock private MissionCommandPort missionCommandPort;
     @Mock private ThemeRepository themeRepository;
 
     private ManageScenarioService service;
@@ -35,7 +37,7 @@ class ManageScenarioServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new ManageScenarioService(scenarioRepository, missionRepository, themeRepository);
+        service = new ManageScenarioService(scenarioRepository, missionQueryPort, missionCommandPort, themeRepository);
         lenient().when(themeRepository.findByName("ASTRONOMY")).thenReturn(Optional.of(astronomyTheme));
         lenient().when(themeRepository.findByName("CYBERSECURITY")).thenReturn(Optional.of(cybersecurityTheme));
     }
@@ -61,7 +63,7 @@ class ManageScenarioServiceTest {
         assertThat(result.getTitle()).isEqualTo("New");
         assertThat(result.getTheme()).isEqualTo(cybersecurityTheme);
         assertThat(result.isEnabled()).isFalse();
-        verify(missionRepository).setEnabledByScenarioId(scenarioId, false);
+        verify(missionCommandPort).setEnabledByScenarioId(scenarioId, false);
     }
 
     @Test
@@ -101,15 +103,15 @@ class ManageScenarioServiceTest {
 
         when(scenarioRepository.findById(scenarioId)).thenReturn(Optional.of(
                 new Scenario(scenarioId, "S", "D", astronomyTheme, true, 0)));
-        when(missionRepository.findByScenarioIdOrderByOrderIndex(scenarioId)).thenReturn(List.of(m1, m2));
+        when(missionQueryPort.findByScenarioIdOrderByOrderIndex(scenarioId)).thenReturn(List.of(m1, m2));
 
         var cmd = new ManageScenarioUseCase.ReorderMissionsCommand(scenarioId, List.of(m2.getId(), m1.getId()));
         service.reorderMissions(cmd);
 
-        verify(missionRepository).setOrderIndex(m2.getId(), -3);
-        verify(missionRepository).setOrderIndex(m1.getId(), -4);
-        verify(missionRepository).setOrderIndex(m2.getId(), 1);
-        verify(missionRepository).setOrderIndex(m1.getId(), 2);
+        verify(missionCommandPort).setOrderIndex(m2.getId(), -3);
+        verify(missionCommandPort).setOrderIndex(m1.getId(), -4);
+        verify(missionCommandPort).setOrderIndex(m2.getId(), 1);
+        verify(missionCommandPort).setOrderIndex(m1.getId(), 2);
     }
 
     @Test
@@ -128,7 +130,7 @@ class ManageScenarioServiceTest {
                 .scenarioId(scenarioId).orderIndex(1).enabled(true).build();
         when(scenarioRepository.findById(scenarioId)).thenReturn(Optional.of(
                 new Scenario(scenarioId, "S", "D", astronomyTheme, true, 0)));
-        when(missionRepository.findByScenarioIdOrderByOrderIndex(scenarioId)).thenReturn(List.of(m1));
+        when(missionQueryPort.findByScenarioIdOrderByOrderIndex(scenarioId)).thenReturn(List.of(m1));
         var cmd = new ManageScenarioUseCase.ReorderMissionsCommand(scenarioId, List.of());
         assertThatThrownBy(() -> service.reorderMissions(cmd))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -137,7 +139,7 @@ class ManageScenarioServiceTest {
 
     @Test
     void countMissionsByScenarioId() {
-        when(missionRepository.countByScenarioId(scenarioId)).thenReturn(5);
+        when(missionQueryPort.countByScenarioId(scenarioId)).thenReturn(5);
         assertThat(service.countMissionsByScenarioId(scenarioId)).isEqualTo(5);
     }
 }

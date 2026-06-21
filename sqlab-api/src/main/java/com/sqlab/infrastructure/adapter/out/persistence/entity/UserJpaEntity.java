@@ -1,5 +1,6 @@
 package com.sqlab.infrastructure.adapter.out.persistence.entity;
 
+import com.sqlab.domain.model.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -31,8 +32,9 @@ public class UserJpaEntity {
     @Column(nullable = false)
     private int xp;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String role;
+    private UserRole role;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp

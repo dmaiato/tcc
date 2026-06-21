@@ -4,11 +4,11 @@ import java.util.UUID;
 
 public class Scenario {
     private final UUID id;
-    private final String title;
-    private final String description;
-    private final Theme theme;
-    private final boolean enabled;
-    private final int requiredLevel;
+    private String title;
+    private String description;
+    private Theme theme;
+    private int requiredLevel;
+    private boolean enabled;
 
     public Scenario(UUID id, String title, String description, Theme theme, boolean enabled, int requiredLevel) {
         this.id = id;
@@ -25,4 +25,12 @@ public class Scenario {
     public Theme getTheme() { return theme; }
     public boolean isEnabled() { return enabled; }
     public int getRequiredLevel() { return requiredLevel; }
+
+    public void setTitle(String title) { this.title = title; }
+    public void setDescription(String description) { this.description = description; }
+    public void setTheme(Theme theme) { this.theme = theme; }
+    public void setRequiredLevel(int requiredLevel) { this.requiredLevel = requiredLevel; }
+
+    public void disable() { this.enabled = false; }
+    public void enable() { this.enabled = true; }
 }

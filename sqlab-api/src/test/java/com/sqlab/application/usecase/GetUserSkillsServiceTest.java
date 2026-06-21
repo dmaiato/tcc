@@ -1,7 +1,7 @@
 package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.GetUserSkillsUseCase;
-import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.MissionQueryPort;
 import com.sqlab.application.port.out.ProgressRepository;
 import com.sqlab.domain.model.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,14 +22,14 @@ import static org.mockito.Mockito.*;
 class GetUserSkillsServiceTest {
 
     @Mock private ProgressRepository progressRepository;
-    @Mock private MissionRepository missionRepository;
+    @Mock private MissionQueryPort missionQueryPort;
 
     private GetUserSkillsService service;
     private final UUID userId = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
-        service = new GetUserSkillsService(progressRepository, missionRepository);
+        service = new GetUserSkillsService(progressRepository, missionQueryPort);
     }
 
     @Test
@@ -49,7 +49,7 @@ class GetUserSkillsServiceTest {
                 .expectedResult(new ExpectedTuple(List.of(Map.of("x", 1))))
                 .ordered(false).theme(new Theme(UUID.randomUUID(), "ASTRONOMY", null, null)).difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(null).orderIndex(null).enabled(true).build();
-        when(missionRepository.findAllById(Set.of(missionId))).thenReturn(List.of(mission));
+        when(missionQueryPort.findAllById(Set.of(missionId))).thenReturn(List.of(mission));
 
         var result = service.handle(new GetUserSkillsUseCase.Query(userId));
         assertThat(result).containsExactly("JOIN", "SELECT");
@@ -60,7 +60,7 @@ class GetUserSkillsServiceTest {
         var m1 = UUID.randomUUID();
         var m2 = UUID.randomUUID();
         when(progressRepository.findCompletedMissionIdsByUserId(userId)).thenReturn(Set.of(m1, m2));
-        when(missionRepository.findAllById(Set.of(m1, m2))).thenReturn(List.of(
+        when(missionQueryPort.findAllById(Set.of(m1, m2))).thenReturn(List.of(
                 Mission.builder().id(m1).title("M1").briefing("B").objective("O")
                         .ddlScript("DDL").techniques(List.of(new Technique(null, "SELECT"), new Technique(null, "JOIN"))).xpReward(10)
                         .expectedResult(new ExpectedTuple(List.of(Map.of("x", 1))))

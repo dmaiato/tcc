@@ -1,6 +1,6 @@
 package com.sqlab.application.usecase;
 
-import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.MissionQueryPort;
 import com.sqlab.application.port.out.ScenarioRepository;
 import com.sqlab.domain.exception.MissionNotFoundException;
 import com.sqlab.domain.model.*;
@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 class GetAdminMissionsServiceTest {
 
     @Mock
-    private MissionRepository missionRepository;
+    private MissionQueryPort missionQueryPort;
     @Mock
     private ScenarioRepository scenarioRepository;
 
@@ -29,7 +29,7 @@ class GetAdminMissionsServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new GetAdminMissionsService(missionRepository, scenarioRepository);
+        service = new GetAdminMissionsService(missionQueryPort, scenarioRepository);
     }
 
     @Test
@@ -37,7 +37,7 @@ class GetAdminMissionsServiceTest {
         var m1 = createMission(UUID.randomUUID(), "M1", null);
         var m2 = createMission(UUID.randomUUID(), "M2", UUID.randomUUID());
 
-        when(missionRepository.findAll()).thenReturn(List.of(m1, m2));
+        when(missionQueryPort.findAll()).thenReturn(List.of(m1, m2));
 
         var results = service.listAll();
 
@@ -51,7 +51,7 @@ class GetAdminMissionsServiceTest {
         var id = UUID.randomUUID();
         var mission = createMission(id, "Test Mission", null);
 
-        when(missionRepository.findById(id)).thenReturn(Optional.of(mission));
+        when(missionQueryPort.findById(id)).thenReturn(Optional.of(mission));
 
         var result = service.findById(id);
 
@@ -61,7 +61,7 @@ class GetAdminMissionsServiceTest {
     @Test
     void findByIdThrowsWhenNotFound() {
         var id = UUID.randomUUID();
-        when(missionRepository.findById(id)).thenReturn(Optional.empty());
+        when(missionQueryPort.findById(id)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.findById(id))
                 .isInstanceOf(MissionNotFoundException.class);
@@ -74,9 +74,9 @@ class GetAdminMissionsServiceTest {
                 new Theme(UUID.randomUUID(), "CRIMINAL", null, null), true, 2);
         var mission = createMission(UUID.randomUUID(), "Mission X", scenarioId);
 
-        when(missionRepository.findAll()).thenReturn(List.of(mission));
+        when(missionQueryPort.findAll()).thenReturn(List.of(mission));
         when(scenarioRepository.findById(scenarioId)).thenReturn(Optional.of(scenario));
-        when(missionRepository.countByScenarioIdAndEnabledTrue(scenarioId)).thenReturn(7);
+        when(missionQueryPort.countByScenarioIdAndEnabledTrue(scenarioId)).thenReturn(7);
 
         var results = service.listAll();
 
@@ -88,7 +88,7 @@ class GetAdminMissionsServiceTest {
     void resultHasNullScenarioFieldsWhenMissionHasNoScenario() {
         var mission = createMission(UUID.randomUUID(), "Standalone", null);
 
-        when(missionRepository.findAll()).thenReturn(List.of(mission));
+        when(missionQueryPort.findAll()).thenReturn(List.of(mission));
 
         var results = service.listAll();
 

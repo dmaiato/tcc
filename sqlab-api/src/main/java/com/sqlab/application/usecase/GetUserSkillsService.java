@@ -1,7 +1,7 @@
 package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.GetUserSkillsUseCase;
-import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.MissionQueryPort;
 import com.sqlab.application.port.out.ProgressRepository;
 import com.sqlab.domain.model.Technique;
 import org.springframework.stereotype.Service;
@@ -18,12 +18,12 @@ import java.util.stream.Collectors;
 public class GetUserSkillsService implements GetUserSkillsUseCase {
 
     private final ProgressRepository progressRepository;
-    private final MissionRepository missionRepository;
+    private final MissionQueryPort missionQueryPort;
 
     public GetUserSkillsService(ProgressRepository progressRepository,
-                                MissionRepository missionRepository) {
+                                MissionQueryPort missionQueryPort) {
         this.progressRepository = progressRepository;
-        this.missionRepository = missionRepository;
+        this.missionQueryPort = missionQueryPort;
     }
 
     @Override
@@ -35,7 +35,7 @@ public class GetUserSkillsService implements GetUserSkillsUseCase {
         }
 
         Set<String> skills = new HashSet<>();
-        missionRepository.findAllById(completedMissionIds)
+        missionQueryPort.findAllById(completedMissionIds)
                 .forEach(mission -> skills.addAll(
                         mission.getTechniques().stream().map(Technique::getName).collect(Collectors.toSet())));
 

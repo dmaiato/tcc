@@ -24,7 +24,7 @@ class UserMapperTest {
                 .email("alice@example.com")
                 .passwordHash("hash123")
                 .xp(500)
-                .role("USER")
+                .role(UserRole.USER)
                 .createdAt(now)
                 .build();
 
@@ -47,7 +47,7 @@ class UserMapperTest {
                 .email("admin@example.com")
                 .passwordHash("adminhash")
                 .xp(0)
-                .role("ADMIN")
+                .role(UserRole.ADMIN)
                 .createdAt(now)
                 .build();
 
@@ -67,7 +67,7 @@ class UserMapperTest {
         assertEquals("bob@example.com", entity.getEmail());
         assertEquals("$2a$10...", entity.getPasswordHash());
         assertEquals(300, entity.getXp());
-        assertEquals("USER", entity.getRole());
+        assertEquals(UserRole.USER, entity.getRole());
         assertEquals(now, entity.getCreatedAt());
     }
 }

@@ -1,7 +1,8 @@
 package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.GetScenariosUseCase;
-import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.MissionQueryPort;
+import com.sqlab.application.port.out.MissionValidationPort;
 import com.sqlab.application.port.out.ProgressRepository;
 import com.sqlab.application.port.out.ScenarioRepository;
 import com.sqlab.application.port.out.UserRepository;
@@ -21,16 +22,19 @@ import java.util.stream.Collectors;
 public class GetScenariosService implements GetScenariosUseCase {
 
     private final ScenarioRepository scenarioRepository;
-    private final MissionRepository missionRepository;
+    private final MissionQueryPort missionQueryPort;
+    private final MissionValidationPort missionValidationPort;
     private final ProgressRepository progressRepository;
     private final UserRepository userRepository;
 
     public GetScenariosService(ScenarioRepository scenarioRepository,
-                               MissionRepository missionRepository,
-                               ProgressRepository progressRepository,
-                               UserRepository userRepository) {
+                                MissionQueryPort missionQueryPort,
+                                MissionValidationPort missionValidationPort,
+                                ProgressRepository progressRepository,
+                                UserRepository userRepository) {
         this.scenarioRepository = scenarioRepository;
-        this.missionRepository = missionRepository;
+        this.missionQueryPort = missionQueryPort;
+        this.missionValidationPort = missionValidationPort;
         this.progressRepository = progressRepository;
         this.userRepository = userRepository;
     }
@@ -52,7 +56,7 @@ public class GetScenariosService implements GetScenariosUseCase {
                 : Set.of();
         List<Scenario> scenarios = scenarioRepository.findByEnabled();
         Set<UUID> allScenarioIds = scenarios.stream().map(Scenario::getId).collect(Collectors.toSet());
-        Map<UUID, List<Mission>> missionsByScenario = missionRepository
+        Map<UUID, List<Mission>> missionsByScenario = missionQueryPort
                 .findByScenarioIdInOrderByOrderIndex(allScenarioIds)
                 .stream()
                 .collect(Collectors.groupingBy(Mission::getScenarioId, LinkedHashMap::new, Collectors.toList()));
@@ -87,7 +91,7 @@ public class GetScenariosService implements GetScenariosUseCase {
         Scenario scenario = scenarioRepository.findById(scenarioId)
                 .orElseThrow(() -> new ScenarioNotFoundException(scenarioId));
 
-        List<Mission> allMissions = missionRepository.findByScenarioIdOrderByOrderIndex(scenarioId);
+        List<Mission> allMissions = missionQueryPort.findByScenarioIdOrderByOrderIndex(scenarioId);
         if (allMissions.isEmpty() || allMissions.stream().anyMatch(m -> !m.isEnabled())) {
             throw new ScenarioNotFoundException(scenarioId);
         }
@@ -107,7 +111,7 @@ public class GetScenariosService implements GetScenariosUseCase {
             } else if (belowRequiredLevel) {
                 status = "LOCKED";
             } else if (m.getOrderIndex() == null || m.getOrderIndex() == 1
-                       || missionRepository.isPreviousMissionCompleted(userId, scenarioId, m.getOrderIndex() - 1)) {
+                       || missionValidationPort.isPreviousMissionCompleted(userId, scenarioId, m.getOrderIndex() - 1)) {
                 status = "AVAILABLE";
             } else {
                 status = "LOCKED";

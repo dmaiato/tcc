@@ -1,5 +1,6 @@
 package com.sqlab.infrastructure.adapter.out.persistence.repository;
 
+import com.sqlab.domain.model.UserRole;
 import com.sqlab.infrastructure.adapter.out.persistence.entity.*;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
@@ -79,7 +80,7 @@ class JpaEntityMappingsTest extends AbstractPersistenceTest {
         var theme = themeRepository.save(ThemeJpaEntity.builder().name("ASTRONOMY").build());
         var user = userRepository.save(UserJpaEntity.builder()
                 .username("jpatest").email("jpa@test.com").passwordHash("h")
-                .xp(0).role("USER").createdAt(LocalDateTime.now()).build());
+                .xp(0).role(UserRole.USER).createdAt(LocalDateTime.now()).build());
         var mission = missionRepository.save(MissionJpaEntity.builder()
                 .title("JPAM").briefing("B").objective("O").ddlScript("DDL")
                 .xpReward(10).expectedResult(List.of(Map.of("x", 1)))

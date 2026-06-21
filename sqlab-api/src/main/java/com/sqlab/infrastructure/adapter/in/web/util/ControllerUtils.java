@@ -7,11 +7,13 @@ public class ControllerUtils {
     private ControllerUtils() {}
 
     public static UUID parseUserId(String userId) {
-        if (userId == null) return null;
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID not found in token");
+        }
         try {
             return UUID.fromString(userId);
         } catch (IllegalArgumentException e) {
-            return null;
+            throw new IllegalArgumentException("Invalid user ID format in token: " + userId);
         }
     }
 }

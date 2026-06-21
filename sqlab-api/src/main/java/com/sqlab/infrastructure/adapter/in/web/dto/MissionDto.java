@@ -13,24 +13,7 @@ import java.util.UUID;
 
 public class MissionDto {
 
-    public record CreateMissionRequest(
-            @NotBlank String title,
-            @NotBlank String briefing,
-            @NotBlank String objective,
-            String hint,
-            @NotBlank String ddlScript,
-            String dmlScript,
-            List<String> techniques,
-            int xpReward,
-            boolean ordered,
-            @NotBlank String theme,
-            @NotNull DifficultyLevel difficulty,
-            @NotEmpty List<Map<String, Object>> expectedResult,
-            UUID scenarioId,
-            Integer orderIndex,
-            Boolean enabled) {}
-
-    public record UpdateMissionRequest(
+    public record UpsertMissionRequest(
             @NotBlank String title,
             @NotBlank String briefing,
             @NotBlank String objective,

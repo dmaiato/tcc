@@ -1,7 +1,7 @@
 package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.GetAdminScenariosUseCase;
-import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.MissionQueryPort;
 import com.sqlab.application.port.out.ScenarioRepository;
 import com.sqlab.domain.model.Scenario;
 import org.springframework.stereotype.Service;
@@ -15,18 +15,18 @@ import java.util.UUID;
 public class GetAdminScenariosService implements GetAdminScenariosUseCase {
 
     private final ScenarioRepository scenarioRepository;
-    private final MissionRepository missionRepository;
+    private final MissionQueryPort missionQueryPort;
 
     public GetAdminScenariosService(ScenarioRepository scenarioRepository,
-                                    MissionRepository missionRepository) {
+                                    MissionQueryPort missionQueryPort) {
         this.scenarioRepository = scenarioRepository;
-        this.missionRepository = missionRepository;
+        this.missionQueryPort = missionQueryPort;
     }
 
     @Override
     public List<ScenarioListResult> listAll() {
         return scenarioRepository.findAll().stream()
-                .map(s -> new ScenarioListResult(s, missionRepository.countByScenarioId(s.getId())))
+                .map(s -> new ScenarioListResult(s, missionQueryPort.countByScenarioId(s.getId())))
                 .toList();
     }
 
@@ -34,7 +34,7 @@ public class GetAdminScenariosService implements GetAdminScenariosUseCase {
     public ScenarioDetailResult findById(UUID id) {
         Scenario scenario = scenarioRepository.findById(id)
                 .orElseThrow(() -> new com.sqlab.domain.exception.ScenarioNotFoundException(id));
-        var missions = missionRepository.findByScenarioIdOrderByOrderIndex(id);
+        var missions = missionQueryPort.findByScenarioIdOrderByOrderIndex(id);
         return new ScenarioDetailResult(scenario, missions);
     }
 }

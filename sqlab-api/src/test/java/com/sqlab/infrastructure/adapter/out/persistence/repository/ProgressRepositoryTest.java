@@ -1,6 +1,7 @@
 package com.sqlab.infrastructure.adapter.out.persistence.repository;
 
 import com.sqlab.domain.model.DifficultyLevel;
+import com.sqlab.domain.model.UserRole;
 import com.sqlab.infrastructure.adapter.out.persistence.entity.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ class ProgressRepositoryTest extends AbstractPersistenceTest {
         var technique = techniqueRepository.save(TechniqueJpaEntity.builder().name("SELECT").build());
         user = userRepository.save(UserJpaEntity.builder()
                 .username("puser").email("p@test.com").passwordHash("h")
-                .xp(0).role("USER").createdAt(LocalDateTime.now()).build());
+                .xp(0).role(UserRole.USER).createdAt(LocalDateTime.now()).build());
         mission = missionRepository.save(MissionJpaEntity.builder()
                 .title("PM").briefing("B").objective("O").ddlScript("DDL")
                 .xpReward(10).expectedResult(List.of(Map.of("x", 1)))

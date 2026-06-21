@@ -1,6 +1,8 @@
 package com.sqlab.infrastructure.adapter.in.web;
 
-import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.MissionCommandPort;
+import com.sqlab.application.port.out.MissionQueryPort;
+import com.sqlab.application.port.out.MissionValidationPort;
 import com.sqlab.domain.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +34,13 @@ class AdminValidateMissionIntegrationTest {
     private WebApplicationContext context;
 
     @MockitoBean
-    private MissionRepository missionRepository;
+    private MissionQueryPort missionQueryPort;
+
+    @MockitoBean
+    private MissionCommandPort missionCommandPort;
+
+    @MockitoBean
+    private MissionValidationPort missionValidationPort;
 
     private UUID missionId;
     private Mission mission;
@@ -63,7 +71,7 @@ class AdminValidateMissionIntegrationTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void shouldReturnCorrectWhenAdminAndValidSolution() throws Exception {
-        when(missionRepository.findById(missionId)).thenReturn(Optional.of(mission));
+        when(missionQueryPort.findById(missionId)).thenReturn(Optional.of(mission));
 
         String requestBody = """
                 {"tuples": [{"name": "Alice"}]}
@@ -79,7 +87,7 @@ class AdminValidateMissionIntegrationTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void shouldReturnIncorrectWhenAdminAndWrongSolution() throws Exception {
-        when(missionRepository.findById(missionId)).thenReturn(Optional.of(mission));
+        when(missionQueryPort.findById(missionId)).thenReturn(Optional.of(mission));
 
         String requestBody = """
                 {"tuples": [{"name": "Bob"}]}

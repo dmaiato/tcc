@@ -1,7 +1,7 @@
 package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.GetUserProgressUseCase;
-import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.MissionQueryPort;
 import com.sqlab.application.port.out.ProgressRepository;
 import com.sqlab.application.port.out.ScenarioRepository;
 import com.sqlab.domain.model.Mission;
@@ -17,14 +17,14 @@ import java.util.stream.Collectors;
 public class GetUserProgressService implements GetUserProgressUseCase {
 
     private final ProgressRepository progressRepository;
-    private final MissionRepository missionRepository;
+    private final MissionQueryPort missionQueryPort;
     private final ScenarioRepository scenarioRepository;
 
     public GetUserProgressService(ProgressRepository progressRepository,
-                                  MissionRepository missionRepository,
+                                  MissionQueryPort missionQueryPort,
                                   ScenarioRepository scenarioRepository) {
         this.progressRepository = progressRepository;
-        this.missionRepository = missionRepository;
+        this.missionQueryPort = missionQueryPort;
         this.scenarioRepository = scenarioRepository;
     }
 
@@ -40,7 +40,7 @@ public class GetUserProgressService implements GetUserProgressUseCase {
                 .map(Progress::getMissionId)
                 .collect(Collectors.toSet());
         Map<UUID, Mission> missionMap = new HashMap<>();
-        missionRepository.findAllById(missionIds)
+        missionQueryPort.findAllById(missionIds)
                 .forEach(m -> missionMap.put(m.getId(), m));
 
         Set<UUID> scenarioIds = missionMap.values().stream()

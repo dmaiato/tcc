@@ -8,6 +8,7 @@ import com.sqlab.domain.exception.ScenarioNotFoundException;
 import com.sqlab.domain.exception.ThemeNotFoundException;
 import com.sqlab.domain.exception.UserAlreadyExistsException;
 import com.sqlab.domain.exception.UserNotFoundException;
+import com.sqlab.infrastructure.adapter.in.web.dto.ErrorCode;
 import com.sqlab.infrastructure.adapter.in.web.dto.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -79,13 +80,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissionLockedException.class)
     public ResponseEntity<ErrorResponse> handleMissionLocked(MissionLockedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(new ErrorResponse(HttpStatus.FORBIDDEN.value(), ex.getMessage(), "MISSION_LOCKED", ex.getScenarioId()));
+                .body(new ErrorResponse(HttpStatus.FORBIDDEN.value(), ex.getMessage(), ErrorCode.MISSION_LOCKED.name(), ex.getScenarioId()));
     }
 
     @ExceptionHandler(LevelRequiredException.class)
     public ResponseEntity<ErrorResponse> handleLevelRequired(LevelRequiredException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(new ErrorResponse(HttpStatus.FORBIDDEN.value(), ex.getMessage(), "LEVEL_REQUIRED",
+                .body(new ErrorResponse(HttpStatus.FORBIDDEN.value(), ex.getMessage(), ErrorCode.LEVEL_REQUIRED.name(),
                         ex.getRequiredLevel(), ex.getCurrentLevel()));
     }
 

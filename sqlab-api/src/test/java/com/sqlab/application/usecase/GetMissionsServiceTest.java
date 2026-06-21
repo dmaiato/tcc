@@ -1,7 +1,8 @@
 package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.GetMissionsUseCase;
-import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.MissionQueryPort;
+import com.sqlab.application.port.out.MissionValidationPort;
 import com.sqlab.application.port.out.ScenarioRepository;
 import com.sqlab.application.port.out.ThemeRepository;
 import com.sqlab.domain.exception.LevelRequiredException;
@@ -23,7 +24,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class GetMissionsServiceTest {
 
-    @Mock private MissionRepository missionRepository;
+    @Mock private MissionQueryPort missionQueryPort;
+    @Mock private MissionValidationPort missionValidationPort;
     @Mock private ScenarioRepository scenarioRepository;
     @Mock private MissionAccessValidator missionAccessValidator;
     @Mock private ThemeRepository themeRepository;
@@ -36,7 +38,7 @@ class GetMissionsServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new GetMissionsService(missionRepository, scenarioRepository, missionAccessValidator, themeRepository);
+        service = new GetMissionsService(missionQueryPort, missionValidationPort, scenarioRepository, missionAccessValidator, themeRepository);
         lenient().when(themeRepository.findByName("ASTRONOMY")).thenReturn(Optional.of(astronomyTheme));
     }
 
@@ -55,7 +57,7 @@ class GetMissionsServiceTest {
     @Test
     void listAllWithoutFilters() {
         var mission = createMission(true, 0);
-        when(missionRepository.findByEnabledTrue()).thenReturn(List.of(mission));
+        when(missionQueryPort.findByEnabledTrue()).thenReturn(List.of(mission));
 
         var result = service.handle(new GetMissionsUseCase.ListAllQuery());
         assertThat(result).hasSize(1);
@@ -64,7 +66,7 @@ class GetMissionsServiceTest {
     @Test
     void listWithThemeFilter() {
         var mission = createMission(true, 0);
-        when(missionRepository.findByTheme(astronomyTheme)).thenReturn(List.of(mission));
+        when(missionQueryPort.findByTheme(astronomyTheme)).thenReturn(List.of(mission));
 
         var result = service.handle(new GetMissionsUseCase.ListAllQuery("ASTRONOMY", null));
         assertThat(result).hasSize(1);
@@ -73,7 +75,7 @@ class GetMissionsServiceTest {
     @Test
     void listWithDifficultyFilter() {
         var mission = createMission(true, 0);
-        when(missionRepository.findByDifficulty(DifficultyLevel.BEGINNER)).thenReturn(List.of(mission));
+        when(missionQueryPort.findByDifficulty(DifficultyLevel.BEGINNER)).thenReturn(List.of(mission));
 
         var result = service.handle(new GetMissionsUseCase.ListAllQuery(null, DifficultyLevel.BEGINNER));
         assertThat(result).hasSize(1);
@@ -82,7 +84,7 @@ class GetMissionsServiceTest {
     @Test
     void listWithThemeAndDifficultyFilter() {
         var mission = createMission(true, 0);
-        when(missionRepository.findByThemeAndDifficulty(astronomyTheme, DifficultyLevel.BEGINNER))
+        when(missionQueryPort.findByThemeAndDifficulty(astronomyTheme, DifficultyLevel.BEGINNER))
                 .thenReturn(List.of(mission));
 
         var result = service.handle(new GetMissionsUseCase.ListAllQuery("ASTRONOMY", DifficultyLevel.BEGINNER));
@@ -92,7 +94,7 @@ class GetMissionsServiceTest {
     @Test
     void listFiltersOutDisabledMissions() {
         var disabled = createMission(false, 0);
-        when(missionRepository.findByEnabledTrue()).thenReturn(List.of(disabled));
+        when(missionQueryPort.findByEnabledTrue()).thenReturn(List.of(disabled));
 
         var result = service.handle(new GetMissionsUseCase.ListAllQuery());
         assertThat(result).isEmpty();

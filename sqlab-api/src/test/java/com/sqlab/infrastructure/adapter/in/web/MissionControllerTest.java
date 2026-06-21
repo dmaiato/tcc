@@ -2,8 +2,6 @@ package com.sqlab.infrastructure.adapter.in.web;
 
 import tools.jackson.databind.ObjectMapper;
 import com.sqlab.application.port.in.*;
-import com.sqlab.application.port.out.MissionRepository;
-import com.sqlab.application.port.out.ScenarioRepository;
 import com.sqlab.domain.model.*;
 import com.sqlab.domain.exception.MissionNotFoundException;
 import com.sqlab.domain.model.Mission;
@@ -20,7 +18,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -55,17 +52,7 @@ class MissionControllerTest {
     private AdminValidateMissionUseCase adminValidateMissionUseCase;
 
     @MockitoBean
-    private ScenarioRepository scenarioRepository;
-
-    @MockitoBean
-    private MissionRepository missionRepository;
-
-    @MockitoBean
     private GetAdminMissionsUseCase getAdminMissionsUseCase;
-
-    @BeforeEach
-    void setUp() {
-    }
 
     private Mission createMission(UUID id, String title) {
         return Mission.builder()
@@ -82,7 +69,6 @@ class MissionControllerTest {
     void listAll_shouldReturnMissions() throws Exception {
         var mission = createMission(UUID.randomUUID(), "M1");
         when(getMissionsUseCase.handle(any(GetMissionsUseCase.ListAllQuery.class))).thenReturn(List.of(mission));
-        when(scenarioRepository.findAllById(any())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/missions"))
                 .andExpect(status().isOk())
@@ -95,8 +81,6 @@ class MissionControllerTest {
     void listAll_shouldFilterByThemeAndDifficulty() throws Exception {
         var mission = createMission(UUID.randomUUID(), "Filtered");
         when(getMissionsUseCase.handle(any(GetMissionsUseCase.ListAllQuery.class))).thenReturn(List.of(mission));
-        when(scenarioRepository.findAllById(any())).thenReturn(List.of());
-
         mockMvc.perform(get("/api/missions")
                         .param("theme", "ASTRONOMY")
                         .param("difficulty", "BEGINNER"))
@@ -180,9 +164,8 @@ class MissionControllerTest {
         var missionId = UUID.randomUUID();
         var mission = createMission(missionId, "New Mission");
         when(manageMissionUseCase.create(any())).thenReturn(mission);
-        when(scenarioRepository.findById(any())).thenReturn(Optional.empty());
 
-        var req = new MissionDto.CreateMissionRequest(
+        var req = new MissionDto.UpsertMissionRequest(
                 "New Mission", "Brief", "Obj", null, "DDL", null, List.of("SELECT"),
                 100, true, "ASTRONOMY", DifficultyLevel.BEGINNER,
                 List.of(Map.of("id", 1)), null, null, true);
@@ -214,9 +197,8 @@ class MissionControllerTest {
         var missionId = UUID.randomUUID();
         var mission = createMission(missionId, "Updated Mission");
         when(manageMissionUseCase.update(any())).thenReturn(mission);
-        when(scenarioRepository.findById(any())).thenReturn(Optional.empty());
 
-        var req = new MissionDto.UpdateMissionRequest(
+        var req = new MissionDto.UpsertMissionRequest(
                 "Updated Mission", "Brief", "Obj", null, "DDL", null, List.of("SELECT"),
                 200, false, "CYBERSECURITY", DifficultyLevel.INTERMEDIATE,
                 List.of(Map.of("id", 2)), null, null, false);
@@ -248,7 +230,6 @@ class MissionControllerTest {
                 .scenarioId(null).orderIndex(null).enabled(true).requiredLevel(1)
                 .build();
         when(getAdminMissionsUseCase.findById(missionId)).thenReturn(new GetAdminMissionsUseCase.AdminMissionResult(mission, null, null));
-        when(scenarioRepository.findById(any())).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/missions/{id}/admin", missionId).with(user(USER_ID)))
                 .andExpect(status().isOk())
@@ -260,7 +241,6 @@ class MissionControllerTest {
     void listAllAdmin_shouldReturnAllMissions() throws Exception {
         var mission = createMission(UUID.randomUUID(), "Admin List");
         when(getAdminMissionsUseCase.listAll()).thenReturn(List.of(new GetAdminMissionsUseCase.AdminMissionResult(mission, null, null)));
-        when(scenarioRepository.findById(any())).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/missions/admin").with(user(USER_ID)))
                 .andExpect(status().isOk())

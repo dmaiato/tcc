@@ -5,8 +5,8 @@ import java.util.UUID;
 public class Theme {
     private final UUID id;
     private final String name;
-    private final String description;
-    private final String emoji;
+    private String description;
+    private String emoji;
 
     public Theme(UUID id, String name, String description, String emoji) {
         this.id = id;
@@ -19,6 +19,9 @@ public class Theme {
     public String getName() { return name; }
     public String getDescription() { return description; }
     public String getEmoji() { return emoji; }
+
+    public void setDescription(String description) { this.description = description; }
+    public void setEmoji(String emoji) { this.emoji = emoji; }
 
     @Override
     public boolean equals(Object o) {

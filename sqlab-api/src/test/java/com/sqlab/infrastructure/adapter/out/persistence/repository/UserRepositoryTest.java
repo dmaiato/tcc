@@ -1,5 +1,6 @@
 package com.sqlab.infrastructure.adapter.out.persistence.repository;
 
+import com.sqlab.domain.model.UserRole;
 import com.sqlab.infrastructure.adapter.out.persistence.entity.UserJpaEntity;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +22,7 @@ class UserRepositoryTest extends AbstractPersistenceTest {
                 .email(email)
                 .passwordHash("hash")
                 .xp(0)
-                .role("USER")
+                .role(UserRole.USER)
                 .createdAt(LocalDateTime.now())
                 .build();
     }

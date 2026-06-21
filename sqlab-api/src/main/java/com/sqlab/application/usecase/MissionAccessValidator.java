@@ -1,6 +1,7 @@
 package com.sqlab.application.usecase;
 
-import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.MissionQueryPort;
+import com.sqlab.application.port.out.MissionValidationPort;
 import com.sqlab.application.port.out.ScenarioRepository;
 import com.sqlab.application.port.out.UserRepository;
 import com.sqlab.domain.exception.LevelRequiredException;
@@ -16,20 +17,23 @@ import java.util.UUID;
 @Component
 public class MissionAccessValidator {
 
-    private final MissionRepository missionRepository;
+    private final MissionQueryPort missionQueryPort;
+    private final MissionValidationPort missionValidationPort;
     private final UserRepository userRepository;
     private final ScenarioRepository scenarioRepository;
 
-    public MissionAccessValidator(MissionRepository missionRepository,
+    public MissionAccessValidator(MissionQueryPort missionQueryPort,
+                                  MissionValidationPort missionValidationPort,
                                   UserRepository userRepository,
                                   ScenarioRepository scenarioRepository) {
-        this.missionRepository = missionRepository;
+        this.missionQueryPort = missionQueryPort;
+        this.missionValidationPort = missionValidationPort;
         this.userRepository = userRepository;
         this.scenarioRepository = scenarioRepository;
     }
 
     public Mission ensureAccessible(UUID missionId, UUID userId) {
-        Mission mission = missionRepository.findById(missionId)
+        Mission mission = missionQueryPort.findById(missionId)
                 .orElseThrow(() -> new MissionNotFoundException(missionId));
 
         if (!mission.isEnabled()) {
@@ -37,7 +41,7 @@ public class MissionAccessValidator {
         }
 
         if (mission.getScenarioId() != null
-            && missionRepository.existsByScenarioIdAndEnabledFalse(mission.getScenarioId())) {
+            && missionValidationPort.existsByScenarioIdAndEnabledFalse(mission.getScenarioId())) {
             throw new MissionNotFoundException(missionId);
         }
 
@@ -48,7 +52,7 @@ public class MissionAccessValidator {
     }
 
     public Mission checkLevel(UUID missionId, UUID userId) {
-        Mission mission = missionRepository.findById(missionId)
+        Mission mission = missionQueryPort.findById(missionId)
                 .orElseThrow(() -> new MissionNotFoundException(missionId));
         checkLevel(mission, userId);
         return mission;
@@ -68,7 +72,7 @@ public class MissionAccessValidator {
     private void checkOrder(Mission mission, UUID userId) {
         if (userId != null && mission.getScenarioId() != null
             && mission.getOrderIndex() != null && mission.getOrderIndex() > 1) {
-            boolean prevCompleted = missionRepository.isPreviousMissionCompleted(
+            boolean prevCompleted = missionValidationPort.isPreviousMissionCompleted(
                     userId, mission.getScenarioId(), mission.getOrderIndex() - 1);
             if (!prevCompleted) {
                 String scenarioTitle = scenarioRepository.findById(mission.getScenarioId())

@@ -16,7 +16,7 @@ public abstract class AbstractIntegrationTest {
 
     static {
         try {
-            postgres = new PostgreSQLContainer<>("postgres:17-alpine")
+            postgres = new PostgreSQLContainer<>("postgres:16-alpine")
                     .withStartupTimeout(Duration.ofMinutes(2));
             postgres.start();
         } catch (Exception e) {

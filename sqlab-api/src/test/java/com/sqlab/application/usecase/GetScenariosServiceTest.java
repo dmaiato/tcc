@@ -1,6 +1,7 @@
 package com.sqlab.application.usecase;
 
-import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.MissionQueryPort;
+import com.sqlab.application.port.out.MissionValidationPort;
 import com.sqlab.application.port.out.ProgressRepository;
 import com.sqlab.application.port.out.ScenarioRepository;
 import com.sqlab.application.port.out.UserRepository;
@@ -25,7 +26,8 @@ import static org.mockito.Mockito.*;
 class GetScenariosServiceTest {
 
     @Mock private ScenarioRepository scenarioRepository;
-    @Mock private MissionRepository missionRepository;
+    @Mock private MissionQueryPort missionQueryPort;
+    @Mock private MissionValidationPort missionValidationPort;
     @Mock private ProgressRepository progressRepository;
     @Mock private UserRepository userRepository;
 
@@ -33,7 +35,7 @@ class GetScenariosServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new GetScenariosService(scenarioRepository, missionRepository, progressRepository, userRepository);
+        service = new GetScenariosService(scenarioRepository, missionQueryPort, missionValidationPort, progressRepository, userRepository);
     }
 
     @Test

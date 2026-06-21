@@ -1,6 +1,7 @@
 package com.sqlab.infrastructure.adapter.out.persistence.mapper;
 
 import com.sqlab.domain.model.Progress;
+import com.sqlab.domain.model.UserRole;
 import com.sqlab.infrastructure.adapter.out.persistence.entity.MissionJpaEntity;
 import com.sqlab.infrastructure.adapter.out.persistence.entity.ProgressJpaEntity;
 import com.sqlab.infrastructure.adapter.out.persistence.entity.UserJpaEntity;
@@ -22,7 +23,7 @@ class ProgressMapperTest {
 
     private UserJpaEntity userJpa() {
         return UserJpaEntity.builder().id(userId).username("u").email("u@e").passwordHash("h")
-                .xp(0).role("USER").createdAt(now).build();
+                .xp(0).role(UserRole.USER).createdAt(now).build();
     }
 
     private MissionJpaEntity missionJpa() {

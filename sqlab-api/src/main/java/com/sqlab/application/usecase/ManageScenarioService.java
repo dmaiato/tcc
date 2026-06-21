@@ -1,7 +1,8 @@
 package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.ManageScenarioUseCase;
-import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.MissionCommandPort;
+import com.sqlab.application.port.out.MissionQueryPort;
 import com.sqlab.application.port.out.ScenarioRepository;
 import com.sqlab.application.port.out.ThemeRepository;
 import com.sqlab.domain.exception.ScenarioNotFoundException;
@@ -21,14 +22,17 @@ import java.util.UUID;
 public class ManageScenarioService implements ManageScenarioUseCase {
 
     private final ScenarioRepository scenarioRepository;
-    private final MissionRepository missionRepository;
+    private final MissionQueryPort missionQueryPort;
+    private final MissionCommandPort missionCommandPort;
     private final ThemeRepository themeRepository;
 
     public ManageScenarioService(ScenarioRepository scenarioRepository,
-                                  MissionRepository missionRepository,
+                                  MissionQueryPort missionQueryPort,
+                                  MissionCommandPort missionCommandPort,
                                   ThemeRepository themeRepository) {
         this.scenarioRepository = scenarioRepository;
-        this.missionRepository = missionRepository;
+        this.missionQueryPort = missionQueryPort;
+        this.missionCommandPort = missionCommandPort;
         this.themeRepository = themeRepository;
     }
 
@@ -70,7 +74,7 @@ public class ManageScenarioService implements ManageScenarioUseCase {
         );
 
         if (enabledChanged) {
-            missionRepository.setEnabledByScenarioId(command.id(), enabled);
+            missionCommandPort.setEnabledByScenarioId(command.id(), enabled);
         }
 
         return scenarioRepository.save(updated);
@@ -81,16 +85,13 @@ public class ManageScenarioService implements ManageScenarioUseCase {
         Scenario existing = scenarioRepository.findById(scenarioId)
                 .orElseThrow(() -> new ScenarioNotFoundException(scenarioId));
 
-        Scenario updated = new Scenario(
-                existing.getId(),
-                existing.getTitle(),
-                existing.getDescription(),
-                existing.getTheme(),
-                enabled,
-                existing.getRequiredLevel()
-        );
-        scenarioRepository.save(updated);
-        missionRepository.setEnabledByScenarioId(scenarioId, enabled);
+        if (enabled) {
+            existing.enable();
+        } else {
+            existing.disable();
+        }
+        scenarioRepository.save(existing);
+        missionCommandPort.setEnabledByScenarioId(scenarioId, enabled);
     }
 
     @Override
@@ -107,7 +108,7 @@ public class ManageScenarioService implements ManageScenarioUseCase {
             throw new ScenarioNotFoundException(command.scenarioId());
         }
 
-        List<Mission> existingMissions = missionRepository
+        List<Mission> existingMissions = missionQueryPort
                 .findByScenarioIdOrderByOrderIndex(command.scenarioId());
 
         HashSet<UUID> existingIds = new HashSet<>();
@@ -132,17 +133,17 @@ public class ManageScenarioService implements ManageScenarioUseCase {
 
         for (int i = 0; i < size; i++) {
             UUID missionId = command.missionIds().get(i);
-            missionRepository.setOrderIndex(missionId, -(size + i + 1));
+            missionCommandPort.setOrderIndex(missionId, -(size + i + 1));
         }
 
         for (int i = 0; i < size; i++) {
             UUID missionId = command.missionIds().get(i);
-            missionRepository.setOrderIndex(missionId, i + 1);
+            missionCommandPort.setOrderIndex(missionId, i + 1);
         }
     }
 
     @Override
     public int countMissionsByScenarioId(UUID scenarioId) {
-        return missionRepository.countByScenarioId(scenarioId);
+        return missionQueryPort.countByScenarioId(scenarioId);
     }
 }

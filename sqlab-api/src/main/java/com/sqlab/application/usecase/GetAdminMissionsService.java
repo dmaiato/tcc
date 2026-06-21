@@ -1,7 +1,7 @@
 package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.GetAdminMissionsUseCase;
-import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.MissionQueryPort;
 import com.sqlab.application.port.out.ScenarioRepository;
 import com.sqlab.domain.model.Mission;
 import org.springframework.stereotype.Service;
@@ -14,25 +14,25 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class GetAdminMissionsService implements GetAdminMissionsUseCase {
 
-    private final MissionRepository missionRepository;
+    private final MissionQueryPort missionQueryPort;
     private final ScenarioRepository scenarioRepository;
 
-    public GetAdminMissionsService(MissionRepository missionRepository,
+    public GetAdminMissionsService(MissionQueryPort missionQueryPort,
                                    ScenarioRepository scenarioRepository) {
-        this.missionRepository = missionRepository;
+        this.missionQueryPort = missionQueryPort;
         this.scenarioRepository = scenarioRepository;
     }
 
     @Override
     public List<AdminMissionResult> listAll() {
-        return missionRepository.findAll().stream()
+        return missionQueryPort.findAll().stream()
                 .map(this::toResult)
                 .toList();
     }
 
     @Override
     public AdminMissionResult findById(UUID id) {
-        Mission mission = missionRepository.findById(id)
+        Mission mission = missionQueryPort.findById(id)
                 .orElseThrow(() -> new com.sqlab.domain.exception.MissionNotFoundException(id));
         return toResult(mission);
     }
@@ -43,7 +43,7 @@ public class GetAdminMissionsService implements GetAdminMissionsUseCase {
         if (mission.getScenarioId() != null) {
             scenarioTitle = scenarioRepository.findById(mission.getScenarioId())
                     .map(com.sqlab.domain.model.Scenario::getTitle).orElse(null);
-            scenarioTotalMissions = missionRepository.countByScenarioIdAndEnabledTrue(mission.getScenarioId());
+            scenarioTotalMissions = missionQueryPort.countByScenarioIdAndEnabledTrue(mission.getScenarioId());
         }
         return new AdminMissionResult(mission, scenarioTitle, scenarioTotalMissions);
     }

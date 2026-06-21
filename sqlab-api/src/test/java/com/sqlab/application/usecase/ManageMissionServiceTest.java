@@ -1,7 +1,8 @@
 package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.in.ManageMissionUseCase;
-import com.sqlab.application.port.out.MissionRepository;
+import com.sqlab.application.port.out.MissionCommandPort;
+import com.sqlab.application.port.out.MissionQueryPort;
 import com.sqlab.application.port.out.ScenarioMissionCascadePort;
 import com.sqlab.application.port.out.TechniqueRepository;
 import com.sqlab.application.port.out.ThemeRepository;
@@ -26,7 +27,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ManageMissionServiceTest {
 
-    @Mock private MissionRepository missionRepository;
+    @Mock private MissionQueryPort missionQueryPort;
+    @Mock private MissionCommandPort missionCommandPort;
     @Mock private ScenarioMissionCascadePort scenarioMissionCascadePort;
     @Mock private ThemeRepository themeRepository;
     @Mock private TechniqueRepository techniqueRepository;
@@ -39,7 +41,7 @@ class ManageMissionServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new ManageMissionService(missionRepository, scenarioMissionCascadePort, themeRepository, techniqueRepository);
+        service = new ManageMissionService(missionQueryPort, missionCommandPort, scenarioMissionCascadePort, themeRepository, techniqueRepository);
         lenient().when(themeRepository.findByName("ASTRONOMY")).thenReturn(Optional.of(astronomyTheme));
         lenient().when(techniqueRepository.findByNameIn(Set.of("SELECT"))).thenReturn(List.of(selectTechnique));
         lenient().when(techniqueRepository.findByNameIn(Set.of("JOIN"))).thenReturn(List.of(joinTechnique));
@@ -47,7 +49,7 @@ class ManageMissionServiceTest {
 
     @Test
     void createMission() {
-        when(missionRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(missionCommandPort.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         var cmd = new ManageMissionUseCase.CreateMissionCommand(
                 "Title", "Briefing", "Objective", "Hint",
                 "DDL", "DML", List.of("SELECT"), 100, true,
@@ -64,8 +66,8 @@ class ManageMissionServiceTest {
     @Test
     void createMissionWithScenarioAutoAssignsOrderIndex() {
         var scenarioId = UUID.randomUUID();
-        when(missionRepository.countByScenarioId(scenarioId)).thenReturn(3);
-        when(missionRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(missionQueryPort.countByScenarioId(scenarioId)).thenReturn(3);
+        when(missionCommandPort.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         var cmd = new ManageMissionUseCase.CreateMissionCommand(
                 "Title", "B", "O", null, "DDL", null,
                 List.of(), 50, false, "ASTRONOMY", DifficultyLevel.BEGINNER,
@@ -83,8 +85,8 @@ class ManageMissionServiceTest {
                 .expectedResult(new ExpectedTuple(List.of(Map.of("x", 1))))
                 .ordered(false).theme(astronomyTheme).difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(null).orderIndex(null).enabled(true).build();
-        when(missionRepository.findById(missionId)).thenReturn(Optional.of(existing));
-        when(missionRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(missionQueryPort.findById(missionId)).thenReturn(Optional.of(existing));
+        when(missionCommandPort.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         var cmd = new ManageMissionUseCase.UpdateMissionCommand(
                 missionId, "Updated", "B", "O", null, "DDL", null,
@@ -104,7 +106,7 @@ class ManageMissionServiceTest {
                 List.of(), 10, false, "ASTRONOMY",
                 DifficultyLevel.BEGINNER, List.of(Map.of("x", 1)),
                 null, null, null);
-        when(missionRepository.findById(missionId)).thenReturn(Optional.empty());
+        when(missionQueryPort.findById(missionId)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.update(cmd)).isInstanceOf(MissionNotFoundException.class);
     }
 
@@ -115,16 +117,16 @@ class ManageMissionServiceTest {
                 .expectedResult(new ExpectedTuple(List.of(Map.of("x", 1))))
                 .ordered(false).theme(astronomyTheme).difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(null).orderIndex(null).enabled(true).build();
-        when(missionRepository.findById(missionId)).thenReturn(Optional.of(mission));
+        when(missionQueryPort.findById(missionId)).thenReturn(Optional.of(mission));
         service.delete(missionId);
-        verify(missionRepository).deleteById(missionId);
+        verify(missionCommandPort).deleteById(missionId);
     }
 
     @Test
     void deleteThrowsWhenNotFound() {
-        when(missionRepository.findById(missionId)).thenReturn(Optional.empty());
+        when(missionQueryPort.findById(missionId)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.delete(missionId)).isInstanceOf(MissionNotFoundException.class);
-        verify(missionRepository, never()).deleteById(any());
+        verify(missionCommandPort, never()).deleteById(any());
     }
 
     @Test
@@ -136,6 +138,6 @@ class ManageMissionServiceTest {
                 UUID.randomUUID(), null, null);
         assertThatThrownBy(() -> service.update(cmd))
                 .isInstanceOf(IllegalArgumentException.class);
-        verify(missionRepository, never()).findById(any());
+        verify(missionQueryPort, never()).findById(any());
     }
 }
