@@ -4,6 +4,7 @@ import { ApiService } from './api.service';
 import { UserResponse, SkillsResponse } from './models/user.model';
 import { MissionProgress } from './models/mission.model';
 import { AuthService } from './auth/auth.service';
+import { xpForLevel as xpForLevelFn, xpProgress as xpProgressFn } from './utils/xp.utils';
 
 export interface ProfileData {
   user: UserResponse;
@@ -48,13 +49,10 @@ export class ProfileService {
   }
 
   xpForLevel(level: number): number {
-    return (level - 1) * (level - 1) * 100;
+    return xpForLevelFn(level);
   }
 
   xpProgress(xp: number, level: number): number {
-    const current = this.xpForLevel(level);
-    const next = this.xpForLevel(level + 1);
-    if (next === current) return 100;
-    return ((xp - current) / (next - current)) * 100;
+    return xpProgressFn(xp, level);
   }
 }

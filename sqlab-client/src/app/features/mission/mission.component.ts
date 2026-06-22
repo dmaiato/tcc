@@ -14,7 +14,7 @@ import { MissionTabsComponent } from './mission-tabs/mission-tabs.component';
 import { SqlEditorComponent } from './sql-editor/sql-editor.component';
 import { ActionBarComponent } from './action-bar/action-bar.component';
 import { ResultsPaneComponent } from './results-pane/results-pane.component';
-import { ColumnInfo } from './data-viewer/data-viewer.component';
+import { SchemaTable, normalizeRows, schemasEqual } from '../../core/utils/schema.utils';
 
 @Component({
   selector: 'app-mission',
@@ -56,7 +56,7 @@ export class MissionComponent implements OnInit, OnDestroy {
   lockedMessage = signal('');
   lockedScenarioId = signal<string | null>(null);
 
-  schema = signal<{ name: string; columns: ColumnInfo[] }[]>([]);
+  schema = signal<SchemaTable[]>([]);
 
   expectedResult = signal<Record<string, unknown>[] | null>(null);
   expectedColumns = signal<string[]>([]);
@@ -140,30 +140,13 @@ export class MissionComponent implements OnInit, OnDestroy {
       const dbSchema = await this.pgliteService.getSchema();
       const currentSchema = this.schema();
 
-      if (!this.schemasEqual(dbSchema, currentSchema)) {
+      if (!schemasEqual(dbSchema, currentSchema)) {
         this.schema.set(dbSchema);
         this.toastService.info('Schema updated');
       }
     } catch {
       // ignore errors
     }
-  }
-
-  private schemasEqual(
-    a: { name: string; columns: { name: string; type: string }[] }[],
-    b: { name: string; columns: { name: string; type: string }[] }[]
-  ): boolean {
-    if (a.length !== b.length) return false;
-
-    const sortedA = [...a].sort((x, y) => x.name.localeCompare(y.name));
-    const sortedB = [...b].sort((x, y) => x.name.localeCompare(y.name));
-
-    for (let i = 0; i < sortedA.length; i++) {
-      const colsA = sortedA[i].columns.map(c => `${c.name}:${c.type}`).sort().join(',');
-      const colsB = sortedB[i].columns.map(c => `${c.name}:${c.type}`).sort().join(',');
-      if (colsA !== colsB) return false;
-    }
-    return true;
   }
 
   private async loadSchema(): Promise<void> {
@@ -302,22 +285,6 @@ export class MissionComponent implements OnInit, OnDestroy {
     }
   }
 
-  private normalizeRows(rows: Record<string, unknown>[]): Record<string, unknown>[] {
-    return rows.map(row => {
-      const normalized: Record<string, unknown> = {};
-      for (const [key, value] of Object.entries(row)) {
-        if (value instanceof Date) {
-          normalized[key] = value.toISOString().split('T')[0];
-        } else if (typeof value === 'object' && value !== null && !(value instanceof Array)) {
-          normalized[key] = this.normalizeRows([value as Record<string, unknown>])[0];
-        } else {
-          normalized[key] = value;
-        }
-      }
-      return normalized;
-    });
-  }
-
   submitSolution(): void {
     const result = this.queryResult();
     if (!result) return;
@@ -329,7 +296,7 @@ export class MissionComponent implements OnInit, OnDestroy {
     this.submitError.set(null);
     this.validationResult.set(null);
 
-    const normalizedRows = this.normalizeRows(result.rows);
+    const normalizedRows = normalizeRows(result.rows);
 
     const validate$ = this.authService.isAdmin()
       ? this.missionService.adminValidateMission(mission.id, normalizedRows)
