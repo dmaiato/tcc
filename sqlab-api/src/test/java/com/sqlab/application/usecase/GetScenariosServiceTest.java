@@ -40,7 +40,7 @@ class GetScenariosServiceTest {
 
     @Test
     void listAll() {
-        var scenario = new Scenario(UUID.randomUUID(), "S1", "D", new Theme(UUID.randomUUID(), "ASTRONOMY", null, null), true, 1);
+        var scenario = new Scenario(UUID.randomUUID(), "S1", "D", new Theme(UUID.randomUUID(), "ASTRONOMY", null, null), 1, true);
         when(scenarioRepository.findAll()).thenReturn(List.of(scenario));
         var result = service.handle();
         assertThat(result).hasSize(1);
@@ -49,7 +49,7 @@ class GetScenariosServiceTest {
     @Test
     void findById() {
         var id = UUID.randomUUID();
-        var scenario = new Scenario(id, "S1", "D", new Theme(UUID.randomUUID(), "ASTRONOMY", null, null), true, 1);
+        var scenario = new Scenario(id, "S1", "D", new Theme(UUID.randomUUID(), "ASTRONOMY", null, null), 1, true);
         when(scenarioRepository.findById(id)).thenReturn(Optional.of(scenario));
         var result = service.handle(id);
         assertThat(result.getId()).isEqualTo(id);

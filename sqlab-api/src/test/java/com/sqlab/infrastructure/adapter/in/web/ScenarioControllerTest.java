@@ -76,7 +76,7 @@ class ScenarioControllerTest {
     void findById_shouldReturnScenarioDetail() throws Exception {
         var scenarioId = UUID.randomUUID();
         var userUuid = UUID.fromString(USER_ID);
-        var scenario = new Scenario(scenarioId, "Detail", "Description", astronomyTheme, true, 1);
+        var scenario = new Scenario(scenarioId, "Detail", "Description", astronomyTheme, 1, true);
         var mission = Mission.builder()
                 .id(UUID.randomUUID()).title("M1").briefing("B").objective("O")
                 .hint(null).ddlScript("DDL").dmlScript(null)
@@ -111,7 +111,7 @@ class ScenarioControllerTest {
         var scenarioId = UUID.randomUUID();
         var userUuid = UUID.fromString(USER_ID);
         var missionId = UUID.randomUUID();
-        var scenario = new Scenario(scenarioId, "Completed Scenario", "Description", astronomyTheme, true, 1);
+        var scenario = new Scenario(scenarioId, "Completed Scenario", "Description", astronomyTheme, 1, true);
         var mission = Mission.builder()
                 .id(missionId).title("M1").briefing("B").objective("O")
                 .hint(null).ddlScript("DDL").dmlScript(null)
@@ -132,7 +132,7 @@ class ScenarioControllerTest {
 
     @Test
     void listAllAdmin_shouldReturnAllScenarios() throws Exception {
-        var scenario = new Scenario(UUID.randomUUID(), "Admin View", "Desc", astronomyTheme, true, 1);
+        var scenario = new Scenario(UUID.randomUUID(), "Admin View", "Desc", astronomyTheme, 1, true);
         var result = new GetAdminScenariosUseCase.ScenarioListResult(scenario, 0);
         when(getAdminScenariosUseCase.listAll()).thenReturn(List.of(result));
 
@@ -145,7 +145,7 @@ class ScenarioControllerTest {
     @Test
     void findByIdAdmin_shouldReturnAdminDetail() throws Exception {
         var scenarioId = UUID.randomUUID();
-        var scenario = new Scenario(scenarioId, "Admin Detail", "Desc", astronomyTheme, true, 1);
+        var scenario = new Scenario(scenarioId, "Admin Detail", "Desc", astronomyTheme, 1, true);
         var mission = Mission.builder()
                 .id(UUID.randomUUID()).title("M1").briefing("B").objective("O")
                 .hint(null).ddlScript("DDL").dmlScript(null)
@@ -167,7 +167,7 @@ class ScenarioControllerTest {
     @Test
     void create_shouldReturnCreatedScenario() throws Exception {
         var scenarioId = UUID.randomUUID();
-        var scenario = new Scenario(scenarioId, "New Scenario", "Desc", astronomyTheme, true, 1);
+        var scenario = new Scenario(scenarioId, "New Scenario", "Desc", astronomyTheme, 1, true);
         when(manageScenarioUseCase.create(any())).thenReturn(scenario);
 
         var req = new ScenarioDto.CreateScenarioRequest("New Scenario", "Desc", "ASTRONOMY", true, 1);
@@ -197,7 +197,7 @@ class ScenarioControllerTest {
     @Test
     void update_shouldReturnUpdatedScenario() throws Exception {
         var scenarioId = UUID.randomUUID();
-        var scenario = new Scenario(scenarioId, "Updated", "New Desc", astronomyTheme, true, 2);
+        var scenario = new Scenario(scenarioId, "Updated", "New Desc", astronomyTheme, 2, true);
         when(manageScenarioUseCase.update(any())).thenReturn(scenario);
         when(manageScenarioUseCase.countMissionsByScenarioId(scenarioId)).thenReturn(5);
 

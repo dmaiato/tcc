@@ -94,7 +94,7 @@ class MissionTest {
         assertEquals("Title", mission.getTitle());
         assertEquals(200, mission.getXpReward());
         assertTrue(mission.isOrdered());
-        assertEquals(new Theme(UUID.randomUUID(), "ASTRONOMY", null, null), mission.getTheme());
+        assertEquals(new Theme(UUID.randomUUID(), "ASTRONOMY", null, null).getName(), mission.getTheme().getName());
         assertEquals(DifficultyLevel.ADVANCED, mission.getDifficulty());
         assertEquals(1, mission.getOrderIndex());
         assertTrue(mission.isEnabled());

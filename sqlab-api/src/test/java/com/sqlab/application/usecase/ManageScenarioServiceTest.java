@@ -54,7 +54,7 @@ class ManageScenarioServiceTest {
 
     @Test
     void updateScenario() {
-        var existing = new Scenario(scenarioId, "Old", "Desc", astronomyTheme, true, 1);
+        var existing = new Scenario(scenarioId, "Old", "Desc", astronomyTheme, 1, true);
         when(scenarioRepository.findById(scenarioId)).thenReturn(Optional.of(existing));
         when(scenarioRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -75,7 +75,7 @@ class ManageScenarioServiceTest {
 
     @Test
     void deleteScenario() {
-        var existing = new Scenario(scenarioId, "T", "D", astronomyTheme, true, 1);
+        var existing = new Scenario(scenarioId, "T", "D", astronomyTheme, 1, true);
         when(scenarioRepository.findById(scenarioId)).thenReturn(Optional.of(existing));
         service.delete(scenarioId);
         verify(scenarioRepository).deleteById(scenarioId);
@@ -102,7 +102,7 @@ class ManageScenarioServiceTest {
                 .scenarioId(scenarioId).orderIndex(2).enabled(true).build();
 
         when(scenarioRepository.findById(scenarioId)).thenReturn(Optional.of(
-                new Scenario(scenarioId, "S", "D", astronomyTheme, true, 0)));
+                new Scenario(scenarioId, "S", "D", astronomyTheme, 0, true)));
         when(missionQueryPort.findByScenarioIdOrderByOrderIndex(scenarioId)).thenReturn(List.of(m1, m2));
 
         var cmd = new ManageScenarioUseCase.ReorderMissionsCommand(scenarioId, List.of(m2.getId(), m1.getId()));
@@ -129,7 +129,7 @@ class ManageScenarioServiceTest {
                 .ordered(false).theme(astronomyTheme).difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(scenarioId).orderIndex(1).enabled(true).build();
         when(scenarioRepository.findById(scenarioId)).thenReturn(Optional.of(
-                new Scenario(scenarioId, "S", "D", astronomyTheme, true, 0)));
+                new Scenario(scenarioId, "S", "D", astronomyTheme, 0, true)));
         when(missionQueryPort.findByScenarioIdOrderByOrderIndex(scenarioId)).thenReturn(List.of(m1));
         var cmd = new ManageScenarioUseCase.ReorderMissionsCommand(scenarioId, List.of());
         assertThatThrownBy(() -> service.reorderMissions(cmd))

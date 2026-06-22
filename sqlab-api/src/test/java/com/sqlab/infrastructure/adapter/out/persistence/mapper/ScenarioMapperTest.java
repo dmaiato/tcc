@@ -38,7 +38,7 @@ class ScenarioMapperTest {
         assertEquals(id, domain.getId());
         assertEquals("SQL Basics", domain.getTitle());
         assertEquals("Learn SQL", domain.getDescription());
-        assertEquals(new Theme(UUID.randomUUID(), "ASTRONOMY", null, null), domain.getTheme());
+        assertEquals("ASTRONOMY", domain.getTheme().getName());
         assertTrue(domain.isEnabled());
         assertEquals(2, domain.getRequiredLevel());
     }
@@ -64,7 +64,7 @@ class ScenarioMapperTest {
     @Test
     void toJpa() {
         var theme = themeJpa();
-        var domain = new Scenario(id, "Title", "Desc", new Theme(UUID.randomUUID(), "ASTRONOMY", null, null), true, 3);
+        var domain = new Scenario(id, "Title", "Desc", new Theme(UUID.randomUUID(), "ASTRONOMY", null, null), 3, true);
 
         var entity = mapper.toJpa(domain, theme);
 

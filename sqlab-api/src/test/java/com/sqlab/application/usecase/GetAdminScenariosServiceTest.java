@@ -38,8 +38,8 @@ class GetAdminScenariosServiceTest {
     @Test
     void listAllReturnsScenariosWithMissionCount() {
         var theme = new Theme(UUID.randomUUID(), "ASTRONOMY", null, null);
-        var s1 = new Scenario(UUID.randomUUID(), "S1", "D1", theme, true, 1);
-        var s2 = new Scenario(UUID.randomUUID(), "S2", "D2", theme, true, 2);
+        var s1 = new Scenario(UUID.randomUUID(), "S1", "D1", theme, 1, true);
+        var s2 = new Scenario(UUID.randomUUID(), "S2", "D2", theme, 2, true);
 
         when(scenarioRepository.findAll()).thenReturn(List.of(s1, s2));
         when(missionQueryPort.countByScenarioId(s1.getId())).thenReturn(3);
@@ -56,7 +56,7 @@ class GetAdminScenariosServiceTest {
     void findByIdReturnsScenarioWithMissions() {
         var id = UUID.randomUUID();
         var theme = new Theme(UUID.randomUUID(), "CRIMINAL", null, null);
-        var scenario = new Scenario(id, "Night at the Blue Moon", "Desc", theme, true, 2);
+        var scenario = new Scenario(id, "Night at the Blue Moon", "Desc", theme, 2, true);
         var missions = List.<Mission>of();
 
         when(scenarioRepository.findById(id)).thenReturn(Optional.of(scenario));

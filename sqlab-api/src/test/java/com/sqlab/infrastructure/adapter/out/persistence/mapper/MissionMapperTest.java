@@ -62,7 +62,7 @@ class MissionMapperTest {
         assertEquals("Mission X", domain.getTitle());
         assertEquals(100, domain.getXpReward());
         assertTrue(domain.isOrdered());
-        assertEquals(new Theme(UUID.randomUUID(), "ASTRONOMY", null, null), domain.getTheme());
+        assertEquals("ASTRONOMY", domain.getTheme().getName());
         assertEquals(DifficultyLevel.ADVANCED, domain.getDifficulty());
         assertEquals(scenario.getId(), domain.getScenarioId());
         assertEquals(Integer.valueOf(2), domain.getOrderIndex());
@@ -118,7 +118,7 @@ class MissionMapperTest {
 
         var domain = mapper.toDomain(entity);
 
-        assertEquals(List.of(new Technique(null, "ALPHA"), new Technique(null, "BETA"), new Technique(null, "ZEBRA")), domain.getTechniques());
+        assertEquals(List.of("ALPHA", "BETA", "ZEBRA"), domain.getTechniques().stream().map(Technique::getName).toList());
     }
 
     @Test

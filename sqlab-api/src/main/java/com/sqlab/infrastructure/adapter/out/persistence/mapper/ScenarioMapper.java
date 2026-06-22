@@ -18,8 +18,8 @@ public class ScenarioMapper {
                 entity.getTitle(),
                 entity.getDescription(),
                 theme,
-                entity.isEnabled(),
-                entity.getRequiredLevel()
+                entity.getRequiredLevel(),
+                entity.isEnabled()
         );
     }
 

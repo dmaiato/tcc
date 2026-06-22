@@ -71,7 +71,7 @@ class GetAdminMissionsServiceTest {
     void resultIncludesScenarioTitleAndTotalMissions() {
         var scenarioId = UUID.randomUUID();
         var scenario = new Scenario(scenarioId, "Blue Moon", "Desc",
-                new Theme(UUID.randomUUID(), "CRIMINAL", null, null), true, 2);
+                new Theme(UUID.randomUUID(), "CRIMINAL", null, null), 2, true);
         var mission = createMission(UUID.randomUUID(), "Mission X", scenarioId);
 
         when(missionQueryPort.findAll()).thenReturn(List.of(mission));
