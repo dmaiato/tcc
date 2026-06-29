@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { NgIconsModule } from '@ng-icons/core';
 import { AuthService } from '../../core/auth/auth.service';
-import { ThemeService } from '../../core/ui/theme.service';
+import { UiThemeService } from '../../core/ui/theme.service';
 import { ProfileService } from '../../core/profile.service';
 
 @Component({
@@ -18,7 +18,7 @@ export class HeaderComponent {
   private readonly profileService = inject(ProfileService);
   private readonly router = inject(Router);
   private readonly elementRef = inject(ElementRef);
-  readonly themeService = inject(ThemeService);
+  readonly themeService = inject(UiThemeService);
   isLight = computed(() => this.themeService.isLight());
 
   isDropdownOpen = signal(false);

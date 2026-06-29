@@ -20,7 +20,7 @@
           @if (isThemeDropdownOpen()) {
             <div class="absolute left-0 top-full mt-1 w-40 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50">
               <button (click)="setTheme(null); $event.stopPropagation()" type="button" class="flex items-center gap-2 w-full px-3 py-2 text-xs font-mono text-foreground hover:bg-muted/50 transition-colors" [class.bg-primary/10]="selectedTheme() === null">All Themes</button>
-              @for (theme of availableThemes(); track theme.name) {
+              @for (theme of themes(); track theme.name) {
                 <button (click)="setTheme(theme.name); $event.stopPropagation()" type="button" class="flex items-center gap-2 w-full px-3 py-2 text-xs font-mono text-foreground hover:bg-muted/50 transition-colors" [class.bg-primary/10]="selectedTheme() === theme.name">{{ getThemeLabel(theme) }}</button>
               }
             </div>

@@ -4,6 +4,7 @@ import { NgIconsModule } from '@ng-icons/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { MissionService } from '../../core/mission.service';
+import { ThemeService } from '../../core/theme.service';
 import { ToastService } from '../../shared/toast/toast.service';
 import { DifficultyBadgeComponent } from '../../shared/difficulty-badge/difficulty-badge.component';
 import { ThemeBadgeComponent } from '../../shared/theme-badge/theme-badge.component';
@@ -19,6 +20,7 @@ import { MissionSummary, Theme, DifficultyLevel } from '../../core/models/missio
 export class DashboardComponent {
   private readonly authService = inject(AuthService);
   private readonly missionService = inject(MissionService);
+  private readonly themeService = inject(ThemeService);
   private readonly toastService = inject(ToastService);
   private readonly elementRef = inject(ElementRef);
 
@@ -32,6 +34,7 @@ export class DashboardComponent {
 
   missions = signal<MissionSummary[]>([]);
   completedIds = signal<Set<string>>(new Set());
+  themes = signal<Theme[]>([]);
   isLoading = signal(true);
 
   selectedTheme = signal<string | null>(null);
@@ -74,6 +77,11 @@ export class DashboardComponent {
       error: () => {
         this.toastService.error('Failed to load progress data');
       }
+    });
+
+    this.themeService.getAll().subscribe({
+      next: (themes) => this.themes.set(themes),
+      error: () => this.themes.set([])
     });
   }
 
@@ -130,16 +138,6 @@ export class DashboardComponent {
     this.closeDropdowns();
     this.reloadMissions();
   }
-
-  readonly availableThemes = computed(() => {
-    const themes = this.missions().map(m => m.theme);
-    const seen = new Set<string>();
-    return themes.filter(t => {
-      if (seen.has(t.name)) return false;
-      seen.add(t.name);
-      return true;
-    });
-  });
 
   readonly hasActiveFilters = computed(() => this.selectedTheme() !== null || this.selectedDifficulty() !== 'ALL');
 

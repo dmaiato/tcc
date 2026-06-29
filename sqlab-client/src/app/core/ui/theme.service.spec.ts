@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
-import { ThemeService, Theme } from './theme.service';
+import { UiThemeService, Theme } from './theme.service';
 
-describe('ThemeService', () => {
+describe('UiThemeService', () => {
   let matchMediaMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
@@ -14,28 +14,28 @@ describe('ThemeService', () => {
   it('deve usar dark quando localStorage vazio e preferência dark', () => {
     matchMediaMock.mockReturnValue({ matches: false });
     TestBed.configureTestingModule({});
-    const service = TestBed.inject(ThemeService);
+    const service = TestBed.inject(UiThemeService);
     expect(service['theme']()).toBe('dark');
   });
 
   it('deve usar light quando localStorage = light', () => {
     localStorage.setItem('sqlab-theme', 'light');
     TestBed.configureTestingModule({});
-    const service = TestBed.inject(ThemeService);
+    const service = TestBed.inject(UiThemeService);
     expect(service['theme']()).toBe('light');
   });
 
   it('deve usar dark quando localStorage = dark', () => {
     localStorage.setItem('sqlab-theme', 'dark');
     TestBed.configureTestingModule({});
-    const service = TestBed.inject(ThemeService);
+    const service = TestBed.inject(UiThemeService);
     expect(service['theme']()).toBe('dark');
   });
 
   it('toggle deve alternar de dark para light', () => {
     localStorage.setItem('sqlab-theme', 'dark');
     TestBed.configureTestingModule({});
-    const service = TestBed.inject(ThemeService);
+    const service = TestBed.inject(UiThemeService);
     service.toggle();
     expect(service.isDark()).toBe(false);
     expect(service.isLight()).toBe(true);
@@ -44,7 +44,7 @@ describe('ThemeService', () => {
   it('toggle deve alternar de light para dark', () => {
     localStorage.setItem('sqlab-theme', 'light');
     TestBed.configureTestingModule({});
-    const service = TestBed.inject(ThemeService);
+    const service = TestBed.inject(UiThemeService);
     service.toggle();
     expect(service.isDark()).toBe(true);
     expect(service.isLight()).toBe(false);
@@ -53,7 +53,7 @@ describe('ThemeService', () => {
   it('apply deve persistir tema em localStorage', () => {
     localStorage.setItem('sqlab-theme', 'dark');
     TestBed.configureTestingModule({});
-    const service = TestBed.inject(ThemeService);
+    const service = TestBed.inject(UiThemeService);
     service.toggle();
     expect(localStorage.getItem('sqlab-theme')).toBe('light');
   });
@@ -61,7 +61,7 @@ describe('ThemeService', () => {
   it('apply deve setar dataset.theme para light e remover para dark', () => {
     localStorage.setItem('sqlab-theme', 'dark');
     TestBed.configureTestingModule({});
-    const service = TestBed.inject(ThemeService);
+    const service = TestBed.inject(UiThemeService);
     service.toggle();
     expect(document.documentElement.dataset['theme']).toBe('light');
     service.toggle();
@@ -71,7 +71,7 @@ describe('ThemeService', () => {
   it('isDark/isLight signals refletem tema atual', () => {
     localStorage.setItem('sqlab-theme', 'dark');
     TestBed.configureTestingModule({});
-    const service = TestBed.inject(ThemeService);
+    const service = TestBed.inject(UiThemeService);
     expect(service.isDark()).toBe(true);
     expect(service.isLight()).toBe(false);
 

@@ -6,6 +6,8 @@ import com.sqlab.infrastructure.adapter.out.persistence.repository.ThemeJpaRepos
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -22,5 +24,13 @@ public class ThemePersistenceAdapter implements ThemeRepository {
     public Optional<Theme> findByName(String name) {
         return themeJpaRepository.findByName(name)
                 .map(t -> new Theme(t.getId(), t.getName(), t.getDescription(), t.getEmoji()));
+    }
+
+    @Override
+    public List<Theme> findAll() {
+        return themeJpaRepository.findAll().stream()
+                .map(t -> new Theme(t.getId(), t.getName(), t.getDescription(), t.getEmoji()))
+                .sorted(Comparator.comparing(Theme::getName))
+                .toList();
     }
 }

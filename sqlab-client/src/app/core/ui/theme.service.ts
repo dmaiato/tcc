@@ -3,7 +3,7 @@ import { Injectable, signal, computed } from '@angular/core';
 export type Theme = 'dark' | 'light';
 
 @Injectable({ providedIn: 'root' })
-export class ThemeService {
+export class UiThemeService {
   private readonly theme = signal<Theme>('dark');
   readonly isDark = computed(() => this.theme() === 'dark');
   readonly isLight = computed(() => this.theme() === 'light');
