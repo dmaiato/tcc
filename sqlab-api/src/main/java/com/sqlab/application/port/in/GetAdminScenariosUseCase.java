@@ -1,6 +1,7 @@
 package com.sqlab.application.port.in;
 
 import com.sqlab.domain.model.Mission;
+import com.sqlab.domain.model.Page;
 import com.sqlab.domain.model.Scenario;
 
 import java.util.List;
@@ -13,6 +14,8 @@ public interface GetAdminScenariosUseCase {
     record ScenarioDetailResult(Scenario scenario, List<Mission> missions) {}
 
     List<ScenarioListResult> listAll();
+
+    Page<ScenarioListResult> listAll(String name, String theme, Boolean enabled, int page, int size);
 
     ScenarioDetailResult findById(UUID id);
 }

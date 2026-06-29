@@ -5,6 +5,7 @@ import com.sqlab.application.port.out.MissionQueryPort;
 import com.sqlab.application.port.out.MissionValidationPort;
 import com.sqlab.domain.model.DifficultyLevel;
 import com.sqlab.domain.model.Mission;
+import com.sqlab.domain.model.Page;
 import com.sqlab.domain.model.Theme;
 import com.sqlab.infrastructure.adapter.out.persistence.entity.MissionJpaEntity;
 import com.sqlab.infrastructure.adapter.out.persistence.entity.ScenarioJpaEntity;
@@ -12,6 +13,9 @@ import com.sqlab.infrastructure.adapter.out.persistence.entity.TechniqueJpaEntit
 import com.sqlab.infrastructure.adapter.out.persistence.entity.ThemeJpaEntity;
 import com.sqlab.infrastructure.adapter.out.persistence.mapper.MissionMapper;
 import com.sqlab.infrastructure.adapter.out.persistence.repository.*;
+import com.sqlab.infrastructure.adapter.out.persistence.spec.MissionSpecifications;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -95,6 +99,38 @@ public class MissionPersistenceAdapter implements MissionQueryPort, MissionComma
         return jpaRepository.findByEnabledTrue().stream()
                 .map(mapper::toDomain)
                 .toList();
+    }
+
+    @Override
+    public Page<Mission> findByFilters(String name, Theme theme, DifficultyLevel difficulty, String scenarioScope, int page, int size) {
+        String themeName = theme != null ? theme.getName() : null;
+        org.springframework.data.domain.Page<MissionJpaEntity> entityPage = jpaRepository.findAll(
+                MissionSpecifications.withFilters(name, themeName, difficulty, scenarioScope),
+                PageRequest.of(page, size, Sort.by("title").ascending())
+        );
+        return new Page<>(
+                entityPage.getContent().stream().map(mapper::toDomain).toList(),
+                (int) entityPage.getTotalElements(),
+                entityPage.getTotalPages(),
+                entityPage.getNumber(),
+                entityPage.getSize()
+        );
+    }
+
+    @Override
+    public Page<Mission> findAllByFilters(String name, Theme theme, DifficultyLevel difficulty, String scenarioScope, Boolean enabled, int page, int size) {
+        String themeName = theme != null ? theme.getName() : null;
+        org.springframework.data.domain.Page<MissionJpaEntity> entityPage = jpaRepository.findAll(
+                MissionSpecifications.withFiltersAdmin(name, themeName, difficulty, scenarioScope, enabled),
+                PageRequest.of(page, size, Sort.by("title").ascending())
+        );
+        return new Page<>(
+                entityPage.getContent().stream().map(mapper::toDomain).toList(),
+                (int) entityPage.getTotalElements(),
+                entityPage.getTotalPages(),
+                entityPage.getNumber(),
+                entityPage.getSize()
+        );
     }
 
     @Override

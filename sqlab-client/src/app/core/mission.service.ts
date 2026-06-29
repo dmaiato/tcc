@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpParams } from '@angular/common/http';
 import { ApiService } from './api.service';
-import { MissionSummary, Mission, MissionProgress, CreateMissionRequest, UpdateMissionRequest } from './models/mission.model';
+import { AdminMissionPage, MissionPage, MissionSummary, Mission, MissionProgress, CreateMissionRequest, UpdateMissionRequest } from './models/mission.model';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +10,7 @@ import { MissionSummary, Mission, MissionProgress, CreateMissionRequest, UpdateM
 export class MissionService {
   private readonly api = inject(ApiService);
 
-  getSummary(theme?: string | null, difficulty?: string): Observable<MissionSummary[]> {
+  getSummary(theme?: string | null, difficulty?: string, name?: string, scenarioScope?: string, page?: number, size?: number): Observable<MissionPage> {
     let params = new HttpParams();
     if (theme) {
       params = params.set('theme', theme);
@@ -18,7 +18,15 @@ export class MissionService {
     if (difficulty && difficulty !== 'ALL') {
       params = params.set('difficulty', difficulty);
     }
-    return this.api.get<MissionSummary[]>('/missions', params);
+    if (name) {
+      params = params.set('name', name);
+    }
+    if (scenarioScope && scenarioScope !== 'ALL') {
+      params = params.set('scenarioScope', scenarioScope);
+    }
+    params = params.set('page', page?.toString() ?? '0');
+    params = params.set('size', size?.toString() ?? '12');
+    return this.api.get<MissionPage>('/missions', params);
   }
 
   getAll(): Observable<Mission[]> {
@@ -55,6 +63,28 @@ export class MissionService {
 
   getAdminMissions(): Observable<Mission[]> {
     return this.api.get<Mission[]>('/missions/admin');
+  }
+
+  getAdminMissionsPaged(name?: string, theme?: string, difficulty?: string, scenarioScope?: string, enabled?: boolean, page: number = 0, size: number = 12): Observable<AdminMissionPage> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+    if (name) {
+      params = params.set('name', name);
+    }
+    if (theme) {
+      params = params.set('theme', theme);
+    }
+    if (difficulty) {
+      params = params.set('difficulty', difficulty);
+    }
+    if (scenarioScope && scenarioScope !== 'ALL') {
+      params = params.set('scenarioScope', scenarioScope);
+    }
+    if (enabled !== undefined) {
+      params = params.set('enabled', String(enabled));
+    }
+    return this.api.get<AdminMissionPage>('/missions/admin', params);
   }
 
   deleteMission(id: string): Observable<void> {

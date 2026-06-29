@@ -46,11 +46,9 @@ export class MissionComponent implements OnInit, OnDestroy {
   isRunning = signal(false);
   isRestoring = signal(false);
 
-  allMissions = signal<Mission[]>([]);
   prevMission = signal<Mission | null>(null);
   nextMission = signal<Mission | null>(null);
   currentIndex = signal(-1);
-  totalMissions = signal(0);
   runId = signal(0);
 
   scenarioMissionIds = signal<string[]>([]);
@@ -65,7 +63,6 @@ export class MissionComponent implements OnInit, OnDestroy {
   showExpected = signal(false);
 
   ngOnInit(): void {
-    this.loadMissions();
     this.route.paramMap.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(params => {
@@ -91,17 +88,6 @@ export class MissionComponent implements OnInit, OnDestroy {
     }
   }
 
-  private loadMissions(): void {
-    this.missionService.getAll().subscribe({
-      next: (missions) => {
-        this.allMissions.set(missions);
-        this.totalMissions.set(missions.length);
-        this.updateNavigation();
-      },
-      error: () => this.allMissions.set([])
-    });
-  }
-
   private loadScenarioMissions(scenarioId: string): void {
     this.scenarioService.getById(scenarioId).subscribe({
       next: (scenario) => {
@@ -123,16 +109,12 @@ export class MissionComponent implements OnInit, OnDestroy {
     if (scenarioIds.length > 0 && current.scenarioId) {
       const idx = scenarioIds.indexOf(current.id);
       this.currentIndex.set(idx);
-      this.totalMissions.set(scenarioIds.length);
       this.prevMission.set(idx > 0 ? { id: scenarioIds[idx - 1] } as Mission : null);
       this.nextMission.set(idx < scenarioIds.length - 1 ? { id: scenarioIds[idx + 1] } as Mission : null);
     } else {
-      const all = this.allMissions();
-      const idx = all.findIndex(m => m.id === current.id);
-      this.currentIndex.set(idx);
-      this.totalMissions.set(all.length);
-      this.prevMission.set(idx > 0 ? all[idx - 1] : null);
-      this.nextMission.set(idx < all.length - 1 ? all[idx + 1] : null);
+      this.currentIndex.set(0);
+      this.prevMission.set(null);
+      this.nextMission.set(null);
     }
   }
 

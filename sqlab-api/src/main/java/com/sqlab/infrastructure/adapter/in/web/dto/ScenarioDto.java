@@ -36,6 +36,14 @@ public class ScenarioDto {
             int requiredLevel,
             ThemeDto.ThemeResponse theme) {}
 
+    public record ScenarioPage(
+            List<ScenarioSummary> content,
+            int totalElements,
+            int totalPages,
+            int number,
+            int size,
+            boolean hasNext) {}
+
     public record CreateScenarioRequest(
             @NotBlank String title,
             @NotBlank String description,
@@ -78,4 +86,12 @@ public class ScenarioDto {
 
     public record ReorderMissionsRequest(
             @NotNull List<@NotNull UUID> missionIds) {}
+
+    public record AdminScenarioPage(
+            List<ScenarioResponse> content,
+            int totalElements,
+            int totalPages,
+            int number,
+            int size,
+            boolean hasNext) {}
 }

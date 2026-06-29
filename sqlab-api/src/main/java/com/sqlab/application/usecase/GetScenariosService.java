@@ -8,6 +8,7 @@ import com.sqlab.application.port.out.ScenarioRepository;
 import com.sqlab.application.port.out.UserRepository;
 import com.sqlab.domain.exception.ScenarioNotFoundException;
 import com.sqlab.domain.model.Mission;
+import com.sqlab.domain.model.Page;
 import com.sqlab.domain.model.Scenario;
 import com.sqlab.domain.model.User;
 import com.sqlab.domain.model.UserRole;
@@ -74,6 +75,33 @@ public class GetScenariosService implements GetScenariosUseCase {
                             s.getId(), s.getTitle(), missions.size(), completed, s.getRequiredLevel(), s.getTheme());
                 })
                 .toList();
+    }
+
+    @Override
+    public Page<ScenarioSummaryResult> handleEnabledWithProgress(UUID userId, String name, String themeName, int page, int size) {
+        Set<UUID> completedIds = userId != null
+                ? progressRepository.findCompletedMissionIdsByUserId(userId)
+                : Set.of();
+        com.sqlab.domain.model.Page<Scenario> scenarioPage = scenarioRepository.findByFilters(name, themeName, page, size);
+        Set<UUID> pageScenarioIds = scenarioPage.content().stream()
+                .map(Scenario::getId)
+                .collect(Collectors.toSet());
+        Map<UUID, List<Mission>> missionsByScenario = pageScenarioIds.isEmpty()
+                ? Map.of()
+                : missionQueryPort.findByScenarioIdInOrderByOrderIndex(pageScenarioIds)
+                        .stream()
+                        .collect(Collectors.groupingBy(Mission::getScenarioId, LinkedHashMap::new, Collectors.toList()));
+        List<ScenarioSummaryResult> results = scenarioPage.content().stream()
+                .map(s -> {
+                    List<Mission> missions = missionsByScenario.getOrDefault(s.getId(), List.of());
+                    int completed = (int) missions.stream()
+                            .filter(m -> completedIds.contains(m.getId()))
+                            .count();
+                    return new ScenarioSummaryResult(
+                            s.getId(), s.getTitle(), missions.size(), completed, s.getRequiredLevel(), s.getTheme());
+                })
+                .toList();
+        return new Page<>(results, scenarioPage.totalElements(), scenarioPage.totalPages(), scenarioPage.number(), scenarioPage.size());
     }
 
     @Override

@@ -29,15 +29,21 @@ describe('MissionService', () => {
     expect(mockApi.get).toHaveBeenCalledWith('/missions');
   });
 
-  it('getSummary: deve chamar GET /missions com params theme e difficulty', () => {
-    mockApi.get.mockReturnValue(of([]));
-    service.getSummary('sql', 'BEGINNER').subscribe();
+  it('getSummary: deve chamar GET /missions com params theme, difficulty, name, scenarioScope, page e size', () => {
+    mockApi.get.mockReturnValue(of({ content: [], totalElements: 0, totalPages: 0, number: 0, size: 12, hasNext: false }));
+    service.getSummary('sql', 'BEGINNER', 'join', 'IN_SCENARIO', 0, 12).subscribe();
     expect(mockApi.get).toHaveBeenCalledWith('/missions', expect.objectContaining({}));
   });
 
-  it('getSummary: deve chamar GET /missions sem params quando theme=null e difficulty=ALL', () => {
-    mockApi.get.mockReturnValue(of([]));
+  it('getSummary: deve chamar GET /missions com paginacao padrao quando sem params', () => {
+    mockApi.get.mockReturnValue(of({ content: [], totalElements: 0, totalPages: 0, number: 0, size: 12, hasNext: false }));
     service.getSummary(null, 'ALL').subscribe();
+    expect(mockApi.get).toHaveBeenCalledWith('/missions', expect.objectContaining({}));
+  });
+
+  it('getSummary: deve chamar GET /missions com scenarioScope', () => {
+    mockApi.get.mockReturnValue(of({ content: [], totalElements: 0, totalPages: 0, number: 0, size: 12, hasNext: false }));
+    service.getSummary(null, 'ALL', undefined, 'IN_SCENARIO').subscribe();
     expect(mockApi.get).toHaveBeenCalledWith('/missions', expect.objectContaining({}));
   });
 

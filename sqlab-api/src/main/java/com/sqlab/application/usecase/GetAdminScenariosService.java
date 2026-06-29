@@ -3,6 +3,7 @@ package com.sqlab.application.usecase;
 import com.sqlab.application.port.in.GetAdminScenariosUseCase;
 import com.sqlab.application.port.out.MissionQueryPort;
 import com.sqlab.application.port.out.ScenarioRepository;
+import com.sqlab.domain.model.Page;
 import com.sqlab.domain.model.Scenario;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +29,15 @@ public class GetAdminScenariosService implements GetAdminScenariosUseCase {
         return scenarioRepository.findAll().stream()
                 .map(s -> new ScenarioListResult(s, missionQueryPort.countByScenarioId(s.getId())))
                 .toList();
+    }
+
+    @Override
+    public Page<ScenarioListResult> listAll(String name, String theme, Boolean enabled, int page, int size) {
+        Page<Scenario> scenarioPage = scenarioRepository.findAllByFilters(name, theme, enabled, page, size);
+        List<ScenarioListResult> results = scenarioPage.content().stream()
+                .map(s -> new ScenarioListResult(s, missionQueryPort.countByScenarioId(s.getId())))
+                .toList();
+        return new Page<>(results, scenarioPage.totalElements(), scenarioPage.totalPages(), scenarioPage.number(), scenarioPage.size());
     }
 
     @Override

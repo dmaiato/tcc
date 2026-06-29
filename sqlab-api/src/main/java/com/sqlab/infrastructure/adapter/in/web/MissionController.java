@@ -7,6 +7,7 @@ import com.sqlab.application.port.in.ManageMissionUseCase;
 import com.sqlab.application.port.in.ValidateMissionUseCase;
 import com.sqlab.domain.model.DifficultyLevel;
 import com.sqlab.domain.model.Mission;
+import com.sqlab.domain.model.Page;
 import com.sqlab.infrastructure.adapter.in.web.dto.MissionDto;
 import com.sqlab.infrastructure.adapter.in.web.dto.mapper.MissionDtoMapper;
 import com.sqlab.infrastructure.adapter.in.web.util.ControllerUtils;
@@ -16,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -42,18 +42,18 @@ public class MissionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<MissionDto.MissionSummary>> listAll(
+    public ResponseEntity<MissionDto.MissionPage> listAll(
             @RequestParam(required = false) String theme,
-            @RequestParam(required = false) DifficultyLevel difficulty) {
+            @RequestParam(required = false) DifficultyLevel difficulty,
+            @RequestParam(required = false, defaultValue = "") String name,
+            @RequestParam(required = false) String scenarioScope,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
 
-        List<Mission> missions = getMissionsUseCase
-                .handle(new GetMissionsUseCase.ListAllQuery(theme, difficulty));
+        Page<Mission> missions = getMissionsUseCase
+                .handle(new GetMissionsUseCase.ListAllQuery(theme, difficulty, name, scenarioScope, page, size));
 
-        List<MissionDto.MissionSummary> response = missions.stream()
-                .map(m -> MissionDtoMapper.toSummary(m, null))
-                .toList();
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(MissionDtoMapper.toPage(missions));
     }
 
     @GetMapping("/{missionId}")
@@ -129,12 +129,17 @@ public class MissionController {
     }
 
     @GetMapping("/admin")
-    public ResponseEntity<List<MissionDto.MissionResponse>> listAllAdmin() {
-        var results = getAdminMissionsUseCase.listAll();
-        List<MissionDto.MissionResponse> response = results.stream()
-                .map(MissionDtoMapper::toMissionResponse)
-                .toList();
-        return ResponseEntity.ok(response);
+    public ResponseEntity<MissionDto.AdminMissionPage> listAllAdmin(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String theme,
+            @RequestParam(required = false) DifficultyLevel difficulty,
+            @RequestParam(required = false) String scenarioScope,
+            @RequestParam(required = false) Boolean enabled,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+
+        var results = getAdminMissionsUseCase.listAll(name, theme, difficulty, scenarioScope, enabled, page, size);
+        return ResponseEntity.ok(MissionDtoMapper.toAdminPage(results));
     }
 
     @DeleteMapping("/{missionId}")

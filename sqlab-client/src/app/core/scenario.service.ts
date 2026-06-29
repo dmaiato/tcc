@@ -1,7 +1,10 @@
 import { Injectable, inject } from '@angular/core';
+import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import {
+  AdminScenarioPage,
+  ScenarioPage,
   ScenarioResponse,
   ScenarioSummary,
   ScenarioDetail,
@@ -21,12 +24,41 @@ export class ScenarioService {
     return this.api.get<ScenarioSummary[]>('/scenarios');
   }
 
+  getPaged(name?: string, theme?: string, page: number = 0, size: number = 12): Observable<ScenarioPage> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+    if (name) {
+      params = params.set('name', name);
+    }
+    if (theme) {
+      params = params.set('theme', theme);
+    }
+    return this.api.get<ScenarioPage>('/scenarios', params);
+  }
+
   getById(id: string): Observable<ScenarioDetail> {
     return this.api.get<ScenarioDetail>(`/scenarios/${id}`);
   }
 
   getAllAdmin(): Observable<ScenarioResponse[]> {
     return this.api.get<ScenarioResponse[]>('/admin/scenarios');
+  }
+
+  getAdminScenariosPaged(name?: string, theme?: string, enabled?: boolean, page: number = 0, size: number = 12): Observable<AdminScenarioPage> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+    if (name) {
+      params = params.set('name', name);
+    }
+    if (theme) {
+      params = params.set('theme', theme);
+    }
+    if (enabled !== undefined) {
+      params = params.set('enabled', String(enabled));
+    }
+    return this.api.get<AdminScenarioPage>('/admin/scenarios', params);
   }
 
   getAdminDetail(id: string): Observable<ScenarioAdminDetail> {

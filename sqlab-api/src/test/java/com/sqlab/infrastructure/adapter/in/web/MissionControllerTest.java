@@ -5,6 +5,7 @@ import com.sqlab.application.port.in.*;
 import com.sqlab.domain.model.*;
 import com.sqlab.domain.exception.MissionNotFoundException;
 import com.sqlab.domain.model.Mission;
+import com.sqlab.domain.model.Page;
 import com.sqlab.infrastructure.adapter.in.web.dto.MissionDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -66,26 +67,55 @@ class MissionControllerTest {
     }
 
     @Test
-    void listAll_shouldReturnMissions() throws Exception {
+    void listAll_shouldReturnPaginatedResponse() throws Exception {
         var mission = createMission(UUID.randomUUID(), "M1");
-        when(getMissionsUseCase.handle(any(GetMissionsUseCase.ListAllQuery.class))).thenReturn(List.of(mission));
+        var page = new Page<>(List.of(mission), 1, 1, 0, 12);
+        when(getMissionsUseCase.handle(any(GetMissionsUseCase.ListAllQuery.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/missions"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].title").value("M1"))
-                .andExpect(jsonPath("$[0].theme.name").value("ASTRONOMY"))
-                .andExpect(jsonPath("$[0].difficulty").value("BEGINNER"));
+                .andExpect(jsonPath("$.content[0].title").value("M1"))
+                .andExpect(jsonPath("$.content[0].theme.name").value("ASTRONOMY"))
+                .andExpect(jsonPath("$.content[0].difficulty").value("BEGINNER"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.size").value(12))
+                .andExpect(jsonPath("$.hasNext").value(false));
     }
 
     @Test
     void listAll_shouldFilterByThemeAndDifficulty() throws Exception {
         var mission = createMission(UUID.randomUUID(), "Filtered");
-        when(getMissionsUseCase.handle(any(GetMissionsUseCase.ListAllQuery.class))).thenReturn(List.of(mission));
+        var page = new Page<>(List.of(mission), 1, 1, 0, 12);
+        when(getMissionsUseCase.handle(any(GetMissionsUseCase.ListAllQuery.class))).thenReturn(page);
         mockMvc.perform(get("/api/missions")
                         .param("theme", "ASTRONOMY")
                         .param("difficulty", "BEGINNER"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].title").value("Filtered"));
+                .andExpect(jsonPath("$.content[0].title").value("Filtered"));
+    }
+
+    @Test
+    void listAll_shouldFilterByName() throws Exception {
+        var mission = createMission(UUID.randomUUID(), "Join Mission");
+        var page = new Page<>(List.of(mission), 1, 1, 0, 12);
+        when(getMissionsUseCase.handle(any(GetMissionsUseCase.ListAllQuery.class))).thenReturn(page);
+        mockMvc.perform(get("/api/missions")
+                        .param("name", "join"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].title").value("Join Mission"));
+    }
+
+    @Test
+    void listAll_shouldUseDefaultPagination() throws Exception {
+        var mission = createMission(UUID.randomUUID(), "Default");
+        var page = new Page<>(List.of(mission), 1, 1, 0, 12);
+        when(getMissionsUseCase.handle(any(GetMissionsUseCase.ListAllQuery.class))).thenReturn(page);
+        mockMvc.perform(get("/api/missions"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.size").value(12));
     }
 
     @Test
@@ -238,12 +268,52 @@ class MissionControllerTest {
     }
 
     @Test
-    void listAllAdmin_shouldReturnAllMissions() throws Exception {
+    void listAllAdmin_shouldReturnPaginatedMissions() throws Exception {
         var mission = createMission(UUID.randomUUID(), "Admin List");
-        when(getAdminMissionsUseCase.listAll()).thenReturn(List.of(new GetAdminMissionsUseCase.AdminMissionResult(mission, null, null)));
+        var result = new GetAdminMissionsUseCase.AdminMissionResult(mission, null, null);
+        var page = new com.sqlab.domain.model.Page<>(List.of(result), 1, 1, 0, 12);
+
+        when(getAdminMissionsUseCase.listAll(isNull(), isNull(), isNull(), isNull(), isNull(), eq(0), eq(12))).thenReturn(page);
 
         mockMvc.perform(get("/api/missions/admin").with(user(USER_ID)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].title").value("Admin List"));
+                .andExpect(jsonPath("$.content[0].title").value("Admin List"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.size").value(12))
+                .andExpect(jsonPath("$.hasNext").value(false));
+    }
+
+    @Test
+    void listAllAdmin_shouldFilterByThemeAndDifficulty() throws Exception {
+        var mission = createMission(UUID.randomUUID(), "Filtered Admin");
+        var result = new GetAdminMissionsUseCase.AdminMissionResult(mission, null, null);
+        var page = new com.sqlab.domain.model.Page<>(List.of(result), 1, 1, 0, 12);
+
+        when(getAdminMissionsUseCase.listAll(eq("join"), eq("ASTRONOMY"), eq(DifficultyLevel.BEGINNER), isNull(), isNull(), eq(0), eq(12))).thenReturn(page);
+
+        mockMvc.perform(get("/api/missions/admin")
+                        .param("name", "join")
+                        .param("theme", "ASTRONOMY")
+                        .param("difficulty", "BEGINNER")
+                        .with(user(USER_ID)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].title").value("Filtered Admin"))
+                .andExpect(jsonPath("$.content[0].difficulty").value("BEGINNER"));
+    }
+
+    @Test
+    void listAllAdmin_shouldUseDefaultPagination() throws Exception {
+        var mission = createMission(UUID.randomUUID(), "Default Page");
+        var result = new GetAdminMissionsUseCase.AdminMissionResult(mission, null, null);
+        var page = new com.sqlab.domain.model.Page<>(List.of(result), 1, 1, 0, 12);
+
+        when(getAdminMissionsUseCase.listAll(isNull(), isNull(), isNull(), isNull(), isNull(), eq(0), eq(12))).thenReturn(page);
+
+        mockMvc.perform(get("/api/missions/admin").with(user(USER_ID)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.size").value(12));
     }
 }

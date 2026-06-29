@@ -11,6 +11,7 @@ export interface Technique {
 }
 
 export type DifficultyLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT';
+export type ScenarioScope = 'ALL' | 'IN_SCENARIO' | 'STANDALONE';
 
 export interface Mission {
   id: string;
@@ -32,6 +33,15 @@ export interface Mission {
   scenarioTotalMissions?: number;
   enabled?: boolean;
   expectedResult?: Record<string, unknown>[];
+}
+
+export interface MissionPage {
+  content: MissionSummary[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+  hasNext: boolean;
 }
 
 export interface MissionSummary {
@@ -156,6 +166,33 @@ export interface ScenarioAdminDetail {
   enabled: boolean;
   totalMissions: number;
   missions: ScenarioMissionSummary[];
+}
+
+export interface ScenarioPage {
+  content: ScenarioSummary[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+  hasNext: boolean;
+}
+
+export interface AdminMissionPage {
+  content: Mission[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+  hasNext: boolean;
+}
+
+export interface AdminScenarioPage {
+  content: ScenarioResponse[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+  hasNext: boolean;
 }
 
 export interface CreateScenarioRequest {

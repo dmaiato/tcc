@@ -3,6 +3,7 @@ package com.sqlab.infrastructure.adapter.in.web;
 import com.sqlab.application.port.in.GetAdminScenariosUseCase;
 import com.sqlab.application.port.in.GetScenariosUseCase;
 import com.sqlab.application.port.in.ManageScenarioUseCase;
+import com.sqlab.domain.model.Page;
 import com.sqlab.domain.model.Scenario;
 import com.sqlab.infrastructure.adapter.in.web.dto.ScenarioDto;
 import com.sqlab.infrastructure.adapter.in.web.dto.mapper.ScenarioDtoMapper;
@@ -32,6 +33,19 @@ public class ScenarioController {
         this.getAdminScenariosUseCase = getAdminScenariosUseCase;
     }
 
+    @GetMapping(value = "/scenarios", params = "page")
+    public ResponseEntity<ScenarioDto.ScenarioPage> listAllPaginated(
+            @RequestParam int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String theme,
+            @AuthenticationPrincipal String userId) {
+        UUID userUuid = ControllerUtils.parseUserId(userId);
+        Page<GetScenariosUseCase.ScenarioSummaryResult> results = getScenariosUseCase
+                .handleEnabledWithProgress(userUuid, name, theme, page, size);
+        return ResponseEntity.ok(ScenarioDtoMapper.toPage(results));
+    }
+
     @GetMapping("/scenarios")
     public ResponseEntity<List<ScenarioDto.ScenarioSummary>> listAll(
             @AuthenticationPrincipal String userId) {
@@ -55,13 +69,22 @@ public class ScenarioController {
         return ResponseEntity.ok(ScenarioDtoMapper.toDetail(detail, missionItems));
     }
 
-    @GetMapping("/admin/scenarios")
-    public ResponseEntity<List<ScenarioDto.ScenarioResponse>> listAllAdmin() {
+    @GetMapping(value = "/admin/scenarios", params = "!page")
+    public ResponseEntity<List<ScenarioDto.ScenarioResponse>> listAllAdminFlat() {
         var results = getAdminScenariosUseCase.listAll();
-        List<ScenarioDto.ScenarioResponse> response = results.stream()
-                .map(ScenarioDtoMapper::toResponse)
-                .toList();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(results.stream().map(ScenarioDtoMapper::toResponse).toList());
+    }
+
+    @GetMapping(value = "/admin/scenarios", params = "page")
+    public ResponseEntity<ScenarioDto.AdminScenarioPage> listAllAdmin(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String theme,
+            @RequestParam(required = false) Boolean enabled,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+
+        var results = getAdminScenariosUseCase.listAll(name, theme, enabled, page, size);
+        return ResponseEntity.ok(ScenarioDtoMapper.toAdminPage(results));
     }
 
     @GetMapping("/admin/scenarios/{scenarioId}")

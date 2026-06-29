@@ -70,4 +70,20 @@ public class MissionDto {
 
     @JsonInclude(Include.NON_NULL)
     public record ValidationResponse(boolean correct, String feedback) {}
+
+    public record MissionPage(
+            List<MissionSummary> content,
+            int totalElements,
+            int totalPages,
+            int number,
+            int size,
+            boolean hasNext) {}
+
+    public record AdminMissionPage(
+            List<MissionResponse> content,
+            int totalElements,
+            int totalPages,
+            int number,
+            int size,
+            boolean hasNext) {}
 }

@@ -12,6 +12,8 @@ import com.sqlab.domain.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -19,6 +21,7 @@ import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,6 +32,13 @@ class GetMissionsServiceTest {
     @Mock private ScenarioRepository scenarioRepository;
     @Mock private MissionAccessValidator missionAccessValidator;
     @Mock private ThemeRepository themeRepository;
+
+    @Captor private ArgumentCaptor<String> nameCaptor;
+    @Captor private ArgumentCaptor<Theme> themeCaptor;
+    @Captor private ArgumentCaptor<DifficultyLevel> difficultyCaptor;
+    @Captor private ArgumentCaptor<String> scenarioScopeCaptor;
+    @Captor private ArgumentCaptor<Integer> pageCaptor;
+    @Captor private ArgumentCaptor<Integer> sizeCaptor;
 
     private GetMissionsService service;
     private final UUID userId = UUID.randomUUID();
@@ -54,50 +64,117 @@ class GetMissionsServiceTest {
                 .build();
     }
 
+    private Page<Mission> pageOf(Mission... missions) {
+        List<Mission> list = Arrays.asList(missions);
+        return new Page<>(list, list.size(), 1, 0, 12);
+    }
+
     @Test
     void listAllWithoutFilters() {
         var mission = createMission(true, 0);
-        when(missionQueryPort.findByEnabledTrue()).thenReturn(List.of(mission));
+        when(missionQueryPort.findByFilters(isNull(), isNull(), isNull(), isNull(), eq(0), eq(12)))
+                .thenReturn(pageOf(mission));
 
-        var result = service.handle(new GetMissionsUseCase.ListAllQuery());
-        assertThat(result).hasSize(1);
+        Page<Mission> result = service.handle(new GetMissionsUseCase.ListAllQuery());
+
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.totalElements()).isEqualTo(1);
     }
 
     @Test
     void listWithThemeFilter() {
         var mission = createMission(true, 0);
-        when(missionQueryPort.findByTheme(astronomyTheme)).thenReturn(List.of(mission));
+        when(missionQueryPort.findByFilters(isNull(), eq(astronomyTheme), isNull(), isNull(), eq(0), eq(12)))
+                .thenReturn(pageOf(mission));
 
-        var result = service.handle(new GetMissionsUseCase.ListAllQuery("ASTRONOMY", null));
-        assertThat(result).hasSize(1);
+        Page<Mission> result = service.handle(new GetMissionsUseCase.ListAllQuery("ASTRONOMY", null));
+
+        assertThat(result.content()).hasSize(1);
     }
 
     @Test
     void listWithDifficultyFilter() {
         var mission = createMission(true, 0);
-        when(missionQueryPort.findByDifficulty(DifficultyLevel.BEGINNER)).thenReturn(List.of(mission));
+        when(missionQueryPort.findByFilters(isNull(), isNull(), eq(DifficultyLevel.BEGINNER), isNull(), eq(0), eq(12)))
+                .thenReturn(pageOf(mission));
 
-        var result = service.handle(new GetMissionsUseCase.ListAllQuery(null, DifficultyLevel.BEGINNER));
-        assertThat(result).hasSize(1);
+        Page<Mission> result = service.handle(new GetMissionsUseCase.ListAllQuery(null, DifficultyLevel.BEGINNER));
+
+        assertThat(result.content()).hasSize(1);
     }
 
     @Test
     void listWithThemeAndDifficultyFilter() {
         var mission = createMission(true, 0);
-        when(missionQueryPort.findByThemeAndDifficulty(astronomyTheme, DifficultyLevel.BEGINNER))
-                .thenReturn(List.of(mission));
+        when(missionQueryPort.findByFilters(isNull(), eq(astronomyTheme), eq(DifficultyLevel.BEGINNER), isNull(), eq(0), eq(12)))
+                .thenReturn(pageOf(mission));
 
-        var result = service.handle(new GetMissionsUseCase.ListAllQuery("ASTRONOMY", DifficultyLevel.BEGINNER));
-        assertThat(result).hasSize(1);
+        Page<Mission> result = service.handle(new GetMissionsUseCase.ListAllQuery("ASTRONOMY", DifficultyLevel.BEGINNER));
+
+        assertThat(result.content()).hasSize(1);
     }
 
     @Test
-    void listFiltersOutDisabledMissions() {
-        var disabled = createMission(false, 0);
-        when(missionQueryPort.findByEnabledTrue()).thenReturn(List.of(disabled));
+    void listAllPaginatedWithSearchName() {
+        var mission = createMission(true, 0);
+        when(missionQueryPort.findByFilters(eq("join"), isNull(), isNull(), isNull(), eq(0), eq(12)))
+                .thenReturn(pageOf(mission));
 
-        var result = service.handle(new GetMissionsUseCase.ListAllQuery());
-        assertThat(result).isEmpty();
+        Page<Mission> result = service.handle(
+                new GetMissionsUseCase.ListAllQuery(null, null, "join", null, 0, 12));
+
+        assertThat(result.content()).hasSize(1);
+    }
+
+    @Test
+    void listAllPaginatedWithScenarioFilter() {
+        var mission = createMission(true, 0);
+        when(missionQueryPort.findByFilters(isNull(), isNull(), isNull(), eq("IN_SCENARIO"), eq(0), eq(12)))
+                .thenReturn(pageOf(mission));
+
+        Page<Mission> result = service.handle(
+                new GetMissionsUseCase.ListAllQuery(null, null, null, "IN_SCENARIO", 0, 12));
+
+        assertThat(result.content()).hasSize(1);
+    }
+
+    @Test
+    void listAllPaginatedRespectsPageSize() {
+        var mission = createMission(true, 0);
+        Page<Mission> expectedPage = new Page<>(List.of(mission), 1, 1, 0, 12);
+        when(missionQueryPort.findByFilters(isNull(), isNull(), isNull(), isNull(), eq(0), eq(12)))
+                .thenReturn(expectedPage);
+
+        Page<Mission> result = service.handle(new GetMissionsUseCase.ListAllQuery());
+
+        assertThat(result.number()).isZero();
+        assertThat(result.size()).isEqualTo(12);
+        assertThat(result.totalPages()).isEqualTo(1);
+        assertThat(result.hasNext()).isFalse();
+    }
+
+    @Test
+    void listAllPaginatedSecondPage() {
+        var mission = createMission(true, 0);
+        Page<Mission> expectedPage = new Page<>(List.of(mission), 13, 2, 1, 12);
+        when(missionQueryPort.findByFilters(isNull(), isNull(), isNull(), isNull(), eq(1), eq(12)))
+                .thenReturn(expectedPage);
+
+        Page<Mission> result = service.handle(
+                new GetMissionsUseCase.ListAllQuery(null, null, null, null, 1, 12));
+
+        assertThat(result.number()).isEqualTo(1);
+        assertThat(result.totalElements()).isEqualTo(13);
+        assertThat(result.hasNext()).isFalse();
+    }
+
+    @Test
+    void listAllThrowsWhenThemeNotFound() {
+        when(themeRepository.findByName("UNKNOWN")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.handle(
+                new GetMissionsUseCase.ListAllQuery("UNKNOWN", null)))
+                .isInstanceOf(com.sqlab.domain.exception.ThemeNotFoundException.class);
     }
 
     @Test

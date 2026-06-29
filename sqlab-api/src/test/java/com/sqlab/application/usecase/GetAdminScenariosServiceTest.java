@@ -18,6 +18,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -75,5 +76,39 @@ class GetAdminScenariosServiceTest {
 
         assertThatThrownBy(() -> service.findById(id))
                 .isInstanceOf(ScenarioNotFoundException.class);
+    }
+
+    @Test
+    void listAllPaginatedReturnsPage() {
+        var theme = new Theme(UUID.randomUUID(), "ASTRONOMY", null, null);
+        var scenario = new Scenario(UUID.randomUUID(), "Paginated", "D", theme, 1, true);
+        var domainPage = new com.sqlab.domain.model.Page<>(List.of(scenario), 1, 1, 0, 12);
+
+        when(scenarioRepository.findAllByFilters(isNull(), isNull(), isNull(), eq(0), eq(12))).thenReturn(domainPage);
+        when(missionQueryPort.countByScenarioId(scenario.getId())).thenReturn(3);
+
+        var result = service.listAll(null, null, null, 0, 12);
+
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().get(0).scenario().getTitle()).isEqualTo("Paginated");
+        assertThat(result.content().get(0).totalMissions()).isEqualTo(3);
+        assertThat(result.totalElements()).isEqualTo(1);
+        assertThat(result.hasNext()).isFalse();
+    }
+
+    @Test
+    void listAllPaginatedFiltersByNameAndTheme() {
+        var theme = new Theme(UUID.randomUUID(), "ASTRONOMY", null, null);
+        var scenario = new Scenario(UUID.randomUUID(), "Astro Scenario", "D", theme, 1, true);
+        var domainPage = new com.sqlab.domain.model.Page<>(List.of(scenario), 1, 1, 0, 12);
+
+        when(scenarioRepository.findAllByFilters(eq("astro"), eq("ASTRONOMY"), isNull(), eq(0), eq(12))).thenReturn(domainPage);
+        when(missionQueryPort.countByScenarioId(scenario.getId())).thenReturn(5);
+
+        var result = service.listAll("astro", "ASTRONOMY", null, 0, 12);
+
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().get(0).scenario().getTitle()).isEqualTo("Astro Scenario");
+        assertThat(result.content().get(0).totalMissions()).isEqualTo(5);
     }
 }

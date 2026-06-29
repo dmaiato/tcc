@@ -2,15 +2,19 @@ package com.sqlab.application.port.in;
 
 import com.sqlab.domain.model.DifficultyLevel;
 import com.sqlab.domain.model.Mission;
+import com.sqlab.domain.model.Page;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface GetMissionsUseCase {
 
-    record ListAllQuery(String theme, DifficultyLevel difficulty) {
+    record ListAllQuery(String theme, DifficultyLevel difficulty, String name, String scenarioScope, int page, int size) {
         public ListAllQuery() {
-            this(null, null);
+            this(null, null, null, null, 0, 12);
+        }
+
+        public ListAllQuery(String theme, DifficultyLevel difficulty) {
+            this(theme, difficulty, null, null, 0, 12);
         }
     }
 
@@ -20,7 +24,7 @@ public interface GetMissionsUseCase {
         }
     }
 
-    List<Mission> handle(ListAllQuery query);
+    Page<Mission> handle(ListAllQuery query);
 
     Mission handle(FindByIdQuery query);
 

@@ -109,13 +109,14 @@ export class PgliteService {
 
   private isDataModifyingQuery(sql: string): boolean {
     const trimmed = sql.trim().toUpperCase();
-    return trimmed.startsWith('INSERT') ||
-           trimmed.startsWith('UPDATE') ||
-           trimmed.startsWith('DELETE') ||
-           trimmed.startsWith('CREATE') ||
-           trimmed.startsWith('DROP') ||
-           trimmed.startsWith('ALTER') ||
-           trimmed.startsWith('TRUNCATE');
+    return trimmed.includes('INSERT') ||
+           trimmed.includes('INTO')   ||
+           trimmed.includes('UPDATE') ||
+           trimmed.includes('DELETE') ||
+           trimmed.includes('CREATE') ||
+           trimmed.includes('DROP')   ||
+           trimmed.includes('ALTER')  ||
+           trimmed.includes('TRUNCATE');
   }
 
   async getSchema(): Promise<{ name: string; columns: { name: string; type: string; isPrimaryKey: boolean; isForeignKey: boolean }[] }[]> {

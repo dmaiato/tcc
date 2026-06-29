@@ -17,10 +17,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -70,6 +69,56 @@ class ScenarioControllerTest {
         mockMvc.perform(get("/api/scenarios").with(authentication(new UsernamePasswordAuthenticationToken(USER_ID, null))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    void listAllPaginated_shouldReturnScenarioPage() throws Exception {
+        var scenarioId = UUID.randomUUID();
+        var summary = new GetScenariosUseCase.ScenarioSummaryResult(scenarioId, "Scenario 1", 1, 0, 1, astronomyTheme);
+        var page = new com.sqlab.domain.model.Page<>(List.of(summary), 1, 1, 0, 12);
+
+        when(getScenariosUseCase.handleEnabledWithProgress(any(), isNull(), isNull(), eq(0), eq(12))).thenReturn(page);
+
+        mockMvc.perform(get("/api/scenarios?page=0")
+                        .with(authentication(new UsernamePasswordAuthenticationToken(USER_ID, null))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].title").value("Scenario 1"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.size").value(12))
+                .andExpect(jsonPath("$.hasNext").value(false));
+    }
+
+    @Test
+    void listAllPaginated_shouldFilterByName() throws Exception {
+        var scenarioId = UUID.randomUUID();
+        var summary = new GetScenariosUseCase.ScenarioSummaryResult(scenarioId, "Astro", 1, 0, 1, astronomyTheme);
+        var page = new com.sqlab.domain.model.Page<>(List.of(summary), 1, 1, 0, 12);
+
+        when(getScenariosUseCase.handleEnabledWithProgress(any(), eq("astro"), isNull(), eq(0), eq(12))).thenReturn(page);
+
+        mockMvc.perform(get("/api/scenarios?page=0&name=astro")
+                        .with(authentication(new UsernamePasswordAuthenticationToken(USER_ID, null))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].title").value("Astro"))
+                .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    void listAllPaginated_shouldFilterByTheme() throws Exception {
+        var scenarioId = UUID.randomUUID();
+        var summary = new GetScenariosUseCase.ScenarioSummaryResult(scenarioId, "Astro", 1, 0, 1, astronomyTheme);
+        var page = new com.sqlab.domain.model.Page<>(List.of(summary), 1, 1, 0, 12);
+
+        when(getScenariosUseCase.handleEnabledWithProgress(any(), isNull(), eq("ASTRONOMY"), eq(0), eq(12))).thenReturn(page);
+
+        mockMvc.perform(get("/api/scenarios?page=0&theme=ASTRONOMY")
+                        .with(authentication(new UsernamePasswordAuthenticationToken(USER_ID, null))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].title").value("Astro"))
+                .andExpect(jsonPath("$.totalElements").value(1));
     }
 
     @Test
@@ -131,15 +180,50 @@ class ScenarioControllerTest {
     }
 
     @Test
-    void listAllAdmin_shouldReturnAllScenarios() throws Exception {
+    void listAllAdmin_shouldReturnPaginatedScenarios() throws Exception {
         var scenario = new Scenario(UUID.randomUUID(), "Admin View", "Desc", astronomyTheme, 1, true);
         var result = new GetAdminScenariosUseCase.ScenarioListResult(scenario, 0);
-        when(getAdminScenariosUseCase.listAll()).thenReturn(List.of(result));
+        var page = new com.sqlab.domain.model.Page<>(List.of(result), 1, 1, 0, 12);
 
-        mockMvc.perform(get("/api/admin/scenarios").with(user(USER_ID)))
+        when(getAdminScenariosUseCase.listAll(isNull(), isNull(), isNull(), eq(0), eq(12))).thenReturn(page);
+
+        mockMvc.perform(get("/api/admin/scenarios?page=0").with(user(USER_ID)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].title").value("Admin View"))
-                .andExpect(jsonPath("$[0].totalMissions").value(0));
+                .andExpect(jsonPath("$.content[0].title").value("Admin View"))
+                .andExpect(jsonPath("$.content[0].totalMissions").value(0))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.hasNext").value(false));
+    }
+
+    @Test
+    void listAllAdmin_shouldFilterByNameAndTheme() throws Exception {
+        var scenario = new Scenario(UUID.randomUUID(), "Filtered", "Desc", astronomyTheme, 1, true);
+        var result = new GetAdminScenariosUseCase.ScenarioListResult(scenario, 3);
+        var page = new com.sqlab.domain.model.Page<>(List.of(result), 1, 1, 0, 12);
+
+        when(getAdminScenariosUseCase.listAll(eq("space"), eq("ASTRONOMY"), isNull(), eq(0), eq(12))).thenReturn(page);
+
+        mockMvc.perform(get("/api/admin/scenarios?page=0")
+                        .param("name", "space")
+                        .param("theme", "ASTRONOMY")
+                        .with(user(USER_ID)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].title").value("Filtered"))
+                .andExpect(jsonPath("$.content[0].totalMissions").value(3));
+    }
+
+    @Test
+    void listAllAdmin_shouldUseDefaultPagination() throws Exception {
+        var scenario = new Scenario(UUID.randomUUID(), "Default", "Desc", astronomyTheme, 1, true);
+        var result = new GetAdminScenariosUseCase.ScenarioListResult(scenario, 0);
+        var page = new com.sqlab.domain.model.Page<>(List.of(result), 1, 1, 0, 12);
+
+        when(getAdminScenariosUseCase.listAll(isNull(), isNull(), isNull(), eq(0), eq(12))).thenReturn(page);
+
+        mockMvc.perform(get("/api/admin/scenarios?page=0").with(user(USER_ID)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.size").value(12));
     }
 
     @Test

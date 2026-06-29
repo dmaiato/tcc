@@ -2,10 +2,12 @@ package com.sqlab.infrastructure.adapter.in.web.dto.mapper;
 
 import com.sqlab.application.port.in.GetAdminScenariosUseCase;
 import com.sqlab.application.port.in.GetScenariosUseCase;
+import com.sqlab.domain.model.Page;
 import com.sqlab.infrastructure.adapter.in.web.dto.ScenarioDto;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ScenarioDtoMapper {
 
@@ -43,6 +45,22 @@ public class ScenarioDtoMapper {
                 result.scenario().getDescription(), result.totalMissions(),
                 result.scenario().isEnabled(), result.scenario().getRequiredLevel(),
                 ThemeDtoMapper.toResponse(result.scenario().getTheme()));
+    }
+
+    public static ScenarioDto.ScenarioPage toPage(Page<GetScenariosUseCase.ScenarioSummaryResult> page) {
+        List<ScenarioDto.ScenarioSummary> content = page.content().stream()
+                .map(ScenarioDtoMapper::toSummary)
+                .toList();
+        return new ScenarioDto.ScenarioPage(content, page.totalElements(), page.totalPages(),
+                page.number(), page.size(), page.hasNext());
+    }
+
+    public static ScenarioDto.AdminScenarioPage toAdminPage(Page<GetAdminScenariosUseCase.ScenarioListResult> page) {
+        List<ScenarioDto.ScenarioResponse> content = page.content().stream()
+                .map(ScenarioDtoMapper::toResponse)
+                .collect(Collectors.toList());
+        return new ScenarioDto.AdminScenarioPage(content, page.totalElements(), page.totalPages(),
+                page.number(), page.size(), page.hasNext());
     }
 
     public static ScenarioDto.ScenarioResponse toResponse(

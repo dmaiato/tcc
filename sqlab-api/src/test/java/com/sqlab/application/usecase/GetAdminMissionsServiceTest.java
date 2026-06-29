@@ -2,6 +2,7 @@ package com.sqlab.application.usecase;
 
 import com.sqlab.application.port.out.MissionQueryPort;
 import com.sqlab.application.port.out.ScenarioRepository;
+import com.sqlab.application.port.out.ThemeRepository;
 import com.sqlab.domain.exception.MissionNotFoundException;
 import com.sqlab.domain.model.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,12 +25,14 @@ class GetAdminMissionsServiceTest {
     private MissionQueryPort missionQueryPort;
     @Mock
     private ScenarioRepository scenarioRepository;
+    @Mock
+    private ThemeRepository themeRepository;
 
     private GetAdminMissionsService service;
 
     @BeforeEach
     void setUp() {
-        service = new GetAdminMissionsService(missionQueryPort, scenarioRepository);
+        service = new GetAdminMissionsService(missionQueryPort, scenarioRepository, themeRepository);
     }
 
     @Test
@@ -76,7 +79,7 @@ class GetAdminMissionsServiceTest {
 
         when(missionQueryPort.findAll()).thenReturn(List.of(mission));
         when(scenarioRepository.findById(scenarioId)).thenReturn(Optional.of(scenario));
-        when(missionQueryPort.countByScenarioIdAndEnabledTrue(scenarioId)).thenReturn(7);
+        when(missionQueryPort.countByScenarioId(scenarioId)).thenReturn(7);
 
         var results = service.listAll();
 
@@ -94,6 +97,35 @@ class GetAdminMissionsServiceTest {
 
         assertThat(results.get(0).scenarioTitle()).isNull();
         assertThat(results.get(0).scenarioTotalMissions()).isNull();
+    }
+
+    @Test
+    void listAllPaginatedReturnsPage() {
+        var mission = createMission(UUID.randomUUID(), "Paginated", null);
+        var domainPage = new com.sqlab.domain.model.Page<>(List.of(mission), 1, 1, 0, 12);
+
+        when(missionQueryPort.findAllByFilters(any(), any(), any(), any(), any(), eq(0), eq(12))).thenReturn(domainPage);
+
+        var result = service.listAll(null, null, null, null, null, 0, 12);
+
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().get(0).mission().getTitle()).isEqualTo("Paginated");
+        assertThat(result.totalElements()).isEqualTo(1);
+        assertThat(result.hasNext()).isFalse();
+    }
+
+    @Test
+    void listAllPaginatedFiltersByName() {
+        var mission = createMission(UUID.randomUUID(), "Filtered", null);
+        var domainPage = new com.sqlab.domain.model.Page<>(List.of(mission), 1, 1, 0, 12);
+
+        when(themeRepository.findByName("ASTRONOMY")).thenReturn(Optional.of(new Theme(UUID.randomUUID(), "ASTRONOMY", null, null)));
+        when(missionQueryPort.findAllByFilters(eq("astro"), any(), isNull(), any(), any(), eq(0), eq(12))).thenReturn(domainPage);
+
+        var result = service.listAll("astro", "ASTRONOMY", null, null, null, 0, 12);
+
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().get(0).mission().getTitle()).isEqualTo("Filtered");
     }
 
     private Mission createMission(UUID id, String title, UUID scenarioId) {

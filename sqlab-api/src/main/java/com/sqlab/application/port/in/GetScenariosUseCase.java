@@ -1,6 +1,7 @@
 package com.sqlab.application.port.in;
 
 import com.sqlab.domain.model.Mission;
+import com.sqlab.domain.model.Page;
 import com.sqlab.domain.model.Scenario;
 import com.sqlab.domain.model.Theme;
 
@@ -21,6 +22,8 @@ public interface GetScenariosUseCase {
     List<Scenario> handleEnabled();
 
     List<ScenarioSummaryResult> handleEnabledWithProgress(UUID userId);
+
+    Page<ScenarioSummaryResult> handleEnabledWithProgress(UUID userId, String name, String themeName, int page, int size);
 
     Scenario handle(UUID id);
 
