@@ -130,21 +130,23 @@ export class AuthService {
 
   fetchUserProfile(): Observable<User> {
     return this.api.get<UserResponse>('/users/me').pipe(
-      map(response => {
-        const user: User = {
-          id: response.id,
-          email: response.email,
-          username: response.username,
-          createdAt: response.createdAt,
-          xp: response.xp,
-          level: response.level,
-          role: response.role as 'USER' | 'ADMIN'
-        };
-        this._user.set(user);
-        localStorage.setItem(USER_KEY, JSON.stringify(user));
-        return user;
-      })
+      map(response => this.syncFromResponse(response))
     );
+  }
+
+  syncFromResponse(response: UserResponse): User {
+    const user: User = {
+      id: response.id,
+      email: response.email,
+      username: response.username,
+      createdAt: response.createdAt,
+      xp: response.xp,
+      level: response.level,
+      role: response.role as 'USER' | 'ADMIN'
+    };
+    this._user.set(user);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    return user;
   }
 
 }

@@ -43,6 +43,7 @@ export class ProfileService {
       })),
       tap(data => {
         this._profile.set(data);
+        this.authService.syncFromResponse(data.user);
         this._loading.set(false);
       })
     );

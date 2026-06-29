@@ -14,7 +14,9 @@ describe('ProfileService', () => {
     delete: vi.fn(),
   };
 
-  const mockAuthService = {};
+  const mockAuthService = {
+    syncFromResponse: vi.fn()
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
