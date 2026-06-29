@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy, HostListener, DestroyRef } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy, HostListener, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -52,6 +52,20 @@ export class MissionComponent implements OnInit, OnDestroy {
   runId = signal(0);
 
   scenarioMissionIds = signal<string[]>([]);
+  isCompleted = signal(false);
+
+  readonly scenarioProgress = computed(() => {
+    const total = this.scenarioMissionIds().length;
+    const idx = this.currentIndex();
+    if (total === 0 || idx < 0) return '';
+    return `${idx + 1} / ${total}`;
+  });
+  readonly canGoNext = computed(() =>
+    this.scenarioMissionIds().length > 0
+    && this.currentIndex() < this.scenarioMissionIds().length - 1
+    && (this.authService.isAdmin() || this.isCompleted())
+  );
+
   isLocked = signal(false);
   lockedMessage = signal('');
   lockedScenarioId = signal<string | null>(null);
@@ -118,6 +132,17 @@ export class MissionComponent implements OnInit, OnDestroy {
     }
   }
 
+  private loadProgress(missionId: string): void {
+    this.missionService.getUserProgress().subscribe({
+      next: (progress) => {
+        const entry = progress.find(p => p.missionId === missionId);
+        if (entry?.completed) {
+          this.isCompleted.set(true);
+        }
+      }
+    });
+  }
+
   private async refreshSchemaIfNeeded(): Promise<void> {
     if (!this.pgliteService.isSessionReady()) return;
     try {
@@ -156,6 +181,7 @@ export class MissionComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     this.isLocked.set(false);
     this.showExpected.set(false);
+    this.isCompleted.set(false);
 
     const load = this.authService.isAdmin()
       ? this.missionService.getMissionAdmin(id)
@@ -166,6 +192,7 @@ export class MissionComponent implements OnInit, OnDestroy {
         this.mission.set(mission);
         this.initializePglite(mission);
         this.updateNavigation();
+        this.loadProgress(mission.id);
         if (mission.scenarioId) {
           this.loadScenarioMissions(mission.scenarioId);
         }
@@ -290,6 +317,7 @@ export class MissionComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.validationResult.set(response);
         if (response.correct) {
+          this.isCompleted.set(true);
           const message = this.authService.isAdmin() ? 'Validation correct' : 'Mission complete!';
           this.toastService.success(message);
           this.profileService.fetchProfile().subscribe();
