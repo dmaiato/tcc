@@ -31,7 +31,6 @@
     } @else {
       <div class="space-y-3">
         @for (scenario of scenarios(); track scenario.id; let i = $index) {
-          @let style = getThemeStyle(scenario.theme);
           <div class="rounded-xl border border-border bg-card overflow-hidden transition-shadow hover:shadow-sm">
               <div class="flex-1 min-w-0">
                 <div class="px-5 pt-4 pb-3">

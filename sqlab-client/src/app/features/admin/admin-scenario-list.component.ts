@@ -5,15 +5,8 @@ import { Router, RouterLink } from '@angular/router';
 import { ScenarioService } from '../../core/scenario.service';
 import { DifficultyBadgeComponent } from '../../shared/difficulty-badge/difficulty-badge.component';
 import { ThemeBadgeComponent } from '../../shared/theme-badge/theme-badge.component';
-import { ScenarioResponse, ScenarioAdminDetail, Theme, DifficultyLevel } from '../../core/models/mission.model';
+import { ScenarioResponse, ScenarioAdminDetail } from '../../core/models/mission.model';
 import { ToastService } from '../../shared/toast/toast.service';
-
-interface ThemeStyle {
-  label: string;
-  icon: string;
-  from: string;
-  to: string;
-}
 
 @Component({
   selector: 'app-admin-scenario-list',
@@ -32,14 +25,6 @@ export class AdminScenarioListComponent {
   expandedId = signal<string | null>(null);
   expandedMissions = signal<ScenarioAdminDetail | null>(null);
   expandedLoading = signal(false);
-
-  readonly themeStyles: Record<string, ThemeStyle> = {
-    ASTRONOMY: { label: 'Astronomy', icon: 'lucideStar', from: '#7c3aed', to: '#a855f7' },
-    CYBERSECURITY: { label: 'Cybersecurity', icon: 'lucideShield', from: '#059669', to: '#10b981' },
-    CRIMINAL: { label: 'Criminal', icon: 'lucideFingerprint', from: '#dc2626', to: '#f43f5e' },
-    FINANCE: { label: 'Finance', icon: 'lucideTrendingUp', from: '#d97706', to: '#f59e0b' },
-    BIOLOGY: { label: 'Biology', icon: 'lucideFlaskConical', from: '#0d9488', to: '#14b8a6' }
-  };
 
   get totalScenarios(): number {
     return this.scenarios().length;
@@ -61,10 +46,6 @@ export class AdminScenarioListComponent {
         this.toast.error('Failed to load scenarios');
       }
     });
-  }
-
-  getThemeStyle(theme: Theme): ThemeStyle {
-    return this.themeStyles[theme.name];
   }
 
   requestDelete(scenarioId: string): void {

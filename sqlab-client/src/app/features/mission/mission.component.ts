@@ -9,6 +9,7 @@ import { MissionService } from '../../core/mission.service';
 import { ScenarioService } from '../../core/scenario.service';
 import { ToastService } from '../../shared/toast/toast.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { ProfileService } from '../../core/profile.service';
 import { Mission, Theme, DifficultyLevel } from '../../core/models/mission.model';
 import { MissionTabsComponent } from './mission-tabs/mission-tabs.component';
 import { SqlEditorComponent } from './sql-editor/sql-editor.component';
@@ -29,6 +30,7 @@ export class MissionComponent implements OnInit, OnDestroy {
   private readonly missionService = inject(MissionService);
   private readonly scenarioService = inject(ScenarioService);
   private readonly toastService = inject(ToastService);
+  private readonly profileService = inject(ProfileService);
   private readonly destroyRef = inject(DestroyRef);
   readonly authService = inject(AuthService);
 
@@ -308,6 +310,7 @@ export class MissionComponent implements OnInit, OnDestroy {
         if (response.correct) {
           const message = this.authService.isAdmin() ? 'Validation correct' : 'Mission complete!';
           this.toastService.success(message);
+          this.profileService.fetchProfile().subscribe();
         } else if (response.feedback) {
           this.toastService.error(response.feedback);
         } else {
