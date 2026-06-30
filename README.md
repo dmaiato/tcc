@@ -30,16 +30,6 @@ docker compose up --build
 | API | http://localhost:8081 |
 | Database | localhost:5436 |
 
-> **Note:** The admin seed (`V3__seed_admin.sql`) is not applied automatically.
-> To create an admin user, connect to the database and run:
-> ```sql
-> INSERT INTO users (id, username, email, password_hash, xp, role, created_at)
-> VALUES ('00000000-0000-0000-0000-000000000000', 'admin', 'admin@sqlab.com',
->         '$2a$10$0YTw968Ija.MHjNGP8Zkbevt4xVPGONIpf4LQIzvnu/c8enHuYyDi',
->         0, 'ADMIN', NOW())
-> ON CONFLICT (email) DO NOTHING;
-> ```
-
 ### Reset Everything
 
 ```bash
