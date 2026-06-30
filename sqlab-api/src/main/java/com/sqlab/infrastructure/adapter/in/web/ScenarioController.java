@@ -6,7 +6,6 @@ import com.sqlab.application.port.in.ManageScenarioUseCase;
 import com.sqlab.domain.model.Scenario;
 import com.sqlab.infrastructure.adapter.in.web.dto.ScenarioDto;
 import com.sqlab.infrastructure.adapter.in.web.dto.mapper.ScenarioDtoMapper;
-import com.sqlab.infrastructure.adapter.in.web.util.ControllerUtils;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,9 +33,8 @@ public class ScenarioController {
 
     @GetMapping("/scenarios")
     public ResponseEntity<List<ScenarioDto.ScenarioSummary>> listAll(
-            @AuthenticationPrincipal String userId) {
-        UUID userUuid = ControllerUtils.parseUserId(userId);
-        List<GetScenariosUseCase.ScenarioSummaryResult> results = getScenariosUseCase.handleEnabledWithProgress(userUuid);
+            @AuthenticationPrincipal UUID userId) {
+        List<GetScenariosUseCase.ScenarioSummaryResult> results = getScenariosUseCase.handleEnabledWithProgress(userId);
         List<ScenarioDto.ScenarioSummary> response = results.stream()
                 .map(ScenarioDtoMapper::toSummary)
                 .toList();
@@ -46,9 +44,9 @@ public class ScenarioController {
     @GetMapping("/scenarios/{scenarioId}")
     public ResponseEntity<ScenarioDto.ScenarioDetail> findById(
             @PathVariable UUID scenarioId,
-            @AuthenticationPrincipal String userId) {
-        UUID userUuid = ControllerUtils.parseUserId(userId);
-        var detail = getScenariosUseCase.handleDetail(scenarioId, userUuid);
+            @AuthenticationPrincipal UUID userId) {
+
+        var detail = getScenariosUseCase.handleDetail(scenarioId, userId);
 
         var missionItems = ScenarioDtoMapper.toMissionItems(detail.missions());
 

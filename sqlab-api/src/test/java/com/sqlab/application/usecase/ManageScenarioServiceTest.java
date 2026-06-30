@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -91,12 +92,12 @@ class ManageScenarioServiceTest {
     @Test
     void reorderMissions() {
         var m1 = Mission.builder().id(UUID.randomUUID()).title("M1").briefing("B").objective("O")
-                .ddlScript("DDL").techniques(List.of()).xpReward(10)
+                .ddlScript("DDL").techniques(Set.of()).xpReward(10)
                 .expectedResult(new ExpectedTuple(List.of(Map.of("x", 1))))
                 .ordered(false).theme(astronomyTheme).difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(scenarioId).orderIndex(1).enabled(true).build();
         var m2 = Mission.builder().id(UUID.randomUUID()).title("M2").briefing("B").objective("O")
-                .ddlScript("DDL").techniques(List.of()).xpReward(10)
+                .ddlScript("DDL").techniques(Set.of()).xpReward(10)
                 .expectedResult(new ExpectedTuple(List.of(Map.of("x", 1))))
                 .ordered(false).theme(astronomyTheme).difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(scenarioId).orderIndex(2).enabled(true).build();
@@ -124,7 +125,7 @@ class ManageScenarioServiceTest {
     @Test
     void reorderThrowsWhenCountMismatch() {
         var m1 = Mission.builder().id(UUID.randomUUID()).title("M1").briefing("B").objective("O")
-                .ddlScript("DDL").techniques(List.of()).xpReward(10)
+                .ddlScript("DDL").techniques(Set.of()).xpReward(10)
                 .expectedResult(new ExpectedTuple(List.of(Map.of("x", 1))))
                 .ordered(false).theme(astronomyTheme).difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(scenarioId).orderIndex(1).enabled(true).build();

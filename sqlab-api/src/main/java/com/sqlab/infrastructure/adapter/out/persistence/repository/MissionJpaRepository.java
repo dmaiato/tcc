@@ -8,19 +8,19 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 public interface MissionJpaRepository extends JpaRepository<MissionJpaEntity, UUID> {
 
-    List<MissionJpaEntity> findByTheme_Name(String themeName);
-    List<MissionJpaEntity> findByDifficulty(DifficultyLevel difficulty);
-    List<MissionJpaEntity> findByTheme_NameAndDifficulty(String themeName, DifficultyLevel difficulty);
-    List<MissionJpaEntity> findByScenario_IdOrderByOrderIndex(UUID scenarioId);
-    List<MissionJpaEntity> findByScenario_IdInOrderByOrderIndex(Set<UUID> scenarioIds);
-    List<MissionJpaEntity> findByEnabledTrue();
+    Stream<MissionJpaEntity> findByTheme_Name(String themeName);
+    Stream<MissionJpaEntity> findByDifficulty(DifficultyLevel difficulty);
+    Stream<MissionJpaEntity> findByTheme_NameAndDifficulty(String themeName, DifficultyLevel difficulty);
+    Stream<MissionJpaEntity> findByScenario_IdOrderByOrderIndex(UUID scenarioId);
+    Stream<MissionJpaEntity> findByScenario_IdInOrderByOrderIndex(Set<UUID> scenarioIds);
+    Stream<MissionJpaEntity> findByEnabledTrue();
     Optional<MissionJpaEntity> findByScenario_IdAndOrderIndex(UUID scenarioId, int orderIndex);
     int countByScenario_Id(UUID scenarioId);
     int countByScenario_IdAndEnabledTrue(UUID scenarioId);

@@ -15,6 +15,9 @@ import com.sqlab.domain.model.Technique;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,25 +57,26 @@ public class ManageMissionService implements ManageMissionUseCase {
                 .orElseThrow(() -> new ThemeNotFoundException(name));
     }
 
-    private List<Technique> resolveTechniques(List<String> names) {
-        if (names == null || names.isEmpty()) return List.of();
-        Set<String> uniqueNames = Set.copyOf(names);
-        List<Technique> found = techniqueRepository.findByNameIn(uniqueNames);
-        if (found.size() != uniqueNames.size()) {
-            Set<String> foundNames = found.stream().map(Technique::getName).collect(Collectors.toSet());
-            var missing = new java.util.HashSet<>(uniqueNames);
-            missing.removeAll(foundNames);
-            throw new IllegalArgumentException("Techniques not found: " + missing);
+    private Set<Technique> resolveTechniques(Set<String> names) {
+        if (names == null || names.isEmpty()) return Set.of();
+
+        final Set<Technique> found = techniqueRepository.findByNameIn(names);
+
+        if (found.size() < names.size()) {
+            Set<String> foundNames = found.stream().map(Technique::name).collect(Collectors.toSet());
+
+            names.removeIf(name -> foundNames.contains(name));
+
+            throw new IllegalArgumentException("Techniques not found: " + names);
         }
-        Map<String, Technique> techniqueByName = found.stream()
-                .collect(Collectors.toMap(Technique::getName, t -> t));
-        return names.stream().map(techniqueByName::get).toList();
+
+        return found;
     }
 
     private Mission buildMission(UUID id, String title, String briefing,
                                   String objective, String hint,
                                   String ddlScript, String dmlScript,
-                                  List<Technique> techniques, int xpReward,
+                                  Set<Technique> techniques, int xpReward,
                                   List<Map<String, Object>> expectedResult,
                                   boolean ordered, com.sqlab.domain.model.Theme theme,
                                   DifficultyLevel difficulty,

@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,7 +45,7 @@ class MissionAccessValidatorTest {
     private Mission createMission(boolean enabled, UUID scenario, Integer orderIndex, int requiredLevel) {
         return Mission.builder()
                 .id(missionId).title("M").briefing("B").objective("O")
-                .ddlScript("DDL").techniques(List.of()).xpReward(10)
+                .ddlScript("DDL").techniques(Set.of()).xpReward(10)
                 .expectedResult(new ExpectedTuple(List.of(Map.of("x", 1))))
                 .ordered(false).theme(new Theme(UUID.randomUUID(), "ASTRONOMY", null, null))
                 .difficulty(DifficultyLevel.BEGINNER)

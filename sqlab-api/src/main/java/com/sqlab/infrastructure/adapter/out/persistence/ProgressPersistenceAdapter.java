@@ -69,7 +69,7 @@ public class ProgressPersistenceAdapter implements ProgressRepository {
     @Override
     public Set<UUID> findCompletedMissionIdsByUserId(UUID userId) {
         return jpaRepository.findByUserIdAndCompleted(userId, true).stream()
-                .map(e -> e.getMission().getId())
+                .map(e -> e.getMissionId())
                 .collect(Collectors.toSet());
     }
 }

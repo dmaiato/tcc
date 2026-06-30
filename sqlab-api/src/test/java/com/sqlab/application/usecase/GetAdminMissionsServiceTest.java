@@ -103,7 +103,7 @@ class GetAdminMissionsServiceTest {
                 .briefing("B")
                 .objective("O")
                 .ddlScript("DDL")
-                .techniques(List.of())
+                .techniques(Set.of())
                 .xpReward(100)
                 .expectedResult(new ExpectedTuple(List.of(Map.of("x", 1))))
                 .ordered(false)

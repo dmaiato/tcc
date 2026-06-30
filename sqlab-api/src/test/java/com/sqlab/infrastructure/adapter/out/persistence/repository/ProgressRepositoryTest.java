@@ -50,7 +50,7 @@ class ProgressRepositoryTest extends AbstractPersistenceTest {
     @Test
     void saveAndFindByUserId() {
         var prog = ProgressJpaEntity.builder()
-                .user(user).mission(mission)
+                .userId(user.getId()).missionId(mission.getId())
                 .completed(true).completedAt(LocalDateTime.now())
                 .createdAt(LocalDateTime.now()).build();
         progressRepository.save(prog);
@@ -70,10 +70,10 @@ class ProgressRepositoryTest extends AbstractPersistenceTest {
                 .createdAt(LocalDateTime.now()).build());
 
         progressRepository.save(ProgressJpaEntity.builder()
-                .user(user).mission(mission).completed(true)
+                .userId(user.getId()).missionId(mission.getId()).completed(true)
                 .completedAt(LocalDateTime.now()).createdAt(LocalDateTime.now()).build());
         progressRepository.save(ProgressJpaEntity.builder()
-                .user(user).mission(mission2).completed(false)
+                .userId(user.getId()).missionId(mission2.getId()).completed(false)
                 .createdAt(LocalDateTime.now()).build());
 
         var completed = progressRepository.findByUserIdAndCompleted(user.getId(), true);
@@ -83,7 +83,7 @@ class ProgressRepositoryTest extends AbstractPersistenceTest {
     @Test
     void existsByUserIdAndMissionId() {
         progressRepository.save(ProgressJpaEntity.builder()
-                .user(user).mission(mission).completed(true)
+                .userId(user.getId()).missionId(mission.getId()).completed(true)
                 .completedAt(LocalDateTime.now()).createdAt(LocalDateTime.now()).build());
         assertThat(progressRepository.existsByUserIdAndMissionId(user.getId(), mission.getId())).isTrue();
         assertThat(progressRepository.existsByUserIdAndMissionId(user.getId(), UUID.randomUUID())).isFalse();
@@ -92,10 +92,10 @@ class ProgressRepositoryTest extends AbstractPersistenceTest {
     @Test
     void uniqueConstraintOnUserAndMission() {
         progressRepository.save(ProgressJpaEntity.builder()
-                .user(user).mission(mission).completed(true)
+                .userId(user.getId()).missionId(mission.getId()).completed(true)
                 .completedAt(LocalDateTime.now()).createdAt(LocalDateTime.now()).build());
         assertThatThrownBy(() -> progressRepository.saveAndFlush(ProgressJpaEntity.builder()
-                .user(user).mission(mission).completed(false)
+                .userId(user.getId()).missionId(mission.getId()).completed(false)
                 .createdAt(LocalDateTime.now()).build()))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }

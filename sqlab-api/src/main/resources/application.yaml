@@ -47,3 +47,6 @@ sqlab:
 
 server:
   port: 8081
+
+
+frontend-origin: ${FRONTEND_ORIGIN:http://localhost:4200}

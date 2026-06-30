@@ -10,6 +10,8 @@ import com.sqlab.infrastructure.adapter.out.persistence.entity.TechniqueJpaEntit
 import com.sqlab.infrastructure.adapter.out.persistence.entity.ThemeJpaEntity;
 import org.springframework.stereotype.Component;
 
+import static java.util.stream.Collectors.toSet;
+
 import java.util.Comparator;
 import java.util.List;
 
@@ -31,8 +33,8 @@ public class MissionMapper {
                 entity.getDmlScript(),
                 entity.getTechniques().stream()
                         .map(t -> new Technique(t.getId(), t.getName()))
-                        .sorted(Comparator.comparing(Technique::getName))
-                        .toList(),
+                        .sorted(Technique.ALPHABETICAL)
+                        .collect(toSet()),
                 entity.getXpReward(),
                 new ExpectedTuple(entity.getExpectedResult()),
                 entity.isOrdered(),

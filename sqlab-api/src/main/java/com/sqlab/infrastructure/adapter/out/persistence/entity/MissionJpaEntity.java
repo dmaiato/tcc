@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "missions")
+@SQLRestriction("enabled = true") // generates select clauses (findByWhatever) with this conditions by default
 @Getter
 @Setter
 @NoArgsConstructor
@@ -88,6 +90,7 @@ public class MissionJpaEntity {
     void prePersist() {
         if (id == null) {
             id = UUID.randomUUID();
+            createdAt = LocalDateTime.now(); // using app server container time rather than db container time
         }
     }
 }

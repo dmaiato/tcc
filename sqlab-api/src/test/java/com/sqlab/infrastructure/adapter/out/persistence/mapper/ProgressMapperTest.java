@@ -40,8 +40,8 @@ class ProgressMapperTest {
     void toDomainCompleted() {
         var entity = ProgressJpaEntity.builder()
                 .id(UUID.randomUUID())
-                .user(userJpa())
-                .mission(missionJpa())
+                .userId(userJpa().getId())
+                .missionId(missionJpa().getId())
                 .completed(true)
                 .completedAt(now)
                 .createdAt(now)
@@ -59,8 +59,8 @@ class ProgressMapperTest {
     void toDomainNotCompleted() {
         var entity = ProgressJpaEntity.builder()
                 .id(UUID.randomUUID())
-                .user(userJpa())
-                .mission(missionJpa())
+                .userId(userJpa().getId())
+                .missionId(missionJpa().getId())
                 .completed(false)
                 .completedAt(null)
                 .createdAt(now)
@@ -81,8 +81,8 @@ class ProgressMapperTest {
         var entity = mapper.toJpa(domain, userJpa, missionJpa);
 
         assertEquals(domain.getId(), entity.getId());
-        assertSame(userJpa, entity.getUser());
-        assertSame(missionJpa, entity.getMission());
+        assertSame(userJpa, entity.getUserId());
+        assertSame(missionJpa, entity.getMissionId());
         assertTrue(entity.isCompleted());
         assertNotNull(entity.getCompletedAt());
     }

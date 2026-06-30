@@ -9,7 +9,6 @@ import com.sqlab.domain.model.DifficultyLevel;
 import com.sqlab.domain.model.Mission;
 import com.sqlab.infrastructure.adapter.in.web.dto.MissionDto;
 import com.sqlab.infrastructure.adapter.in.web.dto.mapper.MissionDtoMapper;
-import com.sqlab.infrastructure.adapter.in.web.util.ControllerUtils;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +16,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -59,21 +59,20 @@ public class MissionController {
     @GetMapping("/{missionId}")
     public ResponseEntity<MissionDto.MissionResponse> findById(
             @PathVariable UUID missionId,
-            @AuthenticationPrincipal String userId) {
-        UUID userUuid = ControllerUtils.parseUserId(userId);
+            @AuthenticationPrincipal UUID userId) {
         GetMissionsUseCase.MissionDetail detail = getMissionsUseCase.handleDetail(
-                new GetMissionsUseCase.FindByIdQuery(missionId, userUuid));
+                new GetMissionsUseCase.FindByIdQuery(missionId, userId));
         return ResponseEntity.ok(MissionDtoMapper.toResponse(detail));
     }
 
     @PostMapping("/{missionId}/validate")
     public ResponseEntity<MissionDto.ValidationResponse> validate(
             @PathVariable UUID missionId,
-            @AuthenticationPrincipal String userId,
+            @AuthenticationPrincipal UUID userId,
             @Valid @RequestBody MissionDto.ValidationRequest request) {
 
         var result = validateMissionUseCase.handle(
-                new ValidateMissionUseCase.Command(ControllerUtils.parseUserId(userId), missionId, request.tuples())
+                new ValidateMissionUseCase.Command(userId, missionId, request.tuples())
         );
         return ResponseEntity.ok(MissionDtoMapper.toValidationResponse(result));
     }
@@ -95,12 +94,12 @@ public class MissionController {
         ManageMissionUseCase.CreateMissionCommand command = new ManageMissionUseCase.CreateMissionCommand(
                 request.title(), request.briefing(), request.objective(),
                 request.hint(), request.ddlScript(), request.dmlScript(),
-                request.techniques(), request.xpReward(), request.ordered(),
+                Set.copyOf(request.techniques()), request.xpReward(), request.ordered(),
                 request.theme(), request.difficulty(), request.expectedResult(),
                 request.scenarioId(), request.orderIndex(),
                 request.enabled());
         Mission mission = manageMissionUseCase.create(command);
-        var result = new GetAdminMissionsUseCase.AdminMissionResult(mission, null, null);
+        var result = new GetAdminMissionsUseCase.AdminMissionResult(mission);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(MissionDtoMapper.toMissionResponse(result));
     }
@@ -113,12 +112,12 @@ public class MissionController {
                 missionId,
                 request.title(), request.briefing(), request.objective(),
                 request.hint(), request.ddlScript(), request.dmlScript(),
-                request.techniques(), request.xpReward(), request.ordered(),
+                Set.copyOf(request.techniques()), request.xpReward(), request.ordered(),
                 request.theme(), request.difficulty(), request.expectedResult(),
                 request.scenarioId(), request.orderIndex(),
                 request.enabled());
         Mission mission = manageMissionUseCase.update(command);
-        var result = new GetAdminMissionsUseCase.AdminMissionResult(mission, null, null);
+        var result = new GetAdminMissionsUseCase.AdminMissionResult(mission);
         return ResponseEntity.ok(MissionDtoMapper.toMissionResponse(result));
     }
 

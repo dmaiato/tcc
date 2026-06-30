@@ -5,6 +5,7 @@ import com.sqlab.domain.model.Mission;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public interface ManageMissionUseCase {
@@ -16,7 +17,7 @@ public interface ManageMissionUseCase {
             String hint,
             String ddlScript,
             String dmlScript,
-            List<String> techniqueNames,
+            Set<String> techniqueNames,
             int xpReward,
             boolean ordered,
             String themeName,
@@ -34,7 +35,7 @@ public interface ManageMissionUseCase {
             String hint,
             String ddlScript,
             String dmlScript,
-            List<String> techniqueNames,
+            Set<String> techniqueNames,
             int xpReward,
             boolean ordered,
             String themeName,

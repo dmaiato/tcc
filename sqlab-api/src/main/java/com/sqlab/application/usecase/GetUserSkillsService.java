@@ -7,9 +7,9 @@ import com.sqlab.domain.model.Technique;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -26,19 +26,22 @@ public class GetUserSkillsService implements GetUserSkillsUseCase {
         this.missionQueryPort = missionQueryPort;
     }
 
+    @SuppressWarnings("null")
     @Override
     public List<String> handle(Query query) {
-        Set<UUID> completedMissionIds = progressRepository.findCompletedMissionIdsByUserId(query.userId());
+        final Set<UUID> completedMissionIds = progressRepository.findCompletedMissionIdsByUserId(query.userId());
 
         if (completedMissionIds.isEmpty()) {
             return List.of();
         }
 
-        Set<String> skills = new HashSet<>();
+        final Set<String> skills = new TreeSet<>(); // already ordered (will insert in order)
+
         missionQueryPort.findAllById(completedMissionIds)
                 .forEach(mission -> skills.addAll(
-                        mission.getTechniques().stream().map(Technique::getName).collect(Collectors.toSet())));
+                    mission.getTechniques().stream()
+                        .map(Technique::name).collect(Collectors.toSet())));
 
-        return skills.stream().sorted().toList();
+        return List.copyOf(skills);
     }
 }
