@@ -1,10 +1,7 @@
--- V2__seed_missions.sql
--- Seed idempotente com FK dependencies respeitadas
--- Ordem: themes → scenarios → techniques → missions → mission_techniques
 
 -- Themes
 INSERT INTO themes (id, name, description, emoji) VALUES
-    ('b0000001-0000-0000-0000-000000000001', 'ASTRONOMY',     'Explore o cosmos com SQL',     '🌌'),
+    ('b0000001-0000-0000-0000-000000000001', 'ASTRONOMY',     'Explore the cosmos with SQL',     '🌌'),
     ('b0000002-0000-0000-0000-000000000002', 'BIOLOGY',       'Life sciences and data',        '🧬'),
     ('b0000003-0000-0000-0000-000000000003', 'CRIMINAL',      'Investigation and mystery',     '🔍'),
     ('b0000004-0000-0000-0000-000000000004', 'CYBERSECURITY', 'Digital security and hacking',  '🛡️'),
@@ -41,7 +38,6 @@ INSERT INTO techniques (id, name) VALUES
     ('c000000c-0000-0000-0000-00000000000c', 'INSERT')
 ON CONFLICT (id) DO NOTHING;
 
--- Missions (sem coluna techniques, com theme_id UUID, scenario_id e order_index embutidos)
 INSERT INTO missions (id, title, briefing, objective, hint, ddl_script, dml_script, xp_reward, expected_result, ordered, theme_id, difficulty, scenario_id, order_index)
 VALUES
 
