@@ -36,4 +36,8 @@ public interface MissionJpaRepository extends JpaRepository<MissionJpaEntity, UU
     @Modifying
     @Query("UPDATE MissionJpaEntity m SET m.orderIndex = :orderIndex WHERE m.id = :id")
     void setOrderIndex(@Param("id") UUID id, @Param("orderIndex") int orderIndex);
+
+    boolean existsByTheme_Name(String themeName);
+
+    boolean existsByTechniques_Name(String techniqueName);
 }

@@ -18,4 +18,5 @@ public interface ScenarioRepository {
     Page<Scenario> findByFilters(String name, String themeName, int page, int size);
     Page<Scenario> findAllByFilters(String name, String themeName, Boolean enabled, int page, int size);
     int countMissionsByScenarioId(UUID scenarioId);
+    boolean existsByThemeName(String name);
 }

@@ -125,4 +125,9 @@ public class ScenarioPersistenceAdapter implements ScenarioRepository, ScenarioM
         });
         missionJpaRepository.setEnabledByScenarioId(scenarioId, enabled);
     }
+
+    @Override
+    public boolean existsByThemeName(String name) {
+        return jpaRepository.existsByTheme_Name(name);
+    }
 }

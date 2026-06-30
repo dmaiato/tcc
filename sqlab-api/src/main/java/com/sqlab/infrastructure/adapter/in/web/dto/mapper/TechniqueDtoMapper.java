@@ -4,6 +4,7 @@ import com.sqlab.domain.model.Technique;
 import com.sqlab.infrastructure.adapter.in.web.dto.TechniqueDto;
 
 import java.util.List;
+import java.util.UUID;
 
 public class TechniqueDtoMapper {
     public static TechniqueDto.TechniqueResponse toResponse(Technique technique) {
@@ -15,5 +16,13 @@ public class TechniqueDtoMapper {
         return techniques.stream()
                 .map(TechniqueDtoMapper::toResponse)
                 .toList();
+    }
+
+    public static Technique toDomain(TechniqueDto.CreateTechniqueRequest request) {
+        return new Technique(null, request.name().trim());
+    }
+
+    public static Technique toDomain(TechniqueDto.CreateTechniqueRequest request, UUID id) {
+        return new Technique(id, request.name().trim());
     }
 }

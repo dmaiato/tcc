@@ -198,4 +198,14 @@ public class MissionPersistenceAdapter implements MissionQueryPort, MissionComma
     public void deleteById(UUID id) {
         jpaRepository.deleteById(id);
     }
+
+    @Override
+    public boolean existsByTechniqueName(String name) {
+        return jpaRepository.existsByTechniques_Name(name);
+    }
+
+    @Override
+    public boolean existsByThemeName(String name) {
+        return jpaRepository.existsByTheme_Name(name);
+    }
 }

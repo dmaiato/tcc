@@ -5,6 +5,7 @@ import com.sqlab.domain.exception.LevelRequiredException;
 import com.sqlab.domain.exception.MissionLockedException;
 import com.sqlab.domain.exception.MissionNotFoundException;
 import com.sqlab.domain.exception.ScenarioNotFoundException;
+import com.sqlab.domain.exception.TechniqueNotFoundException;
 import com.sqlab.domain.exception.ThemeNotFoundException;
 import com.sqlab.domain.exception.UserAlreadyExistsException;
 import com.sqlab.domain.exception.UserNotFoundException;
@@ -38,7 +39,7 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), ex.getMessage()));
     }
 
-    @ExceptionHandler({MissionNotFoundException.class, ScenarioNotFoundException.class, UserNotFoundException.class})
+    @ExceptionHandler({MissionNotFoundException.class, ScenarioNotFoundException.class, UserNotFoundException.class, TechniqueNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(HttpStatus.NOT_FOUND.value(), ex.getMessage()));
@@ -100,6 +101,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleThemeNotFound(ThemeNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)

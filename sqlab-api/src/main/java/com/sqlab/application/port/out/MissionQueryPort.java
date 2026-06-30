@@ -24,4 +24,6 @@ public interface MissionQueryPort {
     Page<Mission> findAllByFilters(String name, Theme theme, DifficultyLevel difficulty, String scenarioScope, Boolean enabled, int page, int size);
     int countByScenarioId(UUID scenarioId);
     int countByScenarioIdAndEnabledTrue(UUID scenarioId);
+    boolean existsByTechniqueName(String name);
+    boolean existsByThemeName(String name);
 }

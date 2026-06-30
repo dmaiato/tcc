@@ -9,4 +9,9 @@ public class ThemeDtoMapper {
                 theme.getId(), theme.getName(),
                 theme.getDescription(), theme.getEmoji());
     }
+
+    public static Theme toDomain(ThemeDto.CreateThemeRequest request) {
+        return new Theme(null, request.name().trim().toUpperCase(),
+                request.description(), request.emoji());
+    }
 }

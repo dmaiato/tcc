@@ -9,4 +9,6 @@ import java.util.UUID;
 
 public interface ScenarioJpaRepository extends JpaRepository<ScenarioJpaEntity, UUID>, JpaSpecificationExecutor<ScenarioJpaEntity> {
     List<ScenarioJpaEntity> findByEnabledTrue();
+
+    boolean existsByTheme_Name(String themeName);
 }
