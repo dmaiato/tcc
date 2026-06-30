@@ -159,11 +159,13 @@ tcc/
 |--------|--------|-------------|
 | `POST /api/auth/register` | Public | Register |
 | `POST /api/auth/login` | Public | Login, returns JWT |
-| `GET /api/missions` | Auth | List missions (filter by theme, difficulty) |
+| `GET /api/missions` | Auth | List missions (paginated: filter by theme, difficulty, name, scenarioScope) |
 | `GET /api/missions/{id}` | Auth | Mission detail (403 if locked) |
 | `POST /api/missions/{id}/validate` | Auth | Submit query result `{tuples: [...]}` → `{correct, feedback?}` |
-| `GET /api/scenarios` | Auth | List scenarios with progress |
+| `GET /api/missions/admin` | Admin | List all missions (paginated: filter by name, theme, difficulty, scope, enabled/disabled) |
+| `GET /api/scenarios` | Auth | List scenarios with progress (paginated: filter by name, theme) |
 | `GET /api/scenarios/{id}` | Auth | Scenario detail with mission statuses |
+| `GET /api/admin/scenarios` | Admin | List all scenarios (paginated: filter by name, theme, enabled/disabled) |
 | `GET /api/users/me` | Auth | Profile (id, username, email, xp, level) |
 | `GET /api/users/me/progress` | Auth | Mission completion history |
 | `GET /api/users/me/skills` | Auth | Aggregated technique tags |
@@ -174,10 +176,20 @@ tcc/
 | `PUT /api/admin/scenarios/{id}` | Admin | Update scenario |
 | `DELETE /api/admin/scenarios/{id}` | Admin | Delete scenario |
 | `PUT /api/admin/scenarios/{id}/missions/reorder` | Admin | Reorder scenario missions |
+| `GET /api/themes` | Public | List all content themes |
+| `GET /api/techniques` | Public | List all SQL techniques |
+| `POST /api/admin/themes` | Admin | Create theme |
+| `PUT /api/admin/themes/{id}` | Admin | Update theme (name, description, emoji) |
+| `DELETE /api/admin/themes/{id}` | Admin | Delete theme (409 if referenced by missions/scenarios) |
+| `GET /api/admin/techniques` | Admin | List techniques |
+| `POST /api/admin/techniques` | Admin | Create technique |
+| `PUT /api/admin/techniques/{id}` | Admin | Update technique name |
+| `DELETE /api/admin/techniques/{id}` | Admin | Delete technique (409 if referenced by missions) |
 
 ## Seed Data
 
 - **10 missions** across 5 themes (CRIMINAL×3, FINANCE×2, ASTRONOMY×2, CYBERSECURITY×1, BIOLOGY×2)
+- **12 SQL techniques** (SELECT, WHERE, JOINs, GROUP BY, aggregates, DML operations, subselects)
 - **2 scenarios** with sequential unlocking:
   - "Noite no Blue Moon" — 3 missions, requires level 2
   - "The Mendes & Sons Affair" — 2 missions, requires level 3
