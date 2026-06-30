@@ -11,6 +11,7 @@ import {
 } from '@angular/cdk/drag-drop';
 import { MissionService } from '../../core/mission.service';
 import { ScenarioService } from '../../core/scenario.service';
+import { ThemeService } from '../../core/theme.service';
 import {
   CreateScenarioRequest,
   UpdateScenarioRequest,
@@ -38,6 +39,7 @@ interface DifficultyStat {
 export class ScenarioFormComponent implements OnInit {
   private readonly scenarioService = inject(ScenarioService);
   private readonly missionService = inject(MissionService);
+  private readonly themeService = inject(ThemeService);
   private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -57,7 +59,7 @@ export class ScenarioFormComponent implements OnInit {
   originalOrder = signal<string[]>([]);
   orderChanged = signal(false);
 
-  readonly themes: string[] = ['ASTRONOMY', 'CYBERSECURITY', 'CRIMINAL', 'FINANCE', 'BIOLOGY'];
+  readonly themeNames = signal<string[]>([]);
 
   readonly difficultyColors: Record<DifficultyLevel, string> = {
     BEGINNER: '#22c55e',
@@ -88,6 +90,8 @@ export class ScenarioFormComponent implements OnInit {
   readonly formTitleText = computed(() => this.isEditing() ? 'Update Scenario' : 'Create New Scenario');
 
   ngOnInit(): void {
+    this.themeService.getAll().subscribe(themes => this.themeNames.set(themes.map(t => t.name)));
+
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.editId = id;

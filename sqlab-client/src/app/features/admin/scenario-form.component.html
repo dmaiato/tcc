@@ -38,7 +38,7 @@
             <label class="font-mono text-[11px] text-muted-foreground uppercase tracking-wider block mb-1">Theme</label>
             <select [value]="formTheme()" (change)="formTheme.set($any($event.target).value)"
               class="w-full font-mono text-xs bg-muted/30 border border-border rounded-md px-3 py-2 text-foreground focus:border-accent outline-none">
-              @for (t of themes; track t) {
+              @for (t of themeNames(); track t) {
                 <option [value]="t" class="bg-card text-foreground">{{ t }}</option>
               }
             </select>

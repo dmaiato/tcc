@@ -7,11 +7,13 @@
       </div>
       <div>
         <h1 class="font-sans text-2xl font-bold text-foreground tracking-tight">Admin Dashboard</h1>
-        <p class="font-mono text-[11px] text-muted-foreground/70 mt-0.5">Manage missions and scenarios</p>
+        <p class="font-mono text-[11px] text-muted-foreground/70 mt-0.5">Manage missions, scenarios, themes, and techniques</p>
       </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+
       <a routerLink="/admin/missions"
         class="group relative block rounded-2xl border border-border/60 bg-card hover:bg-muted/10 transition-all p-6 overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
@@ -57,6 +59,54 @@
           </div>
         </div>
       </a>
+
+      <a routerLink="/admin/themes"
+        class="group relative block rounded-2xl border border-border/60 bg-card hover:bg-muted/10 transition-all p-6 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-emerald-600/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+        <div class="relative">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-md shadow-emerald-500/20">
+              <ng-icon name="lucidePalette" class="w-5 h-5" color="var(--color-badge-icon)" />
+            </div>
+            <div>
+              <h2 class="font-sans text-base font-bold text-foreground tracking-tight">Theme Manager</h2>
+              <p class="font-mono text-[11px] text-muted-foreground/60">Content theme catalog</p>
+            </div>
+          </div>
+          <p class="font-mono text-[11px] text-muted-foreground/80 leading-relaxed">
+            Create and manage content themes with names, descriptions, and emojis. Themes are assigned to missions and scenarios.
+          </p>
+          <div class="mt-3 pt-3 border-t border-border/40 flex items-center gap-2 text-xs font-mono text-emerald-400 group-hover:gap-3 transition-all">
+            <span>Enter Theme Manager</span>
+            <ng-icon name="lucideArrowRight" class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </div>
+      </a>
+
+      <a routerLink="/admin/techniques"
+        class="group relative block rounded-2xl border border-border/60 bg-card hover:bg-muted/10 transition-all p-6 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-violet-600/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+        <div class="relative">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-md shadow-violet-500/20">
+              <ng-icon name="lucideWrench" class="w-5 h-5" color="var(--color-badge-icon)" />
+            </div>
+            <div>
+              <h2 class="font-sans text-base font-bold text-foreground tracking-tight">Technique Manager</h2>
+              <p class="font-mono text-[11px] text-muted-foreground/60">SQL technique catalog</p>
+            </div>
+          </div>
+          <p class="font-mono text-[11px] text-muted-foreground/80 leading-relaxed">
+            Manage SQL techniques like SELECT, JOIN, GROUP BY. Techniques are assigned to missions for skill tracking.
+          </p>
+          <div class="mt-3 pt-3 border-t border-border/40 flex items-center gap-2 text-xs font-mono text-violet-400 group-hover:gap-3 transition-all">
+            <span>Enter Technique Manager</span>
+            <ng-icon name="lucideArrowRight" class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </div>
+      </a>
+
+
     </div>
   </div>
 </div>

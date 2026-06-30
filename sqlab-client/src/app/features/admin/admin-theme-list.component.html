@@ -1,0 +1,95 @@
+<div class="p-6 overflow-y-auto h-full">
+  <div class="max-w-2xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <a routerLink="/admin"
+          class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-mono text-[11px] text-muted-foreground hover:text-foreground bg-muted/20 hover:bg-muted/40 border border-border transition-all">
+          <ng-icon name="lucideArrowLeft" class="w-3 h-3" />
+          <span>Admin Dashboard</span>
+        </a>
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/60 to-secondary/60 flex items-center justify-center">
+          <ng-icon name="lucidePalette" class="w-5 h-5" color="var(--color-badge-icon)" />
+        </div>
+        <div>
+          <h1 class="font-sans text-xl font-bold text-foreground">Theme Manager</h1>
+          <p class="font-mono text-[11px] text-muted-foreground">{{ themes().length }} total</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-4 grid grid-cols-[auto_1fr_auto_auto] gap-2 items-end">
+      <input
+        type="text"
+        [ngModel]="newEmoji()"
+        (ngModelChange)="newEmoji.set($event)"
+        placeholder="Emoji"
+        class="w-20 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-mono text-foreground placeholder-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      />
+      <input
+        type="text"
+        [ngModel]="newName()"
+        (ngModelChange)="newName.set($event)"
+        (keydown.enter)="createTheme()"
+        placeholder="New theme name..."
+        class="px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-mono text-foreground placeholder-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      />
+      <input
+        type="text"
+        [ngModel]="newDescription()"
+        (ngModelChange)="newDescription.set($event)"
+        placeholder="Description"
+        class="w-48 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-mono text-foreground placeholder-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      />
+      <button (click)="createTheme()" type="button" [disabled]="!newName().trim() || isSaving()"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-mono text-xs font-medium transition-colors disabled:opacity-50 whitespace-nowrap">
+        <ng-icon name="lucidePlus" class="w-3 h-3" />
+        Save
+      </button>
+    </div>
+
+    @if (isLoading()) {
+      <div class="text-center py-10">
+        <p class="font-mono text-xs text-muted-foreground">Loading themes...</p>
+      </div>
+    } @else {
+      <div class="space-y-1">
+        @for (theme of themes(); track theme.id) {
+          <div class="flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-card">
+            @if (editingId() === theme.id) {
+              <input type="text" [ngModel]="editEmoji()" (ngModelChange)="editEmoji.set($event)" placeholder="Emoji" class="w-16 px-2 py-1 rounded border border-border bg-card text-xs font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+              <input type="text" [ngModel]="editName()" (ngModelChange)="editName.set($event)" placeholder="Name" class="w-28 px-2 py-1 rounded border border-border bg-card text-xs font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+              <input type="text" [ngModel]="editDescription()" (ngModelChange)="editDescription.set($event)" placeholder="Description" class="flex-1 px-2 py-1 rounded border border-border bg-card text-xs font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+              <button (click)="saveEdit(theme.id)" type="button" class="p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors" title="Save">
+                <ng-icon name="lucideCheck" class="w-3.5 h-3.5" />
+              </button>
+              <button (click)="cancelEdit()" type="button" class="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Cancel">
+                <ng-icon name="lucideX" class="w-3.5 h-3.5" />
+              </button>
+            } @else {
+              <span class="font-mono text-sm w-8">{{ theme.emoji || '--' }}</span>
+              <span class="font-mono text-xs text-foreground w-36">{{ theme.name }}</span>
+              <span class="flex-1 font-mono text-[11px] text-muted-foreground truncate">{{ theme.description || '--' }}</span>
+              <button (click)="startEdit(theme)" type="button" class="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Edit">
+                <ng-icon name="lucidePen" class="w-3 h-3" />
+              </button>
+              @if (confirmDeleteId() === theme.id) {
+                <button (click)="confirmDeleteTheme(theme.id)" type="button" class="font-mono text-[11px] px-2 py-1 rounded bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</button>
+                <button (click)="cancelDelete()" type="button" class="font-mono text-[11px] px-2 py-1 rounded text-muted-foreground hover:text-foreground">Cancel</button>
+              } @else {
+                <button (click)="requestDelete(theme.id)" type="button" class="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title="Delete">
+                  <ng-icon name="lucideTrash2" class="w-3 h-3" />
+                </button>
+              }
+            }
+          </div>
+        }
+      </div>
+
+      @if (themes().length === 0) {
+        <div class="text-center py-10 rounded-xl border border-dashed border-border">
+          <p class="font-mono text-xs text-muted-foreground">No themes yet.</p>
+        </div>
+      }
+    }
+  </div>
+</div>

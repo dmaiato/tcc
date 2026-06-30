@@ -80,6 +80,16 @@ export const routes: Routes = [
     loadComponent: () => import('./features/admin/scenario-form.component').then(m => m.ScenarioFormComponent)
   },
   {
+    path: 'admin/themes',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () => import('./features/admin/admin-theme-list.component').then(m => m.AdminThemeListComponent)
+  },
+  {
+    path: 'admin/techniques',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () => import('./features/admin/admin-technique-list.component').then(m => m.AdminTechniqueListComponent)
+  },
+  {
     path: '**',
     redirectTo: 'dashboard'
   }

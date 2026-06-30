@@ -4,6 +4,8 @@ import { NgIconsModule } from '@ng-icons/core';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { MissionService } from '../../core/mission.service';
 import { ScenarioService } from '../../core/scenario.service';
+import { ThemeService } from '../../core/theme.service';
+import { TechniqueService } from '../../core/technique.service';
 import { CreateMissionRequest, UpdateMissionRequest, DifficultyLevel } from '../../core/models/mission.model';
 import { ToastService } from '../../shared/toast/toast.service';
 import { CodeEditorDialogComponent } from '../../shared/code-editor-dialog/code-editor-dialog.component';
@@ -17,6 +19,8 @@ import { CodeEditorDialogComponent } from '../../shared/code-editor-dialog/code-
 export class MissionFormComponent implements OnInit {
   private readonly missionService = inject(MissionService);
   private readonly scenarioService = inject(ScenarioService);
+  private readonly themeService = inject(ThemeService);
+  private readonly techniqueService = inject(TechniqueService);
   private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -41,14 +45,17 @@ export class MissionFormComponent implements OnInit {
   formExpectedResult = signal('');
   formEnabled = signal<boolean | null>(null);
 
-  readonly allTechniques = ['SELECT', 'WHERE', 'ORDER BY', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'GROUP BY', 'HAVING', 'COUNT', 'SUM', 'AVG', 'UPDATE', 'DELETE', 'INSERT', 'LIKE', 'IN', 'BETWEEN', 'DISTINCT', 'SUBSELECT'];
-  readonly themes: string[] = ['ASTRONOMY', 'CYBERSECURITY', 'CRIMINAL', 'FINANCE', 'BIOLOGY'];
+  readonly allTechniques = signal<string[]>([]);
+  readonly themeNames = signal<string[]>([]);
   readonly difficulties: DifficultyLevel[] = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT'];
 
   readonly isEditing = computed(() => this.editId !== null);
   readonly formTitleText = computed(() => this.isEditing() ? 'Update Mission' : 'Create New Mission');
 
   ngOnInit(): void {
+    this.themeService.getAll().subscribe(themes => this.themeNames.set(themes.map(t => t.name)));
+    this.techniqueService.getAll().subscribe(techniques => this.allTechniques.set(techniques.map(t => t.name)));
+
     const id = this.route.snapshot.paramMap.get('id');
     this.scenarioId = this.route.snapshot.queryParamMap.get('scenarioId');
 
