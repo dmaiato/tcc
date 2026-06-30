@@ -15,12 +15,13 @@ import { MissionTabsComponent } from './mission-tabs/mission-tabs.component';
 import { SqlEditorComponent } from './sql-editor/sql-editor.component';
 import { ActionBarComponent } from './action-bar/action-bar.component';
 import { ResultsPaneComponent } from './results-pane/results-pane.component';
+import { CodeEditorDialogComponent } from '../../shared/code-editor-dialog/code-editor-dialog.component';
 import { SchemaTable, normalizeRows, schemasEqual } from '../../core/utils/schema.utils';
 
 @Component({
   selector: 'app-mission',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, MissionTabsComponent, SqlEditorComponent, ActionBarComponent, ResultsPaneComponent, NgIconsModule],
+  imports: [CommonModule, FormsModule, RouterModule, MissionTabsComponent, SqlEditorComponent, ActionBarComponent, ResultsPaneComponent, NgIconsModule, CodeEditorDialogComponent],
   templateUrl: './mission.component.html'
 })
 export class MissionComponent implements OnInit, OnDestroy {
@@ -66,6 +67,10 @@ export class MissionComponent implements OnInit, OnDestroy {
     && (this.authService.isAdmin() || this.isCompleted())
   );
 
+  readonly isBusy = computed(() =>
+    this.isRunning() || this.isRestoring() || this.isValidating()
+  );
+
   isLocked = signal(false);
   lockedMessage = signal('');
   lockedScenarioId = signal<string | null>(null);
@@ -75,6 +80,8 @@ export class MissionComponent implements OnInit, OnDestroy {
   expectedResult = signal<Record<string, unknown>[] | null>(null);
   expectedColumns = signal<string[]>([]);
   showExpected = signal(false);
+
+  showFullEditor = signal(false);
 
   ngOnInit(): void {
     this.route.paramMap.pipe(
@@ -98,6 +105,7 @@ export class MissionComponent implements OnInit, OnDestroy {
   onGlobalCtrlEnter(event: Event): void {
     if (!this.isRunning() && !this.isRestoring() && this.query().trim()) {
       event.preventDefault();
+      this.showFullEditor.set(false);
       this.executeQuery();
     }
   }
@@ -182,6 +190,20 @@ export class MissionComponent implements OnInit, OnDestroy {
     this.isLocked.set(false);
     this.showExpected.set(false);
     this.isCompleted.set(false);
+    this.query.set('');
+    this.queryResult.set(null);
+    this.queryError.set(null);
+    this.validationResult.set(null);
+    this.submitError.set(null);
+    this.expectedResult.set(null);
+    this.expectedColumns.set([]);
+    this.schema.set([]);
+    this.runId.set(0);
+    this.pgliteService.isModified.set(false);
+    this.isRunning.set(false);
+    this.isRestoring.set(false);
+    this.isValidating.set(false);
+    this.showFullEditor.set(false);
 
     const load = this.authService.isAdmin()
       ? this.missionService.getMissionAdmin(id)

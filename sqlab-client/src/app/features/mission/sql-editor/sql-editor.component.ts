@@ -1,11 +1,12 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { NgIconsModule } from '@ng-icons/core';
 
 @Component({
   selector: 'app-sql-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NgIconsModule],
   templateUrl: './sql-editor.component.html',
   styleUrl: './sql-editor.component.css'
 })
@@ -14,6 +15,7 @@ export class SqlEditorComponent {
   @Input() dbModified = false;
   @Output() valueChange = new EventEmitter<string>();
   @Output() submit = new EventEmitter<void>();
+  @Output() expand = new EventEmitter<void>();
 
   onInput(event: Event): void {
     const target = event.target as HTMLTextAreaElement;

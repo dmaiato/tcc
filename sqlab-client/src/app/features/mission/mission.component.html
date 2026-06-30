@@ -41,17 +41,21 @@
       <a [routerLink]="['/scenarios', mission.scenarioId]" class="font-mono text-[11px] text-muted-foreground hover:text-primary transition-colors px-2 py-1 rounded hover:bg-muted">{{ mission.scenarioTitle }}</a>
       <span class="font-mono text-[11px] text-muted-foreground">-</span>
       <span class="flex items-center gap-0.5 ml-1">
-        @if (currentIndex() > 0) {
-          <a [routerLink]="['/mission', scenarioMissionIds()[currentIndex() - 1]]" class="flex items-center justify-center size-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Previous mission">
-            <ng-icon name="lucideChevronLeft" class="w-3.5 h-3.5" />
-          </a>
-        }
+        <span class="flex items-center justify-center size-6">
+          @if (currentIndex() > 0 && !isBusy()) {
+            <a [routerLink]="['/mission', scenarioMissionIds()[currentIndex() - 1]]" class="flex items-center justify-center size-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Previous mission">
+              <ng-icon name="lucideChevronLeft" class="w-3.5 h-3.5" />
+            </a>
+          }
+        </span>
         <span class="font-mono tabular-nums text-[11px] text-muted-foreground w-10 text-center">{{ scenarioProgress() }}</span>
-        @if (canGoNext()) {
-          <a [routerLink]="['/mission', scenarioMissionIds()[currentIndex() + 1]]" class="flex items-center justify-center size-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Next mission">
-            <ng-icon name="lucideChevronRight" class="w-3.5 h-3.5" />
-          </a>
-        }
+        <span class="flex items-center justify-center size-6">
+          @if (canGoNext() && !isBusy()) {
+            <a [routerLink]="['/mission', scenarioMissionIds()[currentIndex() + 1]]" class="flex items-center justify-center size-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Next mission">
+              <ng-icon name="lucideChevronRight" class="w-3.5 h-3.5" />
+            </a>
+          }
+        </span>
       </span>
     }
   </div>
@@ -63,7 +67,7 @@
     </div>
 
     <div class="w-[62%] flex flex-col min-h-0 p-4 gap-3">
-      <app-sql-editor [value]="query()" [dbModified]="isDbModified()" (valueChange)="onQueryChange($event)" (submit)="executeQuery()" />
+      <app-sql-editor [value]="query()" [dbModified]="isDbModified()" (valueChange)="onQueryChange($event)" (submit)="executeQuery()" (expand)="showFullEditor.set(true)" />
 
       <app-action-bar [query]="query()" [running]="isRunning()" [restoring]="isRestoring()" [verifying]="isValidating()" [verifyResult]="validationResult()" [dbModified]="isDbModified()" [isAdmin]="authService.isAdmin()" (restore)="resetDatabase()" (run)="executeQuery()" (verify)="submitSolution()" />
 
@@ -105,5 +109,14 @@
       }
     </div>
   </div>
+
+  @if (showFullEditor()) {
+    <app-code-editor-dialog
+      title="SQL Query"
+      [value]="query()"
+      (valueChange)="query.set($event)"
+      (close)="showFullEditor.set(false)"
+    />
+  }
   </div>
 }
