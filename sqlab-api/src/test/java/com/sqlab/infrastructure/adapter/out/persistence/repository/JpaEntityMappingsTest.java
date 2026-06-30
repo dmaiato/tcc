@@ -89,15 +89,15 @@ class JpaEntityMappingsTest extends AbstractPersistenceTest {
                 .createdAt(LocalDateTime.now()).build());
 
         var progress = ProgressJpaEntity.builder()
-                .user(user).mission(mission).completed(true)
+                .userId(user.getId()).missionId(mission.getId()).completed(true)
                 .completedAt(LocalDateTime.now()).createdAt(LocalDateTime.now()).build();
         progressRepository.save(progress);
         em.flush();
         em.clear();
 
         var found = em.find(ProgressJpaEntity.class, progress.getId());
-        assertThat(found.getUser().getId()).isEqualTo(user.getId());
-        assertThat(found.getMission().getId()).isEqualTo(mission.getId());
+        assertThat(found.getUserId()).isEqualTo(user.getId());
+        assertThat(found.getMissionId()).isEqualTo(mission.getId());
         assertThat(found.isCompleted()).isTrue();
     }
 }

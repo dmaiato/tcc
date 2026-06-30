@@ -5,9 +5,20 @@ import com.sqlab.domain.model.Mission;
 import java.util.List;
 import java.util.UUID;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
+
 public interface GetAdminMissionsUseCase {
 
-    record AdminMissionResult(Mission mission, String scenarioTitle, Integer scenarioTotalMissions) {}
+    record AdminMissionResult(@NonNull Mission mission,
+                              @Nullable String scenarioTitle,
+                              @Nullable Integer scenarioTotalMissions) {
+        
+        public AdminMissionResult(Mission mission) {
+            this(mission, null, null);
+        }
+    }
 
     List<AdminMissionResult> listAll();
 

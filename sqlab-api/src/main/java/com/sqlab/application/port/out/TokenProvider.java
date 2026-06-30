@@ -10,7 +10,7 @@ import java.util.UUID;
  */
 public interface TokenProvider {
     String generate(UUID userId, String username, UserRole role);
-    String extractUserId(String token);
+    UUID extractUserId(String token);
     String extractRole(String token);
     boolean isValid(String token);
 }

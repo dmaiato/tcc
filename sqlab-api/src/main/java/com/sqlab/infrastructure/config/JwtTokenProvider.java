@@ -2,6 +2,8 @@ package com.sqlab.infrastructure.config;
 
 import com.sqlab.application.port.out.TokenProvider;
 import com.sqlab.domain.model.UserRole;
+
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -44,18 +46,23 @@ public class JwtTokenProvider implements TokenProvider {
                 .compact();
     }
 
+    private Claims claims(String token) {
+        return jwtParser.parseSignedClaims(token).getPayload();
+    }
+
     @Override
-    public String extractUserId(String token) {
-        return jwtParser.parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
+    public UUID extractUserId(String token) {
+        final String userId = claims(token).getSubject();
+        try {   
+            return UUID.fromString(userId);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid user ID format in token: " + userId);
+        }
     }
 
     @Override
     public String extractRole(String token) {
-        return jwtParser.parseSignedClaims(token)
-                .getPayload()
-                .get("role", String.class);
+        return claims(token).get("role", String.class);
     }
 
     @Override

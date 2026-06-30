@@ -64,37 +64,40 @@ public class MissionPersistenceAdapter implements MissionQueryPort, MissionComma
 
     @Override
     public List<Mission> findByTheme(Theme theme) {
-        return jpaRepository.findByTheme_Name(theme.getName()).stream().map(mapper::toDomain).toList();
+        return jpaRepository.findByTheme_Name(theme.getName())
+            .map(mapper::toDomain).toList();
     }
 
     @Override
     public List<Mission> findByDifficulty(DifficultyLevel difficulty) {
-        return jpaRepository.findByDifficulty(difficulty).stream().map(mapper::toDomain).toList();
+        return jpaRepository.findByDifficulty(difficulty)
+            .map(mapper::toDomain).toList();
     }
 
     @Override
     public List<Mission> findByThemeAndDifficulty(Theme theme, DifficultyLevel difficulty) {
-        return jpaRepository.findByTheme_NameAndDifficulty(theme.getName(), difficulty).stream().map(mapper::toDomain).toList();
+        return jpaRepository.findByTheme_NameAndDifficulty(theme.getName(), difficulty)
+            .map(mapper::toDomain).toList();
     }
 
     @Override
     public List<Mission> findByScenarioIdOrderByOrderIndex(UUID scenarioId) {
         return jpaRepository.findByScenario_IdOrderByOrderIndex(scenarioId)
-                .stream().map(mapper::toDomain).toList();
+            .map(mapper::toDomain).toList();
     }
 
     @Override
     public List<Mission> findByScenarioIdInOrderByOrderIndex(Set<UUID> scenarioIds) {
         if (scenarioIds.isEmpty()) return List.of();
         return jpaRepository.findByScenario_IdInOrderByOrderIndex(scenarioIds)
-                .stream().map(mapper::toDomain).toList();
+            .map(mapper::toDomain).toList();
     }
 
     @Override
     public List<Mission> findByEnabledTrue() {
-        return jpaRepository.findByEnabledTrue().stream()
-                .map(mapper::toDomain)
-                .toList();
+        return jpaRepository.findByEnabledTrue()
+            .map(mapper::toDomain)
+            .toList();
     }
 
     @Override
@@ -138,7 +141,7 @@ public class MissionPersistenceAdapter implements MissionQueryPort, MissionComma
         entity.setTheme(themeEntity);
 
         Set<TechniqueJpaEntity> techEntities = mission.getTechniques().stream()
-                .map(t -> techniqueJpaRepository.getReferenceById(t.getId()))
+                .map(t -> techniqueJpaRepository.getReferenceById(t.id()))
                 .collect(Collectors.toCollection(HashSet::new));
         entity.setTechniques(techEntities);
 

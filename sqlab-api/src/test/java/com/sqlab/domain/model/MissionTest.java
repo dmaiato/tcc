@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,7 +22,7 @@ class MissionTest {
                 .hint("Hint")
                 .ddlScript("CREATE TABLE...")
                 .dmlScript("INSERT...")
-                .techniques(List.of(new Technique(null, "SELECT")))
+                .techniques(Set.of(new Technique(null, "SELECT")))
                 .xpReward(100)
                 .expectedResult(expected)
                 .ordered(ordered)
@@ -78,7 +79,7 @@ class MissionTest {
                 .hint("Hint")
                 .ddlScript("DDL")
                 .dmlScript("DML")
-                .techniques(List.of(new Technique(null, "SELECT"), new Technique(null, "JOIN")))
+                .techniques(Set.of(new Technique(null, "SELECT"), new Technique(null, "JOIN")))
                 .xpReward(200)
                 .expectedResult(expected)
                 .ordered(true)

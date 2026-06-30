@@ -43,8 +43,8 @@ class ManageMissionServiceTest {
     void setUp() {
         service = new ManageMissionService(missionQueryPort, missionCommandPort, scenarioMissionCascadePort, themeRepository, techniqueRepository);
         lenient().when(themeRepository.findByName("ASTRONOMY")).thenReturn(Optional.of(astronomyTheme));
-        lenient().when(techniqueRepository.findByNameIn(Set.of("SELECT"))).thenReturn(List.of(selectTechnique));
-        lenient().when(techniqueRepository.findByNameIn(Set.of("JOIN"))).thenReturn(List.of(joinTechnique));
+        lenient().when(techniqueRepository.findByNameIn(Set.of("SELECT"))).thenReturn(Set.of(selectTechnique));
+        lenient().when(techniqueRepository.findByNameIn(Set.of("JOIN"))).thenReturn(Set.of(joinTechnique));
     }
 
     @Test
@@ -52,7 +52,7 @@ class ManageMissionServiceTest {
         when(missionCommandPort.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         var cmd = new ManageMissionUseCase.CreateMissionCommand(
                 "Title", "Briefing", "Objective", "Hint",
-                "DDL", "DML", List.of("SELECT"), 100, true,
+                "DDL", "DML", Set.of("SELECT"), 100, true,
                 "ASTRONOMY", DifficultyLevel.BEGINNER,
                 List.of(Map.of("x", 1)), null, null, null);
 
@@ -70,7 +70,7 @@ class ManageMissionServiceTest {
         when(missionCommandPort.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         var cmd = new ManageMissionUseCase.CreateMissionCommand(
                 "Title", "B", "O", null, "DDL", null,
-                List.of(), 50, false, "ASTRONOMY", DifficultyLevel.BEGINNER,
+                Set.of(), 50, false, "ASTRONOMY", DifficultyLevel.BEGINNER,
                 List.of(Map.of("x", 1)), scenarioId, null, null);
 
         var result = service.create(cmd);
@@ -81,7 +81,7 @@ class ManageMissionServiceTest {
     @Test
     void updateMission() {
         var existing = Mission.builder().id(missionId).title("Old").briefing("B").objective("O")
-                .ddlScript("DDL").techniques(List.of()).xpReward(10)
+                .ddlScript("DDL").techniques(Set.of()).xpReward(10)
                 .expectedResult(new ExpectedTuple(List.of(Map.of("x", 1))))
                 .ordered(false).theme(astronomyTheme).difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(null).orderIndex(null).enabled(true).build();
@@ -90,7 +90,7 @@ class ManageMissionServiceTest {
 
         var cmd = new ManageMissionUseCase.UpdateMissionCommand(
                 missionId, "Updated", "B", "O", null, "DDL", null,
-                List.of("JOIN"), 200, true, "ASTRONOMY",
+                Set.of("JOIN"), 200, true, "ASTRONOMY",
                 DifficultyLevel.ADVANCED, List.of(Map.of("y", 2)),
                 null, null, null);
 
@@ -103,7 +103,7 @@ class ManageMissionServiceTest {
     void updateThrowsWhenNotFound() {
         var cmd = new ManageMissionUseCase.UpdateMissionCommand(
                 missionId, "T", "B", "O", null, "DDL", null,
-                List.of(), 10, false, "ASTRONOMY",
+                Set.of(), 10, false, "ASTRONOMY",
                 DifficultyLevel.BEGINNER, List.of(Map.of("x", 1)),
                 null, null, null);
         when(missionQueryPort.findById(missionId)).thenReturn(Optional.empty());
@@ -113,7 +113,7 @@ class ManageMissionServiceTest {
     @Test
     void deleteMission() {
         var mission = Mission.builder().id(missionId).title("T").briefing("B").objective("O")
-                .ddlScript("DDL").techniques(List.of()).xpReward(10)
+                .ddlScript("DDL").techniques(Set.of()).xpReward(10)
                 .expectedResult(new ExpectedTuple(List.of(Map.of("x", 1))))
                 .ordered(false).theme(astronomyTheme).difficulty(DifficultyLevel.BEGINNER)
                 .scenarioId(null).orderIndex(null).enabled(true).build();
@@ -133,7 +133,7 @@ class ManageMissionServiceTest {
     void validateScenarioConstraintThrows() {
         var cmd = new ManageMissionUseCase.UpdateMissionCommand(
                 missionId, "T", "B", "O", null, "DDL", null,
-                List.of(), 10, false, "ASTRONOMY",
+                Set.of(), 10, false, "ASTRONOMY",
                 DifficultyLevel.BEGINNER, List.of(Map.of("x", 1)),
                 UUID.randomUUID(), null, null);
         assertThatThrownBy(() -> service.update(cmd))

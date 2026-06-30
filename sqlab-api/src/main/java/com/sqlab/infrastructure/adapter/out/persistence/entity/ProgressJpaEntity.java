@@ -20,13 +20,9 @@ public class ProgressJpaEntity {
     @Id
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, updatable = false)
-    private UserJpaEntity user;
+    private UUID userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "mission_id", nullable = false, updatable = false)
-    private MissionJpaEntity mission;
+    private UUID missionId;
 
     @Column(nullable = false)
     private boolean completed;

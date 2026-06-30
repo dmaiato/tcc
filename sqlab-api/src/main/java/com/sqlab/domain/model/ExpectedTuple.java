@@ -4,7 +4,10 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+
+import org.jspecify.annotations.NonNull;
 
 public record ExpectedTuple(List<Map<String, Object>> rows) {
 
@@ -15,26 +18,27 @@ public record ExpectedTuple(List<Map<String, Object>> rows) {
     public ValidationResult matchesUnordered(List<Map<String, Object>> submitted) {
         if (rows.size() != submitted.size()) {
             return ValidationResult.failed(
-                    "Expected " + rows.size() + " row" + (rows.size() != 1 ? "s" : "") +
-                    ", got " + submitted.size()
+                    "Expected %s %s, got %s".formatted(
+                        rows.size(), 
+                        "row" + (rows.size() != 1 ? "s" : ""),
+                        submitted.size())
             );
         }
 
-        ValidationResult columnCheck = checkColumns(submitted);
-        if (columnCheck != null) return columnCheck;
+        return checkColumns(submitted).orElseGet(() -> {
+            boolean allMatch = submitted.stream()
+                .allMatch(candidate -> rows.stream()
+                    .anyMatch(expected -> mapsEqual(expected, candidate)));
+            
+            if (!allMatch) {
+                return ValidationResult.failed("Values don't match expected result");
+            }
 
-        boolean allMatch = submitted.stream().allMatch(candidate ->
-                rows.stream().anyMatch(expected -> mapsEqual(expected, candidate))
-        );
-
-        if (!allMatch) {
-            return ValidationResult.failed("Values don't match expected result");
-        }
-
-        return ValidationResult.CORRECT;
+            return ValidationResult.CORRECT;
+        });
     }
 
-    public ValidationResult matchesOrdered(List<Map<String, Object>> submitted) {
+    public @NonNull ValidationResult matchesOrdered(List<Map<String, Object>> submitted) {
         if (rows.size() != submitted.size()) {
             return ValidationResult.failed(
                     "Expected " + rows.size() + " row" + (rows.size() != 1 ? "s" : "") +
@@ -42,61 +46,57 @@ public record ExpectedTuple(List<Map<String, Object>> rows) {
             );
         }
 
-        ValidationResult columnCheck = checkColumns(submitted);
-        if (columnCheck != null) return columnCheck;
-
-        for (int i = 0; i < rows.size(); i++) {
-            if (!mapsEqual(rows.get(i), submitted.get(i))) {
-                boolean allDataMatches = submitted.stream().allMatch(candidate ->
-                        rows.stream().anyMatch(expected -> mapsEqual(expected, candidate))
-                );
-                if (allDataMatches) {
-                    return ValidationResult.failed("Rows are correct but in wrong order");
+        return checkColumns(submitted).orElseGet(() -> {
+            for (int i = 0; i < rows.size(); i++) {
+                if (!mapsEqual(rows.get(i), submitted.get(i))) {
+                    boolean allDataMatches = submitted.stream().allMatch(candidate ->
+                            rows.stream().anyMatch(expected -> mapsEqual(expected, candidate))
+                    );
+                    if (allDataMatches) {
+                        return ValidationResult.failed("Rows are correct but in wrong order");
+                    }
+                    return checkRow(i, rows.get(i), submitted.get(i)).orElse(null); // are nulls acceptable?
                 }
-                return checkRow(i, rows.get(i), submitted.get(i));
             }
-        }
-        return ValidationResult.CORRECT;
+            return ValidationResult.CORRECT;
+        });
     }
 
-    private ValidationResult checkColumns(List<Map<String, Object>> submitted) {
-        if (rows.isEmpty() || submitted.isEmpty()) return null;
+    private Optional<ValidationResult> checkColumns(List<Map<String, Object>> submitted) {
+        if (rows.isEmpty() || submitted.isEmpty()) return Optional.empty();
 
         Set<String> expectedKeys = rows.get(0).keySet();
         Set<String> actualKeys = submitted.get(0).keySet();
 
         Set<String> missingKeys = new HashSet<>(expectedKeys);
         missingKeys.removeAll(actualKeys);
-        if (!missingKeys.isEmpty()) {
-            return ValidationResult.failed(
-                    "Missing column" + (missingKeys.size() != 1 ? "s" : "") + ": " +
-                    String.join(", ", missingKeys)
-            );
-        }
+        if (!missingKeys.isEmpty()) return Optional.of(ValidationResult.failed(
+            "Missing column" + (missingKeys.size() != 1 ? "s" : "") + ": " +
+            String.join(", ", missingKeys)
+        ));
+    
 
         Set<String> extraKeys = new HashSet<>(actualKeys);
         extraKeys.removeAll(expectedKeys);
-        if (!extraKeys.isEmpty()) {
-            return ValidationResult.failed(
-                    "Unexpected column" + (extraKeys.size() != 1 ? "s" : "") + ": " +
-                    String.join(", ", extraKeys)
-            );
-        }
+        if (!extraKeys.isEmpty()) return Optional.of(ValidationResult.failed(
+            "Unexpected column" + (extraKeys.size() != 1 ? "s" : "") + ": " +
+            String.join(", ", extraKeys)
+        ));
 
-        return null;
+        return Optional.empty();
     }
 
-    private ValidationResult checkRow(int index, Map<String, Object> expected, Map<String, Object> actual) {
+    private Optional<ValidationResult> checkRow(int index, Map<String, Object> expected, Map<String, Object> actual) {
         for (Map.Entry<String, Object> entry : expected.entrySet()) {
             if (!valuesEqual(entry.getValue(), actual.get(entry.getKey()))) {
-                return ValidationResult.failed(
+                return Optional.of(ValidationResult.failed(
                         "Row " + (index + 1) + ": column '" + entry.getKey() +
                         "' expected '" + entry.getValue() + "', got '" +
                         actual.get(entry.getKey()) + "'"
-                );
+                ));
             }
         }
-        return null;
+        return Optional.empty();
     }
 
     private static boolean mapsEqual(Map<String, Object> a, Map<String, Object> b) {

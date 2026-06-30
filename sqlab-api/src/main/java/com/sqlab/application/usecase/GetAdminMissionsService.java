@@ -3,7 +3,10 @@ package com.sqlab.application.usecase;
 import com.sqlab.application.port.in.GetAdminMissionsUseCase;
 import com.sqlab.application.port.out.MissionQueryPort;
 import com.sqlab.application.port.out.ScenarioRepository;
+import com.sqlab.domain.exception.MissionNotFoundException;
 import com.sqlab.domain.model.Mission;
+import com.sqlab.domain.model.Scenario;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,19 +35,18 @@ public class GetAdminMissionsService implements GetAdminMissionsUseCase {
 
     @Override
     public AdminMissionResult findById(UUID id) {
-        Mission mission = missionQueryPort.findById(id)
-                .orElseThrow(() -> new com.sqlab.domain.exception.MissionNotFoundException(id));
-        return toResult(mission);
+        return missionQueryPort.findById(id)
+            .map(this::toResult)
+            .orElseThrow(() -> new MissionNotFoundException(id));
     }
 
     private AdminMissionResult toResult(Mission mission) {
-        String scenarioTitle = null;
-        Integer scenarioTotalMissions = null;
-        if (mission.getScenarioId() != null) {
-            scenarioTitle = scenarioRepository.findById(mission.getScenarioId())
-                    .map(com.sqlab.domain.model.Scenario::getTitle).orElse(null);
-            scenarioTotalMissions = missionQueryPort.countByScenarioIdAndEnabledTrue(mission.getScenarioId());
+        if (mission.hasScenario()) {
+            final String scenarioTitle = scenarioRepository.findById(mission.getScenarioId())
+                    .map(Scenario::getTitle).orElse(null);
+            final Integer scenarioTotalMissions = missionQueryPort.countByScenarioIdAndEnabledTrue(mission.getScenarioId());
+            return new AdminMissionResult(mission, scenarioTitle, scenarioTotalMissions);
         }
-        return new AdminMissionResult(mission, scenarioTitle, scenarioTotalMissions);
+        return new AdminMissionResult(mission);
     }
 }

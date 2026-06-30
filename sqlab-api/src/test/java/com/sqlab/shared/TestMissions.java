@@ -2,6 +2,8 @@ package com.sqlab.shared;
 
 import com.sqlab.domain.model.*;
 
+import static java.util.stream.Collectors.toSet;
+
 import java.util.*;
 
 public final class TestMissions {
@@ -12,7 +14,7 @@ public final class TestMissions {
 
     public static Mission withTechniques(String... techniqueNames) {
         return builder("Mission with Techniques")
-                .techniques(Arrays.stream(techniqueNames).map(n -> new Technique(null, n)).toList())
+                .techniques(Arrays.stream(techniqueNames).map(n -> new Technique(null, n)).collect(toSet()))
                 .build();
     }
 
@@ -55,7 +57,7 @@ public final class TestMissions {
                 .briefing("Briefing")
                 .objective("Objective")
                 .ddlScript("CREATE TABLE t (x INT)")
-                .techniques(List.of())
+                .techniques(Set.of())
                 .xpReward(100)
                 .expectedResult(new ExpectedTuple(List.of(Map.of("x", 1))))
                 .ordered(false)

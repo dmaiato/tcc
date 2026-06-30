@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -21,7 +22,7 @@ public class Mission {
     private String hint;
     private String ddlScript;
     private String dmlScript;
-    private List<Technique> techniques;
+    private Set<Technique> techniques;
     private int xpReward;
     private ExpectedTuple expectedResult;
     private boolean ordered;
@@ -48,4 +49,8 @@ public class Mission {
     }
 
     public void reorder(int orderIndex) { this.orderIndex = orderIndex; }
+
+    public boolean hasScenario() {
+        return getScenarioId() != null;
+    }
 }

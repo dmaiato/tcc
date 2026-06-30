@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class ScenarioDto {
+public final class ScenarioDto {
+
+    private ScenarioDto() { /* this class is not meant to be intantiated */}
 
     public record ScenarioSummary(
             UUID id,

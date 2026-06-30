@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,18 +37,19 @@ public class GetUserProgressService implements GetUserProgressUseCase {
             return List.of();
         }
 
-        Set<UUID> missionIds = progressList.stream()
+        final Set<UUID> missionIds = progressList.stream()
                 .map(Progress::getMissionId)
                 .collect(Collectors.toSet());
-        Map<UUID, Mission> missionMap = new HashMap<>();
-        missionQueryPort.findAllById(missionIds)
-                .forEach(m -> missionMap.put(m.getId(), m));
 
-        Set<UUID> scenarioIds = missionMap.values().stream()
+        final Map<UUID, Mission> missionMap = missionQueryPort.findAllById(missionIds).stream()
+                .collect(Collectors.toMap(Mission::getId, Function.identity()));
+
+        final Set<UUID> scenarioIds = missionMap.values().stream()
                 .map(Mission::getScenarioId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        Map<UUID, String> scenarioTitles = new HashMap<>();
+
+        final Map<UUID, String> scenarioTitles = new HashMap<>();
         scenarioRepository.findAllById(scenarioIds)
                 .forEach(s -> scenarioTitles.put(s.getId(), s.getTitle()));
 

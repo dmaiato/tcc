@@ -6,7 +6,8 @@ import com.sqlab.infrastructure.adapter.out.persistence.repository.TechniqueJpaR
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import static java.util.stream.Collectors.toSet;
+
 import java.util.Optional;
 import java.util.Set;
 
@@ -27,9 +28,9 @@ public class TechniquePersistenceAdapter implements TechniqueRepository {
     }
 
     @Override
-    public List<Technique> findByNameIn(Set<String> names) {
-        return techniqueJpaRepository.findByNameIn(names).stream()
+    public Set<Technique> findByNameIn(Set<String> names) {
+        return techniqueJpaRepository.findByNameIn(names)
                 .map(t -> new Technique(t.getId(), t.getName()))
-                .toList();
+                .collect(toSet());
     }
 }

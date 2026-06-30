@@ -106,7 +106,7 @@ class MissionRepositoryTest extends AbstractPersistenceTest {
                 .enabled(true).scenario(scenario).orderIndex(1)
                 .techniques(Set.of(technique)).createdAt(LocalDateTime.now()).build());
 
-        var results = missionRepository.findByScenario_IdOrderByOrderIndex(scenario.getId());
+        var results = missionRepository.findByScenario_IdOrderByOrderIndex(scenario.getId()).toList();
         assertThat(results).hasSize(2);
         assertThat(results.get(0).getTitle()).isEqualTo("M2");
         assertThat(results.get(1).getTitle()).isEqualTo("M1");

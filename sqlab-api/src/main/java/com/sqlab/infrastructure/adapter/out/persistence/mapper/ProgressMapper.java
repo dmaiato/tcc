@@ -12,8 +12,8 @@ public class ProgressMapper {
     public Progress toDomain(ProgressJpaEntity entity) {
         return new Progress(
                 entity.getId(),
-                entity.getUser().getId(),
-                entity.getMission().getId(),
+                entity.getUserId(),
+                entity.getMissionId(),
                 entity.isCompleted(),
                 entity.getCompletedAt()
         );
@@ -22,8 +22,8 @@ public class ProgressMapper {
     public ProgressJpaEntity toJpa(Progress domain, UserJpaEntity user, MissionJpaEntity mission) {
         ProgressJpaEntity entity = new ProgressJpaEntity();
         entity.setId(domain.getId());
-        entity.setUser(user);
-        entity.setMission(mission);
+        entity.setUserId(user.getId());
+        entity.setMissionId(mission.getId());
         entity.setCompleted(domain.isCompleted());
         entity.setCompletedAt(domain.getCompletedAt());
         return entity;
